@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Club Pinar Fútbol Sala | Gestión Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
+      updateDoc, deleteDoc, onSnapshot, query, orderBy, where
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // ─── CONFIGURACIÓN FIREBASE ──────────────────────────────────────────────
+    const firebaseConfig = {
+      apiKey: "AIzaSyBQ6A_4h7UVjt_pxBZOaMaZZh-b6-edF2o",
+      authDomain: "facturacion-c8682.firebaseapp.com",
+      projectId: "facturacion-c8682",
+      storageBucket: "facturacion-c8682.firebasestorage.app",
+      messagingSenderId: "875153421377",
+      appId: "1:875153421377:web:299738ad96a684797902c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // ─── ESTADO GLOBAL ────────────────────────────────────────────────────────
+    let categories = [];
+    let players    = [];
+    let fees       = {}; 
+
+    const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const POSITIONS = ['Portero','Cierre','Ala Izquierda','Ala Derecha','Pívot'];
+    const BASE_CATS = ['Prebenjamín','Benjamín','Alevín','Infantil','Cadete','Juvenil','Sénior'];
+
+    // ─── CARGA DE DATOS (FIRESTORE) ──────────────────────────────────────────
+    async function loadAll() {
+      const [catSnap, playerSnap, feeSnap] = await Promise.all([
+        getDocs(collection(db,'pinar_categories')),
+        getDocs(collection(db,'pinar_players')),
+        getDocs(collection(db,'pinar_fees'))
+      ]);
+      categories = catSnap.docs.map(d=>({id:d.id,...d.data()}));
+      players    = playerSnap.docs.map(d=>({id:d.id,...d.data()}));
+      fees = {};
+      feeSnap.docs.forEach(d=>{ fees[d.id] = d.data(); });
+      renderAll();
+    }
+
+    // ─── LÓGICA DE CATEGORÍAS ─────────────────────────────────────────────────
+    async function saveCategory(data) {
+      if (data.id) await setDoc(doc(db,'pinar_categories',data.id), data);
+      else { const ref = await addDoc(collection(db,'pinar_categories'), data); data.id = ref.id; }
+      await loadAll();
+    }
+
+    async function deleteCategory(id) {
+      await deleteDoc(doc(db,'pinar_categories',id));
+      await loadAll();
+    }
+
+    // ─── LÓGICA DE JUGADORES ──────────────────────────────────────────────────
+    async function savePlayer(data) {
+      if (data.id) await setDoc(doc(db,'pinar_players',data.id), data);
+      else {
+        const ref = await addDoc(collection(db,'pinar_players'), data);
+        data.id = ref.id;
+        fees[data.id] = {};
+        await setDoc(doc(db,'pinar_fees',data.id), {});
+      }
+      await loadAll();
+    }
+
+    async function deletePlayer(id) {
+      await deleteDoc(doc(db,'pinar_players',id));
+      await deleteDoc(doc(db,'pinar_fees',id));
+      await loadAll();
+    }
+
+    // ─── LÓGICA DE CUOTAS ─────────────────────────────────────────────────────
+    async function toggleFee(playerId, month) {
+      if (!fees[playerId]) fees[playerId] = {};
+      fees[playerId][month] = !fees[playerId][month];
+      await setDoc(doc(db,'pinar_fees',playerId), fees[playerId]);
+      renderFees();
+      renderDashboard();
+    }
+
+    // ─── NAVEGACIÓN ENTRE PESTAÑAS ────────────────────────────────────────────
+    let currentTab = 'dashboard';
+    window.switchTab = function(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b=>{
+        b.classList.toggle('tab-active', b.dataset.tab===tab);
+      });
+      document.querySelectorAll('.tab-pane').forEach(p=>{
+        p.classList.toggle('hidden', p.id!=='tab-'+tab);
+      });
+      if(tab==='dashboard') renderDashboard();
+      if(tab==='categories') renderCategories();
+      if(tab==='players') renderPlayers();
+      if(tab==='fees') renderFees();
+    };
+
+    // ─── RENDERIZADO: DASHBOARD ───────────────────────────────────────────────
+    function renderDashboard() {
+      const el = document.getElementById('dash-content');
+      const totalPlayers = players.length;
+      const totalCats    = categories.length;
+      let totalPaid = 0, totalPending = 0;
+      players.forEach(p=>{
+        const pf = fees[p.id] || {};
+        for(let m=1;m<=12;m++) if(pf[m]) totalPaid++; else totalPending++;
+      });
+      const topScorers = [...players].sort((a,b)=>(b.goals||0)-(a.goals||0)).slice(0,5);
+
+      el.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          ${statCard('Jugadores',totalPlayers,'⚽','bg-red-700')}
+          ${statCard('Equipos',totalCats,'🏆','bg-green-700')}
+          ${statCard('Pagos Recibidos',totalPaid,'✅','bg-green-600')}
+          ${statCard('Pendientes',totalPending,'⏳','bg-red-600')}
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="card"><h3 class="section-title">🥅 Máximos Goleadores</h3>${rankList(topScorers,'goals','Goles')}</div>
+          <div class="card flex flex-col justify-center items-center p-10">
+            <div class="text-6xl mb-4">🔴🟢</div>
+            <div class="text-2xl font-black text-white italic">¡VAMOS PINAR!</div>
+          </div>
+        </div>`;
+    }
+
+    function statCard(label,val,icon,color) {
+      return `<div class="card flex items-center gap-4 border-l-4 border-l-${color.split('-')[1]}-500">
+        <div class="w-12 h-12 ${color} rounded-full flex items-center justify-center text-2xl flex-shrink-0">${icon}</div>
+        <div><div class="text-3xl font-bold text-white">${val}</div><div class="text-gray-400 text-[10px] uppercase font-black">${label}</div></div>
+      </div>`;
+    }
+
+    function rankList(list,field,label) {
+      if(!list.length) return '<p class="text-gray-500 text-sm">Sin datos aún</p>';
+      return list.map((p,i)=>`
+        <div class="flex items-center gap-3 py-2 border-b border-gray-700 last:border-0">
+          <span class="w-6 text-center font-bold text-gray-500">${i+1}</span>
+          <img src="${p.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(p.name)+'&background=7f1d1d&color=fff'}" class="w-8 h-8 rounded-full object-cover" />
+          <span class="flex-1 text-white text-sm font-semibold">${p.name}</span>
+          <span class="font-bold text-green-400">${p[field]||0}</span>
+        </div>`).join('');
+    }
+
+    // ─── RENDERIZADO: CATEGORÍAS ─────────────────────────────────────────────
+    function renderCategories() {
+      const el = document.getElementById('cat-list');
+      if(!categories.length){ el.innerHTML='<p class="text-gray-500 col-span-full text-center py-8">Crea el primer equipo del club.</p>'; return; }
+      el.innerHTML = categories.map(c=>{
+        const teamPlayers = players.filter(p=>p.categoryId===c.id);
+        return `<div class="card relative group border-t-4 border-t-green-600">
+          <button onclick="confirmDeleteCategory('${c.id}')" class="absolute top-2 right-2 text-gray-600 hover:text-red-500 transition-colors">🗑</button>
+          <h3 class="text-white font-black text-lg uppercase tracking-tighter">${c.base} ${c.sub||''}</h3>
+          <div class="flex gap-1 mt-2 mb-4">
+            ${c.tags?c.tags.map(t=>`<span class="px-2 py-0.5 text-[9px] font-black rounded bg-slate-800 text-slate-300 uppercase">${t}</span>`).join(''):''}
+          </div>
+          <div class="text-gray-500 text-xs font-bold uppercase">${teamPlayers.length} Jugadores</div>
+          <button onclick="openEditCategory('${c.id}')" class="mt-4 w-full bg-slate-800 text-xs font-bold py-2 rounded hover:bg-slate-700 transition-colors uppercase">Configurar</button>
+        </div>`;
+      }).join('');
+    }
+
+    window.confirmDeleteCategory = function(id) { if(confirm("¿Eliminar este equipo por completo?")) deleteCategory(id); };
+
+    window.openEditCategory = function(id) {
+      const c = id ? categories.find(x=>x.id===id) : null;
+      openModal('cat-modal');
+      document.getElementById('cat-form-id').value = c?.id||'';
+      document.getElementById('cat-base').value    = c?.base||BASE_CATS[0];
+      document.getElementById('cat-sub').value     = c?.sub||'';
+      document.getElementById('cat-tags').querySelectorAll('input').forEach(inp=>inp.checked = c?.tags?.includes(inp.value)||false);
+    };
+
+    window.saveCategoryForm = async function() {
+      const id = document.getElementById('cat-form-id').value;
+      const data = { 
+        base: document.getElementById('cat-base').value, 
+        sub: document.getElementById('cat-sub').value.trim(), 
+        tags: [...document.getElementById('cat-tags').querySelectorAll('input:checked')].map(i=>i.value) 
+      };
+      if(id) data.id = id;
+      await saveCategory(data);
+      closeModal('cat-modal');
+    };
+
+    // ─── RENDERIZADO: JUGADORES ──────────────────────────────────────────────
+    let playerFilterCat = '';
+    let playerSearch    = '';
+
+    function renderPlayers() {
+      const sel = document.getElementById('player-cat-filter');
+      sel.innerHTML = '<option value="">Todos los equipos</option>' + categories.map(c=>`<option value="${c.id}">${c.base} ${c.sub||''}</option>`).join('');
+      sel.value = playerFilterCat;
+
+      const filtered = players.filter(p=> (!playerFilterCat || p.categoryId===playerFilterCat) && (!playerSearch || p.name.toLowerCase().includes(playerSearch.toLowerCase())) );
+
+      const el = document.getElementById('player-list');
+      if(!filtered.length){ el.innerHTML='<p class="text-gray-500 col-span-full text-center py-8">No hay jugadores registrados.</p>'; return; }
+      el.innerHTML = filtered.map(p=>{
+        const cat = categories.find(c=>c.id===p.categoryId);
+        return `<div class="card relative hover:border-red-600 transition-all border border-slate-800">
+          <button onclick="confirmDeletePlayer('${p.id}')" class="absolute top-2 right-2 text-gray-700 hover:text-red-500">🗑</button>
+          <div class="flex gap-4">
+            <img src="${p.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(p.name)+'&background=7f1d1d&color=fff'}" class="w-16 h-16 rounded-2xl object-cover border-2 border-slate-700" />
+            <div>
+              <div class="font-black text-white text-md leading-tight uppercase">${p.name}</div>
+              <div class="text-[10px] font-bold text-red-500 uppercase mt-1">#${p.dorsal||'S/N'} · ${p.position}</div>
+              <div class="text-[10px] font-bold text-gray-500 uppercase italic">${cat?cat.base+' '+(cat.sub||''):'Sin Equipo'}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-2 mt-4 text-center">
+             <div class="bg-slate-900 rounded-lg p-1"><div class="text-xs font-black text-white">${p.goals||0}</div><div class="text-[8px] text-gray-500 uppercase">Goles</div></div>
+             <div class="bg-slate-900 rounded-lg p-1"><div class="text-xs font-black text-white">${p.attPresent||0}</div><div class="text-[8px] text-gray-500 uppercase">Pres.</div></div>
+             <div class="bg-slate-900 rounded-lg p-1"><div class="text-xs font-black text-white">${p.attAbsent||0}</div><div class="text-[8px] text-gray-500 uppercase">Faltas</div></div>
+             <div class="bg-slate-900 rounded-lg p-1"><div class="text-xs font-black text-white">${p.attInjured||0}</div><div class="text-[8px] text-gray-500 uppercase">Les.</div></div>
+          </div>
+          <button onclick="openEditPlayer('${p.id}')" class="mt-4 w-full bg-red-900/20 text-red-500 text-[10px] font-black py-2 rounded-lg hover:bg-red-900/40 transition-all uppercase">Editar Ficha</button>
+        </div>`;
+      }).join('');
+    }
+
+    window.confirmDeletePlayer = function(id) { if(confirm("¿Eliminar ficha de jugador?")) deletePlayer(id); };
+
+    window.openEditPlayer = function(id) {
+      const p = id ? players.find(x=>x.id===id) : null;
+      document.getElementById('pl-category').innerHTML = '<option value="">Selecciona equipo</option>' + categories.map(c=>`<option value="${c.id}">${c.base} ${c.sub||''}</option>`).join('');
+      openModal('player-modal');
+      document.getElementById('pl-id').value = p?.id||'';
+      document.getElementById('pl-name').value = p?.name||'';
+      document.getElementById('pl-photo').value = p?.photo||'';
+      document.getElementById('pl-dorsal').value = p?.dorsal||'';
+      document.getElementById('pl-position').value = p?.position||POSITIONS[0];
+      document.getElementById('pl-category').value = p?.categoryId||'';
+      document.getElementById('pl-goals').value = p?.goals||0;
+      document.getElementById('pl-att-present').value = p?.attPresent||0;
+      document.getElementById('pl-att-absent').value = p?.attAbsent||0;
+      document.getElementById('pl-att-injured').value = p?.attInjured||0;
+    };
+
+    window.savePlayerForm = async function() {
+      const name = document.getElementById('pl-name').value.trim();
+      if(!name) return alert("Nombre obligatorio");
+      const data = {
+        name, photo: document.getElementById('pl-photo').value, dorsal: parseInt(document.getElementById('pl-dorsal').value)||0,
+        position: document.getElementById('pl-position').value, categoryId: document.getElementById('pl-category').value,
+        goals: parseInt(document.getElementById('pl-goals').value)||0, attPresent: parseInt(document.getElementById('pl-att-present').value)||0,
+        attAbsent: parseInt(document.getElementById('pl-att-absent').value)||0, attInjured: parseInt(document.getElementById('pl-att-injured').value)||0
+      };
+      const id = document.getElementById('pl-id').value;
+      if(id) data.id = id;
+      await savePlayer(data);
+      closeModal('player-modal');
+    };
+
+    // ─── RENDERIZADO: CUOTAS ─────────────────────────────────────────────────
+    let feeCatFilter = '';
+    function renderFees() {
+      const sel = document.getElementById('fee-cat-filter');
+      sel.innerHTML = '<option value="">Todos los equipos</option>' + categories.map(c=>`<option value="${c.id}">${c.base} ${c.sub||''}</option>`).join('');
+      sel.value = feeCatFilter;
+
+      const filtered = players.filter(p=> !feeCatFilter || p.categoryId===feeCatFilter);
+      let totalAmount = 0; filtered.forEach(p=>{ const pf = fees[p.id]||{}; Object.values(pf).forEach(v=> { if(v) totalAmount+=30; }); });
+
+      document.getElementById('fee-summary').innerHTML = `
+        <div class="card bg-green-900/20 border-green-800 flex justify-between items-center mb-6">
+          <span class="text-xs font-black uppercase text-green-400">Total Recaudado (Temp. Actual)</span>
+          <span class="text-3xl font-black text-white">${totalAmount}€</span>
+        </div>`;
+
+      const headerCells = MONTHS.map(m=>`<th class="px-2 py-3 text-[10px] font-black text-gray-500 uppercase text-center">${m}</th>`).join('');
+      const rows = filtered.map(p=>{
+        const pf = fees[p.id]||{};
+        const cells = MONTHS.map((_,i)=>{
+          const m = i+1; const checked = pf[m];
+          return `<td class="px-1 py-2 text-center">
+            <button onclick="toggleFee('${p.id}',${m})" class="w-8 h-8 rounded-lg border-2 transition-all ${checked?'bg-green-600 border-green-500 text-white':'border-slate-800 hover:border-green-600'} flex items-center justify-center mx-auto text-[10px] font-bold">${checked?'✓':''}</button>
+          </td>`;
+        }).join('');
+        return `<tr class="border-b border-slate-800 hover:bg-slate-800/30">
+          <td class="px-3 py-3 whitespace-nowrap"><div class="font-bold text-white text-sm">${p.name}</div></td>
+          ${cells}
+        </tr>`;
+      }).join('');
+
+      document.getElementById('fee-table-wrap').innerHTML = `
+        <div class="overflow-x-auto rounded-xl border border-slate-800">
+          <table class="w-full">
+            <thead class="bg-slate-900"><tr><th class="px-3 py-3 text-left text-[10px] font-black text-gray-500 uppercase">Jugador</th>${headerCells}</tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    // UTILS MODALES
+    window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
+    window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+    window.toggleFee = toggleFee;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('player-cat-filter').addEventListener('change', e=>{ playerFilterCat = e.target.value; renderPlayers(); });
+      document.getElementById('player-search').addEventListener('input', e=>{ playerSearch = e.target.value; renderPlayers(); });
+      document.getElementById('fee-cat-filter').addEventListener('change', e=>{ feeCatFilter = e.target.value; renderFees(); });
+      await loadAll();
+      switchTab('dashboard');
+    });
+  </script>
+
+  <style>
+    body { background: #08080a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+    .card { background: #121217; border: 1px solid #1f1f27; border-radius: 16px; padding: 1.25rem; }
+    .tab-btn { color: #64748b; transition: all 0.3s; }
+    .tab-active { color: #fff; background: linear-gradient(135deg, #b91c1c, #166534); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    .section-title { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 1rem; }
+    .input-field { width: 100%; background: #0a0a0d; border: 1px solid #1f1f27; border-radius: 10px; padding: 0.6rem 1rem; font-size: 0.875rem; color: #fff; outline: none; transition: border 0.2s; }
+    .input-field:focus { border-color: #15803d; }
+  </style>
+</head>
+<body class="pb-10">
+
+<header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white italic">P</div>
+      <div><h1 class="font-black text-xl tracking-tighter leading-none">CLUB PINAR FS</h1><p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Gestión Deportiva Alcorcón</p></div>
+    </div>
+    <div class="hidden sm:block text-[10px] font-black text-green-500 tracking-[0.3em] italic">¡VAMOS PINAR! 🔴🟢</div>
+  </div>
+  <div class="max-w-7xl mx-auto px-6 pb-4">
+    <div class="flex gap-2 p-1 bg-slate-900/50 rounded-xl w-fit">
+      <button class="tab-btn px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest tab-active" data-tab="dashboard" onclick="switchTab('dashboard')">Panel</button>
+      <button class="tab-btn px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="categories" onclick="switchTab('categories')">Equipos</button>
+      <button class="tab-btn px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="players" onclick="switchTab('players')">Plantillas</button>
+      <button class="tab-btn px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="fees" onclick="switchTab('fees')">Cuotas</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 mt-8">
+  <div id="tab-dashboard" class="tab-pane">
+    <h2 class="text-3xl font-black mb-8 italic uppercase tracking-tighter">Estado General</h2>
+    <div id="dash-content"></div>
+  </div>
+
+  <div id="tab-categories" class="tab-pane hidden">
+    <div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter">Categorías</h2><button onclick="openEditCategory(null)" class="bg-green-600 hover:bg-green-500 text-white font-black py-3 px-6 rounded-2xl text-[10px] uppercase shadow-lg shadow-green-900/20">+ Nuevo Equipo</button></div>
+    <div id="cat-list" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+  </div>
+
+  <div id="tab-players" class="tab-pane hidden">
+    <div class="flex flex-wrap items-center gap-4 mb-8">
+      <h2 class="text-3xl font-black italic uppercase tracking-tighter flex-1">Plantilla</h2>
+      <input id="player-search" type="text" placeholder="Buscar por nombre..." class="input-field max-w-xs" />
+      <select id="player-cat-filter" class="input-field max-w-xs"></select>
+      <button onclick="openEditPlayer(null)" class="bg-red-600 hover:bg-red-500 text-white font-black py-3 px-6 rounded-2xl text-[10px] uppercase shadow-lg shadow-red-900/20">+ Alta Jugador</button>
+    </div>
+    <div id="player-list" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+  </div>
+
+  <div id="tab-fees" class="tab-pane hidden">
+    <div class="flex flex-wrap items-center gap-4 mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter flex-1">Control de Cobros</h2><select id="fee-cat-filter" class="input-field max-w-xs"></select></div>
+    <div id="fee-summary"></div>
+    <div id="fee-table-wrap"></div>
+  </div>
+</main>
+
+<!-- MODAL CATEGORIA -->
+<div id="cat-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
+  <div class="card w-full max-w-md"><h3 class="text-xl font-black mb-6 uppercase italic">Configurar Categoría</h3>
+    <input type="hidden" id="cat-form-id" />
+    <div class="space-y-4">
+      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Categoría Base</label><select id="cat-base" class="input-field"><option>Prebenjamín</option><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Juvenil</option><option>Sénior</option></select></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Subcategoría (Letra)</label><input id="cat-sub" type="text" placeholder="Ej: A, B o C" class="input-field" /></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Tipo de Equipo</label><div id="cat-tags" class="flex gap-4 mt-2"><label class="flex items-center gap-2"><input type="checkbox" value="Federado" class="accent-green-600" /> <span class="text-xs">Federado</span></label><label class="flex items-center gap-2"><input type="checkbox" value="Municipal" class="accent-red-600" /> <span class="text-xs">Municipal</span></label></div></div>
+    </div>
+    <div class="flex gap-3 mt-8"><button onclick="closeModal('cat-modal')" class="flex-1 text-[10px] font-black uppercase text-gray-500 py-3">Cancelar</button><button onclick="saveCategoryForm()" class="flex-2 bg-green-600 text-white font-black py-3 px-8 rounded-xl text-[10px] uppercase">Guardar</button></div>
+  </div>
+</div>
+
+<!-- MODAL JUGADOR -->
+<div id="player-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
+  <div class="card w-full max-w-lg overflow-y-auto max-h-[90vh]"><h3 class="text-xl font-black mb-6 uppercase italic">Ficha del Jugador</h3>
+    <input type="hidden" id="pl-id" />
+    <div class="grid grid-cols-2 gap-4">
+      <div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Nombre Completo</label><input id="pl-name" type="text" class="input-field" /></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Dorsal</label><input id="pl-dorsal" type="number" class="input-field" /></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Posición</label><select id="pl-position" class="input-field"><option>Portero</option><option>Cierre</option><option>Ala Izquierda</option><option>Ala Derecha</option><option>Pívot</option></select></div>
+      <div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipo</label><select id="pl-category" class="input-field"></select></div>
+      <div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Foto (URL)</label><input id="pl-photo" type="url" class="input-field" placeholder="https://..." /></div>
+      <div class="col-span-2 border-t border-slate-800 pt-4"><label class="text-[10px] font-black text-red-500 uppercase mb-3 block">Estadísticas y Asistencia</label></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase">Goles</label><input id="pl-goals" type="number" class="input-field" /></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase">Presencias</label><input id="pl-att-present" type="number" class="input-field" /></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase">Faltas</label><input id="pl-att-absent" type="number" class="input-field" /></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase">Lesiones</label><input id="pl-att-injured" type="number" class="input-field" /></div>
+    </div>
+    <div class="flex gap-3 mt-8"><button onclick="closeModal('player-modal')" class="flex-1 text-[10px] font-black uppercase text-gray-500 py-3">Cancelar</button><button onclick="savePlayerForm()" class="flex-2 bg-red-600 text-white font-black py-3 px-8 rounded-xl text-[10px] uppercase">Guardar Jugador</button></div>
+  </div>
+</div>
+
+</body>
+</html>
