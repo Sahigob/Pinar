@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -33,7 +32,6 @@
     .toast-success { background:#166534; color:#fff; }
     .toast-error { background:#991b1b; color:#fff; }
     .toast-info { background:#1e40af; color:#fff; }
-    /* Parent mobile bottom nav */
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0a0a0d; border-top: 1px solid #1f1f27; padding: 8px; z-index: 40; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
     .bottom-nav button { display:flex; flex-direction:column; align-items:center; padding: 8px 4px; border-radius: 10px; color:#64748b; font-size: 9px; font-weight:900; text-transform: uppercase; letter-spacing: 0.05em; }
     .bottom-nav button.active { color:#fff; background: linear-gradient(135deg,#b91c1c,#166534); }
@@ -63,11 +61,7 @@
           <input id="login-password" type="password" class="input-field" autocomplete="current-password" />
         </div>
         <button id="btn-login" class="w-full btn-primary py-3">Entrar</button>
-        <button id="btn-forgot" class="w-full text-[10px] font-black text-gray-500 hover:text-white uppercase py-2">¿Olvidaste tu contraseña?</button>
-        <div id="init-admin-block" class="hidden border-t border-slate-800 pt-4">
-          <p class="text-[10px] text-gray-500 mb-3 text-center">No hay administrador en el sistema.</p>
-          <button id="btn-init-admin" class="w-full btn-success py-3">Crear administrador inicial</button>
-        </div>
+        <p class="text-center text-[10px] text-gray-500 mt-2">Admin por defecto: <b>admin@pinarfs.es</b> / <b>Pinar2026!</b></p>
       </div>
     </div>
     <p class="text-center text-[9px] text-gray-600 mt-6 uppercase tracking-widest">© Club Pinar FS · Alcorcón</p>
@@ -178,7 +172,7 @@
         <h2 class="text-3xl font-black italic uppercase tracking-tighter">Usuarios</h2>
         <button onclick="openEditUser(null)" class="btn-success">+ Nuevo Usuario</button>
       </div>
-      <p class="text-gray-500 text-sm mb-6">Crea cuentas para padres/tutores o jugadores mayores de edad y vincúlalos a uno o varios jugadores. Recibirán acceso solo a su(s) hijo(s).</p>
+      <p class="text-gray-500 text-sm mb-6">Crea cuentas para padres/tutores o jugadores mayores de edad y vincúlalos a uno o varios jugadores.</p>
       <div id="users-list"></div>
     </div>
 
@@ -194,6 +188,17 @@
           <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Bizum (opcional)</label><input id="cfg-bizum" type="text" class="input-field" /></div>
           <button onclick="saveClubConfig()" class="btn-primary mt-4">Guardar Configuración</button>
         </div>
+      </div>
+
+      <div class="card max-w-2xl mt-6">
+        <h3 class="section-title">Copia de Seguridad</h3>
+        <p class="text-gray-400 text-xs mb-4">Exporta todos los datos (equipos, jugadores, cobros, partidos, usuarios, config) a un archivo JSON. Guárdalo o pásalo a otro dispositivo y usa <b>Importar</b> para restaurarlo.</p>
+        <div class="flex flex-wrap gap-3">
+          <button onclick="exportBackup()" class="btn-success">⬇ Exportar copia</button>
+          <label class="btn-primary cursor-pointer">⬆ Importar copia<input type="file" accept="application/json,.json" onchange="importBackup(event)" class="hidden" /></label>
+          <button onclick="wipeAll()" class="btn-danger">🗑 Borrar todo</button>
+        </div>
+        <p id="backup-info" class="text-[11px] text-gray-500 mt-3"></p>
       </div>
     </div>
   </main>
@@ -256,12 +261,6 @@
         </select>
       </div>
       <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Subcategoría (Letra)</label><input id="cat-sub" type="text" placeholder="Ej: A, B o C" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Tipo</label>
-        <div id="cat-tags" class="flex gap-4 mt-2">
-          <label class="flex items-center gap-2"><input type="checkbox" value="Federado" class="accent-green-600" /> <span class="text-xs">Federado</span></label>
-          <label class="flex items-center gap-2"><input type="checkbox" value="Municipal" class="accent-red-600" /> <span class="text-xs">Municipal</span></label>
-        </div>
-      </div>
     </div>
     <div class="flex gap-3 mt-8">
       <button onclick="closeModal('cat-modal')" class="flex-1 btn-secondary">Cancelar</button>
@@ -367,11 +366,11 @@
   <div class="card w-full max-w-md overflow-y-auto max-h-[90vh]">
     <h3 class="text-xl font-black mb-6 uppercase italic">Usuario</h3>
     <input type="hidden" id="us-id" />
-    <p id="us-help" class="text-gray-500 text-[11px] mb-4">Se creará una cuenta nueva en Firebase Auth con la contraseña temporal indicada. Compártela con el padre/tutor.</p>
+    <p class="text-gray-500 text-[11px] mb-4">Cuenta local. Compártele al padre/tutor su email y la contraseña que indiques.</p>
     <div class="space-y-4">
       <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Nombre del titular</label><input id="us-name" type="text" class="input-field" /></div>
       <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Email</label><input id="us-email" type="email" class="input-field" /></div>
-      <div id="us-password-block"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Contraseña temporal</label><input id="us-password" type="text" class="input-field" placeholder="min 6 caracteres" /></div>
+      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Contraseña</label><input id="us-password" type="text" class="input-field" placeholder="min 4 caracteres" /></div>
       <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Rol</label>
         <select id="us-role" class="input-field"><option value="parent">Padre / Tutor</option><option value="player">Jugador mayor de edad</option><option value="admin">Administrador</option></select>
       </div>
@@ -397,7 +396,6 @@
         <input id="proof-file" type="file" accept="image/*" capture="environment" class="input-field" />
       </label>
       <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Notas (opcional)</label><textarea id="proof-notes" class="input-field h-20" placeholder="Ej: pago realizado por Bizum el 15/09"></textarea></div>
-      <div id="proof-progress" class="hidden text-xs text-blue-400 font-bold">Subiendo... <span id="proof-percent">0</span>%</div>
     </div>
     <div class="flex gap-3 mt-6">
       <button onclick="closeModal('proof-modal')" class="flex-1 btn-secondary">Cancelar</button>
@@ -418,578 +416,878 @@
   </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    sendPasswordResetEmail, onAuthStateChanged, signOut, setPersistence,
-    browserLocalPersistence, initializeAuth, indexedDBLocalPersistence
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import {
-    getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
-    updateDoc, deleteDoc, query, where, orderBy, writeBatch, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import {
-    getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   CLUB PINAR FS · Versión 100% local (sin Firebase)
+   Almacenamiento: localStorage del navegador
+   ════════════════════════════════════════════════════════════════════════ */
 
-  // ─── FIREBASE CONFIG ────────────────────────────────────────────────────
-  const firebaseConfig = {
-    apiKey: "AIz...F2o",
-    authDomain: "facturacion-c8682.firebaseapp.com",
-    projectId: "facturacion-c8682",
-    storageBucket: "facturacion-c8682.firebasestorage.app",
-    messagingSenderId: "875153421377",
-    appId: "1:875153421377:web:299738ad96a684797902c0"
-  };
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  const auth = getAuth(app);
-  const storage = getStorage(app);
-  await setPersistence(auth, browserLocalPersistence);
+/* ---------- almacenamiento ---------- */
+const DB = {
+  get(k, def) {
+    try { const v = localStorage.getItem('pinar_'+k); return v ? JSON.parse(v) : def; }
+    catch { return def; }
+  },
+  set(k, v) { localStorage.setItem('pinar_'+k, JSON.stringify(v)); }
+};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
-  // ─── CONSTANTES ─────────────────────────────────────────────────────────
-  const ADMIN_EMAIL = "admin@pinarfs.es";
-  const ADMIN_PASSWORD_INIT = "Pinar2026!";
-  const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const POSITIONS = ['Portero','Cierre','Ala Izquierda','Ala Derecha','Pívot'];
+/* ---------- estado ---------- */
+let state = {
+  user: null, role: null,
+  categories: [], players: [], concepts: [], payments: [], matches: [], users: [], clubInfo: {},
+  parentSelectedPlayer: null,
+  pendingProofPaymentId: null, currentReviewPayment: null,
+  adminTab: 'dashboard', parentTab: 'home',
+  filters: { playerCat:'', playerSearch:'', payCat:'', payStatus:'' }
+};
 
-  // ─── ESTADO GLOBAL ──────────────────────────────────────────────────────
-  let state = {
-    user: null,        // firebase auth user
-    profile: null,     // doc pinar_users/{uid}
-    role: null,        // admin | parent | player
-    categories: [], players: [], concepts: [], payments: [], matches: [], users: [], clubInfo: {},
-    parentSelectedPlayer: null,
-    pendingProofPaymentId: null,
-    currentReviewPayment: null,
-    adminTab: 'dashboard',
-    parentTab: 'home',
-    filters: { playerCat:'', playerSearch:'', payCat:'', payStatus:'' }
-  };
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const moneyFmt = (n) => (Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+const teamName = (catId) => { const c = state.categories.find(c=>c.id===catId); return c ? `${c.base} ${c.sub||''}`.trim() : 'Sin equipo'; };
 
-  // ─── HELPERS ────────────────────────────────────────────────────────────
-  const $ = (id) => document.getElementById(id);
-  const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const moneyFmt = (n) => (Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
-  const teamName = (catId) => { const c = state.categories.find(c=>c.id===catId); return c ? `${c.base} ${c.sub||''}`.trim() : 'Sin equipo'; };
+function toast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=> t.remove(), 3500);
+}
+function showView(id) { ['view-login','view-admin','view-parent'].forEach(v=> $(v).classList.toggle('hidden', v!==id)); }
+function openModal(id){ $(id).classList.remove('hidden'); }
+function closeModal(id){ $(id).classList.add('hidden'); }
+window.openModal = openModal; window.closeModal = closeModal;
 
-  function toast(msg, type='info') {
-    const t = document.createElement('div');
-    t.className = `toast toast-${type}`;
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(()=> t.remove(), 3500);
+function statusBadge(s) {
+  const map = { pending:['Pendiente','badge-pending'], review:['En revisión','badge-review'], approved:['Aprobado','badge-approved'], rejected:['Rechazado','badge-rejected'] };
+  const [t,c] = map[s]||['?','badge-pending'];
+  return `<span class="badge ${c}">${t}</span>`;
+}
+function roleBadge(role) {
+  const map = { admin:['Admin','badge-approved'], parent:['Padre/Tutor','badge-review'], player:['Jugador','badge-pending'] };
+  const [t,c] = map[role]||['?','badge-pending'];
+  return `<span class="badge ${c}">${t}</span>`;
+}
+
+/* ---------- carga datos ---------- */
+function loadAll() {
+  state.users      = DB.get('users', []);
+  state.categories = DB.get('categories', []);
+  state.players    = DB.get('players', []);
+  state.concepts   = DB.get('concepts', []);
+  state.payments   = DB.get('payments', []);
+  state.matches    = DB.get('matches', []);
+  state.clubInfo   = DB.get('config', {});
+  // crear admin por defecto si no hay
+  if (!state.users.some(u=>u.role==='admin')) {
+    state.users.push({ id: uid(), email:'admin@pinarfs.es', password:'Pinar2026!', name:'Administrador', role:'admin', playerIds:[], createdAt: Date.now() });
+    DB.set('users', state.users);
   }
+}
 
-  function showView(id) {
-    ['view-login','view-admin','view-parent'].forEach(v=> $(v).classList.toggle('hidden', v!==id));
+/* ════════════════════ AUTH ════════════════════ */
+function doLogin() {
+  const email = $('login-email').value.trim().toLowerCase();
+  const pass  = $('login-password').value;
+  const err = $('login-error');
+  err.classList.add('hidden');
+  const u = state.users.find(x=> x.email.toLowerCase()===email && x.password===pass);
+  if (!u) { err.textContent = 'Email o contraseña incorrectos.'; err.classList.remove('hidden'); return; }
+  state.user = u; state.role = u.role;
+  DB.set('session', { id: u.id });
+  enterApp();
+}
+function logout() {
+  localStorage.removeItem('pinar_session');
+  state.user = null; state.role = null;
+  showView('view-login');
+}
+window.logout = logout;
+
+function enterApp() {
+  if (state.role === 'admin') {
+    showView('view-admin');
+    $('admin-email-badge').textContent = state.user.email;
+    $('admin-email-badge').classList.remove('hidden');
+    switchAdminTab('dashboard');
+  } else {
+    showView('view-parent');
+    const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
+    state.parentSelectedPlayer = myPlayers[0]?.id || null;
+    switchParentTab('home');
   }
+}
 
-  function openModal(id){ $(id).classList.remove('hidden'); }
-  function closeModal(id){ $(id).classList.add('hidden'); }
-  window.openModal = openModal; window.closeModal = closeModal;
+/* ════════════════════ ADMIN: TABS ════════════════════ */
+window.switchAdminTab = (tab) => {
+  state.adminTab = tab;
+  document.querySelectorAll('[data-tab]').forEach(b=> b.classList.toggle('tab-active', b.dataset.tab===tab));
+  document.querySelectorAll('.admin-pane').forEach(p=> p.classList.toggle('hidden', p.id !== 'admin-tab-'+tab));
+  const map = { dashboard: renderDash, categories: renderCategories, players: renderPlayers, concepts: renderConcepts, payments: renderPayments, matches: renderMatches, morosos: renderMorosos, users: renderUsers, config: renderConfig };
+  map[tab] && map[tab]();
+};
 
-  // ─── AUTH FLOW ──────────────────────────────────────────────────────────
-  async function checkAdminExists() {
-    const q = query(collection(db,'pinar_users'), where('role','==','admin'));
-    const snap = await getDocs(q);
-    return !snap.empty;
+/* ---------- Dashboard ---------- */
+function renderDash() {
+  const totalApproved = state.payments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
+  const totalPending  = state.payments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
+  const numMorosos = new Set(state.payments.filter(p=>p.status!=='approved').map(p=>p.playerId)).size;
+  $('dash-content').innerHTML = `
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Equipos</div><div class="text-3xl font-black text-white">${state.categories.length}</div></div>
+      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Jugadores</div><div class="text-3xl font-black text-white">${state.players.length}</div></div>
+      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Cobrado</div><div class="text-2xl font-black text-green-400">${moneyFmt(totalApproved)}</div></div>
+      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-2xl font-black text-yellow-400">${moneyFmt(totalPending)}</div></div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">Morosos</h3>
+      <p class="text-gray-300">${numMorosos} jugador(es) con pagos pendientes.</p>
+    </div>`;
+}
+
+/* ---------- Equipos ---------- */
+function renderCategories() {
+  if (!state.categories.length) { $('cat-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin equipos. Crea el primero.</p>'; return; }
+  $('cat-list').innerHTML = state.categories.map(c=>`
+    <div class="card">
+      <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(c.base)}</div>
+      <div class="text-2xl font-black text-white tracking-tighter">${escapeHtml(c.sub||'—')}</div>
+      <div class="text-xs text-gray-500 mt-1">${state.players.filter(p=>p.categoryId===c.id).length} jugadores</div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="openEditCategory('${c.id}')" class="btn-secondary flex-1">Editar</button>
+        <button onclick="deleteCategory('${c.id}')" class="btn-danger">🗑</button>
+      </div>
+    </div>`).join('');
+}
+window.openEditCategory = (id) => {
+  const c = id ? state.categories.find(x=>x.id===id) : null;
+  $('cat-form-id').value = c?.id||'';
+  $('cat-base').value = c?.base||'Prebenjamín';
+  $('cat-sub').value = c?.sub||'';
+  openModal('cat-modal');
+};
+window.saveCategoryForm = () => {
+  const id = $('cat-form-id').value;
+  const data = { base: $('cat-base').value, sub: $('cat-sub').value.trim() };
+  if (id) {
+    const i = state.categories.findIndex(x=>x.id===id);
+    state.categories[i] = { ...state.categories[i], ...data };
+  } else {
+    state.categories.push({ id: uid(), ...data });
   }
+  DB.set('categories', state.categories);
+  closeModal('cat-modal'); renderCategories(); toast('Equipo guardado','success');
+};
+window.deleteCategory = (id) => {
+  if (!confirm('¿Eliminar este equipo?')) return;
+  state.categories = state.categories.filter(x=>x.id!==id);
+  DB.set('categories', state.categories);
+  renderCategories();
+};
 
-  async function loadProfile(uid) {
-   created++;
-    }
-    if (created) await batch.commit();
-    closeModal('gen-modal');
-    toast(`${created} cobros generados`, 'success');
-    await loadAllAdmin(); renderPayments();
-  };
+/* ---------- Jugadores ---------- */
+function renderPlayers() {
+  // poblar filtros
+  $('player-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  $('player-cat-filter').value = state.filters.playerCat;
 
-  window.markApproved = async (id) => {
-    await updateDoc(doc(db,'pinar_payments',id), { status:'approved', approvedAt: Date.now(), approvedBy: state.user.uid });
-    await loadAllAdmin(); renderPayments();
-    toast('Pago aprobado','success');
-  };
-  window.deletePayment = async (id) => {
-    if (!confirm('¿Eliminar este cobro?')) return;
-    const p = state.payments.find(x=>x.id===id);
-    if (p?.proofPath) { try { await deleteObject(storageRef(storage, p.proofPath)); } catch(e){} }
-    await deleteDoc(doc(db,'pinar_payments',id));
-    await loadAllAdmin(); renderPayments();
-  };
-  window.openReview = (paymentId) => {
-    const p = state.payments.find(x=>x.id===paymentId);
-    if (!p) return;
-    state.currentReviewPayment = paymentId;
-    const pl = state.players.find(x=>x.id===p.playerId);
-    $('review-content').innerHTML = `
-      <div class="space-y-3">
-        <div><span class="text-[10px] font-black text-gray-500 uppercase">Jugador</span><div class="font-bold text-white">${escapeHtml(pl?.name||'')} · ${escapeHtml(teamName(pl?.categoryId))}</div></div>
-        <div><span class="text-[10px] font-black text-gray-500 uppercase">Concepto</span><div class="font-bold text-white">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} · ${moneyFmt(p.amount)}</div></div>
-        <div><span class="text-[10px] font-black text-gray-500 uppercase">Estado</span><div>${statusBadge(p.status)}</div></div>
-        ${p.notes ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Notas del padre</span><div class="text-gray-300 text-sm">${escapeHtml(p.notes)}</div></div>` : ''}
-        ${p.proofUrl ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Justificante</span><a href="${p.proofUrl}" target="_blank" rel="noopener"><img src="${p.proofUrl}" class="w-full max-h-96 object-contain rounded-lg border border-slate-700 mt-2" /></a></div>` : '<p class="text-gray-500 text-sm">Sin justificante subido</p>'}
-      </div>`;
-    openModal('review-modal');
-  };
-  window.approvePayment = async () => {
-    if (!state.currentReviewPayment) return;
-    await updateDoc(doc(db,'pinar_payments',state.currentReviewPayment), { status:'approved', approvedAt: Date.now(), approvedBy: state.user.uid });
-    closeModal('review-modal');
-    await loadAllAdmin(); renderPayments();
-    toast('Pago aprobado','success');
-  };
-  window.rejectPayment = async () => {
-    if (!state.currentReviewPayment) return;
-    const reason = prompt('Motivo del rechazo (opcional):','');
-    await updateDoc(doc(db,'pinar_payments',state.currentReviewPayment), { status:'rejected', rejectedAt: Date.now(), rejectionReason: reason||'' });
-    closeModal('review-modal');
-    await loadAllAdmin(); renderPayments();
-    toast('Pago rechazado','info');
-  };
-
-  // ─── ADMIN: PARTIDOS ────────────────────────────────────────────────────
-  function renderMatches() {
-    const list = [...state.matches].sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-    if (!list.length) { $('match-list').innerHTML = '<p class="text-gray-500 text-center py-8">Aún no hay partidos programados.</p>'; return; }
-    $('match-list').innerHTML = list.map(m=>`
-      <div class="card flex flex-col md:flex-row md:items-center gap-4">
-        <div class="text-center md:w-24">
-          <div class="text-[10px] font-black text-green-500 uppercase">${m.date||''}</div>
-          <div class="text-2xl font-black text-white">${m.time||''}</div>
-        </div>
+  let list = [...state.players];
+  if (state.filters.playerCat) list = list.filter(p=>p.categoryId===state.filters.playerCat);
+  if (state.filters.playerSearch) {
+    const q = state.filters.playerSearch.toLowerCase();
+    list = list.filter(p=> (p.name||'').toLowerCase().includes(q));
+  }
+  if (!list.length) { $('player-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin jugadores.</p>'; return; }
+  $('player-list').innerHTML = list.map(p=>`
+    <div class="card">
+      <div class="flex items-center gap-3">
+        <img src="${p.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(p.name)+'&background=7f1d1d&color=fff'}" class="w-14 h-14 rounded-xl object-cover" />
         <div class="flex-1">
-          <div class="text-[10px] font-black text-gray-500 uppercase">${escapeHtml(teamName(m.categoryId))} · ${m.home==='home'?'LOCAL':'VISITANTE'}</div>
-          <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
-          <div class="text-gray-400 text-sm">${escapeHtml(m.location||'')}${m.address?` — <a class="text-green-400 underline" target="_blank" href="https://www.google.com/maps/search/${encodeURIComponent(m.address)}">${escapeHtml(m.address)}</a>`:''}</div>
-          <div class="text-[10px] text-gray-500 mt-1">Equipación: ${escapeHtml(m.kit||'Titular')}${m.notes?` · ${escapeHtml(m.notes)}`:''}</div>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="openEditMatch('${m.id}')" class="btn-secondary">Editar</button>
-          <button onclick="deleteMatch('${m.id}')" class="btn-danger">🗑</button>
-        </div>
-      </div>`).join('');
-  }
-  window.openEditMatch = (id) => {
-    const m = id ? state.matches.find(x=>x.id===id) : null;
-    $('mt-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-    openModal('match-modal');
-    $('mt-id').value = m?.id||'';
-    $('mt-category').value = m?.categoryId||(state.categories[0]?.id||'');
-    $('mt-date').value = m?.date||'';
-    $('mt-time').value = m?.time||'';
-    $('mt-rival').value = m?.rival||'';
-    $('mt-location').value = m?.location||'';
-    $('mt-address').value = m?.address||'';
-    $('mt-kit').value = m?.kit||'Titular';
-    $('mt-home').value = m?.home||'home';
-    $('mt-notes').value = m?.notes||'';
-  };
-  window.saveMatchForm = async () => {
-    const data = {
-      categoryId: $('mt-category').value, date: $('mt-date').value, time: $('mt-time').value,
-      rival: $('mt-rival').value.trim(), location: $('mt-location').value.trim(), address: $('mt-address').value.trim(),
-      kit: $('mt-kit').value, home: $('mt-home').value, notes: $('mt-notes').value.trim()
-    };
-    if (!data.date) return toast('La fecha es obligatoria','error');
-    const id = $('mt-id').value;
-    if (id) await setDoc(doc(db,'pinar_matches',id), data);
-    else await addDoc(collection(db,'pinar_matches'), data);
-    await loadAllAdmin(); renderMatches();
-    closeModal('match-modal'); toast('Partido guardado','success');
-  };
-  window.deleteMatch = async (id) => {
-    if (!confirm('¿Eliminar este partido?')) return;
-    await deleteDoc(doc(db,'pinar_matches',id));
-    await loadAllAdmin(); renderMatches();
-  };
-
-  // ─── ADMIN: MOROSOS ─────────────────────────────────────────────────────
-  function renderMorosos() {
-    const debts = state.payments.filter(p => p.status !== 'approved');
-    if (!debts.length) { $('morosos-list').innerHTML = '<p class="text-gray-500 text-center py-8">¡Sin morosos! 🎉</p>'; return; }
-    const byPlayer = {};
-    debts.forEach(p => { (byPlayer[p.playerId] = byPlayer[p.playerId]||[]).push(p); });
-    const rows = Object.entries(byPlayer).map(([pid, ps])=>{
-      const pl = state.players.find(x=>x.id===pid);
-      const total = ps.reduce((s,p)=>s+(p.amount||0),0);
-      const conceptList = ps.map(p=>`${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} (${statusBadge(p.status)})`).join('<br/>');
-      return `<tr class="border-b border-slate-800">
-        <td class="px-3 py-3 font-bold text-white">${escapeHtml(pl?.name||'(eliminado)')}</td>
-        <td class="px-3 py-3 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
-        <td class="px-3 py-3 text-sm">${conceptList}</td>
-        <td class="px-3 py-3 text-right font-black text-red-400">${moneyFmt(total)}</td>
-      </tr>`;
-    }).join('');
-    $('morosos-list').innerHTML = `
-      <div class="overflow-x-auto rounded-xl border border-slate-800">
-        <table class="w-full">
-          <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Pendiente</th><th class="px-3 py-3 text-right">Total</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-  }
-
-  // ─── ADMIN: USUARIOS ────────────────────────────────────────────────────
-  function renderUsers() {
-    if (!state.users.length) { $('users-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin usuarios registrados.</p>'; return; }
-    $('users-list').innerHTML = `
-      <div class="overflow-x-auto rounded-xl border border-slate-800">
-        <table class="w-full text-sm">
-          <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Nombre</th><th class="px-3 py-3 text-left">Email</th><th class="px-3 py-3 text-left">Rol</th><th class="px-3 py-3 text-left">Jugadores</th><th class="px-3 py-3 text-center">Acción</th></tr></thead>
-          <tbody>
-            ${state.users.map(u=>{
-              const linked = (u.playerIds||[]).map(pid => state.players.find(p=>p.id===pid)?.name || '(?)').join(', ');
-              return `<tr class="border-b border-slate-800">
-                <td class="px-3 py-2 font-bold text-white">${escapeHtml(u.name||'')}</td>
-                <td class="px-3 py-2 text-gray-400">${escapeHtml(u.email||'')}</td>
-                <td class="px-3 py-2">${roleBadge(u.role)}</td>
-                <td class="px-3 py-2 text-gray-300">${escapeHtml(linked||'—')}</td>
-                <td class="px-3 py-2 text-center">
-                  <button onclick="openEditUser('${u.id}')" class="btn-secondary">Editar</button>
-                  ${u.id !== state.user.uid ? `<button onclick="deleteUserDoc('${u.id}')" class="btn-danger ml-1">🗑</button>` : ''}
-                </td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  }
-  function roleBadge(role) {
-    const map = { admin:['Admin','badge-approved'], parent:['Padre/Tutor','badge-review'], player:['Jugador','badge-pending'] };
-    const [t,c] = map[role]||['?','badge-pending'];
-    return `<span class="badge ${c}">${t}</span>`;
-  }
-  window.openEditUser = (id) => {
-    const u = id ? state.users.find(x=>x.id===id) : null;
-    $('us-id').value = u?.id||'';
-    $('us-name').value = u?.name||'';
-    $('us-email').value = u?.email||'';
-    $('us-password').value = '';
-    $('us-role').value = u?.role||'parent';
-    $('us-password-block').classList.toggle('hidden', !!u);
-    $('us-help').textContent = u
-      ? 'Editando un usuario existente. La contraseña no se modifica desde aquí; los usuarios usan "Olvidé contraseña".'
-      : 'Se creará una cuenta nueva en Firebase Auth con la contraseña temporal indicada. Compártela con el padre/tutor.';
-    $('us-email').readOnly = !!u;
-    $('us-players').innerHTML = state.players.map(p=>`
-      <label class="flex items-center gap-2 text-sm text-gray-300">
-        <input type="checkbox" value="${p.id}" class="us-player-chk accent-green-600" ${u?.playerIds?.includes(p.id)?'checked':''} />
-        ${escapeHtml(p.name)} <span class="text-gray-500 text-xs">· ${escapeHtml(teamName(p.categoryId))}</span>
-      </label>`).join('') || '<p class="text-gray-500 text-xs">Crea primero algún jugador.</p>';
-    openModal('user-modal');
-  };
-  window.saveUserForm = async () => {
-    const id = $('us-id').value;
-    const email = $('us-email').value.trim();
-    const name = $('us-name').value.trim();
-    const role = $('us-role').value;
-    const playerIds = [...document.querySelectorAll('.us-player-chk:checked')].map(i=>i.value);
-    if (!email || !name) return toast('Email y nombre son obligatorios','error');
-
-    try {
-      if (id) {
-        await updateDoc(doc(db,'pinar_users',id), { name, role, playerIds });
-        toast('Usuario actualizado','success');
-      } else {
-        const password = $('us-password').value;
-        if (!password || password.length < 6) return toast('Contraseña mínima 6 caracteres','error');
-        // Crear cuenta Auth. Esto desloguea al admin actual (limitación SDK web). Avisamos.
-        if (!confirm('Para crear el usuario el SDK web cerrará tu sesión de administrador por seguridad. Volverás a la pantalla de login. ¿Continuar?')) return;
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db,'pinar_users',cred.user.uid), { email, name, role, playerIds, createdAt: Date.now() });
-        toast(`Usuario ${email} creado. Contraseña: ${password}`,'success');
-        await signOut(auth);
-        return;
-      }
-      closeModal('user-modal');
-      await loadAllAdmin(); renderUsers();
-    } catch(e) { toast(traduceAuthError(e.code)||e.message,'error'); }
-  };
-  window.deleteUserDoc = async (id) => {
-    if (!confirm('¿Eliminar el VÍNCULO del usuario? (La cuenta Auth seguirá existiendo y deberá ser eliminada manualmente en la consola Firebase)')) return;
-    await deleteDoc(doc(db,'pinar_users',id));
-    await loadAllAdmin(); renderUsers();
-  };
-
-  // ─── ADMIN: CONFIG CLUB ─────────────────────────────────────────────────
-  function renderConfig() {
-    const c = state.clubInfo || {};
-    $('cfg-iban').value = c.iban||'';
-    $('cfg-holder').value = c.holder||'';
-    $('cfg-bank').value = c.bank||'';
-    $('cfg-concept').value = c.concept||'';
-    $('cfg-bizum').value = c.bizum||'';
-  }
-  window.saveClubConfig = async () => {
-    const data = {
-      iban: $('cfg-iban').value.trim(), holder: $('cfg-holder').value.trim(),
-      bank: $('cfg-bank').value.trim(), concept: $('cfg-concept').value.trim(),
-      bizum: $('cfg-bizum').value.trim(), updatedAt: Date.now()
-    };
-    await setDoc(doc(db,'pinar_config','club'), data);
-    state.clubInfo = data;
-    toast('Configuración guardada','success');
-  };
-
-  // ─── ADMIN: EXPORT EXCEL ────────────────────────────────────────────────
-  window.exportPlayers = () => {
-    const rows = state.players.map(p=>({
-      Nombre: p.name, Dorsal: p.dorsal, Posición: p.position,
-      Equipo: teamName(p.categoryId), Goles: p.goals||0,
-      Presencias: p.attPresent||0, Faltas: p.attAbsent||0, Lesiones: p.attInjured||0
-    }));
-    downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
-  };
-  window.exportPayments = () => {
-    const rows = state.payments.map(p=>{
-      const pl = state.players.find(x=>x.id===p.playerId);
-      return {
-        Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId),
-        Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'',
-        Importe: p.amount||0, Estado: p.status, Notas: p.notes||''
-      };
-    });
-    downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
-  };
-  window.exportMorosos = () => {
-    const rows = state.payments.filter(p=>p.status!=='approved').map(p=>{
-      const pl = state.players.find(x=>x.id===p.playerId);
-      return {
-        Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId),
-        Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'',
-        Importe: p.amount||0, Estado: p.status
-      };
-    });
-    downloadXlsx(rows, 'morosos_pinar.xlsx', 'Morosos');
-  };
-  function downloadXlsx(rows, filename, sheet) {
-    if (!rows.length) return toast('Sin datos para exportar','info');
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheet);
-    XLSX.writeFile(wb, filename);
-  }
-
-  // ─── PARENT: NAVEGACIÓN ─────────────────────────────────────────────────
-  window.switchParentTab = (tab) => {
-    state.parentTab = tab;
-    document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.pane===tab));
-    document.querySelectorAll('.parent-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'parent-pane-'+tab));
-    if (state.players.length>1) {
-      const sel = $('parent-player-select');
-      sel.innerHTML = state.players.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${escapeHtml(teamName(p.categoryId))}</option>`).join('');
-      sel.value = state.parentSelectedPlayer;
-      $('parent-player-selector').classList.remove('hidden');
-      sel.onchange = (e)=>{ state.parentSelectedPlayer = e.target.value; switchParentTab(state.parentTab); };
-    }
-    const map = { home: renderParentHome, payments: renderParentPayments, matches: renderParentMatches, history: renderParentHistory, bank: renderParentBank };
-    map[tab] && map[tab]();
-  };
-
-  function currentParentPlayer() { return state.players.find(p=>p.id===state.parentSelectedPlayer) || state.players[0]; }
-
-  function renderParentHome() {
-    const pl = currentParentPlayer();
-    if (!pl) { $('parent-pane-home').innerHTML = '<div class="card text-center py-12"><p class="text-gray-400 font-bold">Tu cuenta aún no está vinculada a ningún jugador.</p><p class="text-gray-500 text-xs mt-2">Contacta con el administrador del club.</p></div>'; return; }
-    const myPayments = state.payments.filter(p=>p.playerId===pl.id);
-    const nextPending = myPayments.filter(p=>p.status!=='approved').sort((a,b)=>(a.month||0)-(b.month||0))[0];
-    const upcomingMatch = state.matches.filter(m=>m.categoryId===pl.categoryId && m.date && new Date(m.date+'T'+(m.time||'23:59'))>=new Date()).sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0];
-    const totalPendiente = myPayments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
-    const totalPagado = myPayments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-
-    $('parent-pane-home').innerHTML = `
-      <div class="card mb-4 flex items-center gap-4">
-        <img src="${pl.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(pl.name)+'&background=7f1d1d&color=fff'}" class="w-16 h-16 rounded-2xl object-cover" />
-        <div>
-          <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(teamName(pl.categoryId))}</div>
-          <h2 class="text-2xl font-black text-white tracking-tight">${escapeHtml(pl.name)}</h2>
-          <div class="text-[11px] text-gray-500">#${pl.dorsal||'S/N'} · ${escapeHtml(pl.position||'')}</div>
+          <div class="text-[10px] font-black uppercase text-green-500">${escapeHtml(teamName(p.categoryId))}</div>
+          <div class="font-black text-white">${escapeHtml(p.name)}</div>
+          <div class="text-[11px] text-gray-500">#${p.dorsal||'S/N'} · ${escapeHtml(p.position||'')}</div>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3 mb-4">
-        <div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pagado</div><div class="text-xl font-black text-green-400">${moneyFmt(totalPagado)}</div></div>
-        <div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(totalPendiente)}</div></div>
+      <div class="grid grid-cols-4 gap-2 mt-3 text-center text-[10px]">
+        <div><div class="text-gray-500">GOL</div><div class="font-black text-white">${p.goals||0}</div></div>
+        <div><div class="text-gray-500">PRE</div><div class="font-black text-white">${p.attPresent||0}</div></div>
+        <div><div class="text-gray-500">FAL</div><div class="font-black text-white">${p.attAbsent||0}</div></div>
+        <div><div class="text-gray-500">LES</div><div class="font-black text-white">${p.attInjured||0}</div></div>
       </div>
-      ${nextPending ? `
-        <div class="card border-l-4 border-l-yellow-500 mb-4">
-          <div class="text-[10px] font-black text-yellow-500 uppercase tracking-widest mb-1">Próximo Pago</div>
-          <div class="flex justify-between items-center">
-            <div>
-              <div class="font-black text-white text-lg">${escapeHtml(nextPending.conceptName)}</div>
-              <div class="text-[10px] text-gray-500">${MONTH_NAMES[(nextPending.month||1)-1]} · ${statusBadge(nextPending.status)}</div>
-            </div>
-            <div class="text-2xl font-black text-white">${moneyFmt(nextPending.amount)}</div>
-          </div>
-          ${nextPending.status==='pending' || nextPending.status==='rejected' ? `<button onclick="openProof('${nextPending.id}')" class="w-full btn-primary mt-3">Subir Justificante</button>` : ''}
-        </div>` : `<div class="card text-center mb-4"><p class="text-green-400 font-black">¡Estás al corriente! 🎉</p></div>`}
-      ${upcomingMatch ? `
-        <div class="card border-l-4 border-l-green-600 mb-4">
-          <div class="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">Próximo Partido</div>
-          <div class="font-black text-white text-lg">vs ${escapeHtml(upcomingMatch.rival||'?')} (${upcomingMatch.home==='home'?'Local':'Visitante'})</div>
-          <div class="text-sm text-gray-300">${upcomingMatch.date} · ${upcomingMatch.time||''}</div>
-          <div class="text-[11px] text-gray-500 mt-1">${escapeHtml(upcomingMatch.location||'')}</div>
-          ${upcomingMatch.address ? `<a class="text-[11px] text-green-400 underline" target="_blank" href="https://www.google.com/maps/search/${encodeURIComponent(upcomingMatch.address)}">${escapeHtml(upcomingMatch.address)}</a>` : ''}
-          <div class="text-[11px] text-gray-500 mt-1">Equipación: <span class="text-white font-bold">${escapeHtml(upcomingMatch.kit||'Titular')}</span></div>
-        </div>` : ''}`;
-  }
-
-  function renderParentPayments() {
-    const pl = currentParentPlayer();
-    if (!pl) { $('parent-pane-payments').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-    const myPayments = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=>(a.month||0)-(b.month||0));
-    if (!myPayments.length) { $('parent-pane-payments').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">El club aún no ha generado cobros para ti.</p></div>'; return; }
-    $('parent-pane-payments').innerHTML = myPayments.map(p=>`
-      <div class="card mb-3">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${MONTH_NAMES[(p.month||1)-1]}</div>
-            <div class="font-black text-white text-lg">${escapeHtml(p.conceptName||'')}</div>
-            <div class="mt-1">${statusBadge(p.status)}</div>
-            ${p.rejectionReason ? `<div class="text-[11px] text-red-400 mt-1">Motivo rechazo: ${escapeHtml(p.rejectionReason)}</div>` : ''}
-          </div>
-          <div class="text-right">
-            <div class="text-2xl font-black text-white">${moneyFmt(p.amount)}</div>
-          </div>
-        </div>
-        ${p.proofUrl ? `<a href="${p.proofUrl}" target="_blank" class="block mt-3"><img src="${p.proofUrl}" class="rounded-lg max-h-48 object-contain border border-slate-700" /></a>` : ''}
-        ${p.status!=='approved' ? `<button onclick="openProof('${p.id}')" class="w-full btn-primary mt-3">${p.proofUrl?'Reemplazar Justificante':'Subir Justificante'}</button>` : ''}
-      </div>`).join('');
-  }
-
-  function renderParentMatches() {
-    const pl = currentParentPlayer();
-    if (!pl) { $('parent-pane-matches').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-    const list = state.matches.filter(m=>m.categoryId===pl.categoryId).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-    if (!list.length) { $('parent-pane-matches').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">No hay partidos programados.</p></div>'; return; }
-    $('parent-pane-matches').innerHTML = list.map(m=>{
-      const past = m.date && new Date(m.date+'T'+(m.time||'23:59'))<new Date();
-      return `<div class="card mb-3 ${past?'opacity-60':''}">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="text-[10px] font-black ${past?'text-gray-500':'text-green-500'} uppercase tracking-widest">${m.date} · ${m.time||''}</div>
-            <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
-            <div class="text-[11px] text-gray-500">${m.home==='home'?'Local':'Visitante'} · Equipación ${escapeHtml(m.kit||'Titular')}</div>
-          </div>
-        </div>
-        <div class="mt-2 text-sm text-gray-300">${escapeHtml(m.location||'')}</div>
-        ${m.address ? `<a class="text-[12px] text-green-400 underline" target="_blank" href="https://www.google.com/maps/search/${encodeURIComponent(m.address)}">${escapeHtml(m.address)}</a>` : ''}
-        ${m.notes ? `<div class="text-[11px] text-gray-500 mt-2">${escapeHtml(m.notes)}</div>` : ''}
-      </div>`;
-    }).join('');
-  }
-
-  function renderParentHistory() {
-    const pl = currentParentPlayer();
-    if (!pl) { $('parent-pane-history').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-    const list = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
-    if (!list.length) { $('parent-pane-history').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin historial de pagos.</p></div>'; return; }
-    $('parent-pane-history').innerHTML = `
-      <div class="card overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead><tr class="text-[10px] font-black uppercase text-gray-500"><th class="py-2 text-left">Concepto</th><th class="py-2 text-left">Mes</th><th class="py-2 text-right">Importe</th><th class="py-2 text-center">Estado</th></tr></thead>
-          <tbody>
-            ${list.map(p=>`<tr class="border-t border-slate-800">
-              <td class="py-2 font-bold text-white">${escapeHtml(p.conceptName||'')}</td>
-              <td class="py-2 text-gray-400">${MONTH_NAMES[(p.month||1)-1]}</td>
-              <td class="py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
-              <td class="py-2 text-center">${statusBadge(p.status)}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  }
-
-  function renderParentBank() {
-    const c = state.clubInfo || {};
-    $('parent-pane-bank').innerHTML = `
-      <div class="card">
-        <h3 class="section-title">💳 Datos para el Pago</h3>
-        ${c.iban ? `
-          <div class="mb-4">
-            <div class="text-[10px] font-black uppercase text-gray-500">IBAN</div>
-            <div class="flex items-center gap-2 mt-1">
-              <code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.iban)}</code>
-              <button onclick="copyText('${escapeHtml(c.iban).replace(/'/g,"&apos;")}')" class="btn-secondary">Copiar</button>
-            </div>
-          </div>` : ''}
-        ${c.holder ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Titular</div><div class="text-white font-bold">${escapeHtml(c.holder)}</div></div>` : ''}
-        ${c.bank ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Banco</div><div class="text-white">${escapeHtml(c.bank)}</div></div>` : ''}
-        ${c.concept ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Concepto</div><div class="text-white">${escapeHtml(c.concept)}</div></div>` : ''}
-        ${c.bizum ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Bizum</div><div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.bizum)}</code><button onclick="copyText('${escapeHtml(c.bizum)}')" class="btn-secondary">Copiar</button></div></div>` : ''}
-        ${!c.iban && !c.bizum ? '<p class="text-gray-500 text-sm text-center py-4">El club aún no ha configurado los datos bancarios.</p>' : ''}
-        <div class="mt-6 p-3 bg-blue-900/20 border border-blue-800 rounded-lg text-[11px] text-blue-300">
-          💡 Tras realizar el pago, ve a <b>Pagos</b> y sube la foto del justificante. El administrador lo revisará.
-        </div>
-      </div>`;
-  }
-  window.copyText = (t) => { navigator.clipboard.writeText(t).then(()=> toast('Copiado','success')); };
-
-  // ─── PARENT: SUBIR JUSTIFICANTE ─────────────────────────────────────────
-  window.openProof = (paymentId) => {
-    const p = state.payments.find(x=>x.id===paymentId);
-    if (!p) return;
-    state.pendingProofPaymentId = paymentId;
-    $('proof-payment-id').value = paymentId;
-    $('proof-info').textContent = `${MONTH_NAMES[(p.month||1)-1]} · ${p.conceptName} · ${moneyFmt(p.amount)}`;
-    $('proof-file').value = '';
-    $('proof-notes').value = p.notes||'';
-    $('proof-progress').classList.add('hidden');
-    openModal('proof-modal');
+      <div class="flex gap-2 mt-3">
+        <button onclick="openEditPlayer('${p.id}')" class="btn-secondary flex-1">Editar</button>
+        <button onclick="deletePlayer('${p.id}')" class="btn-danger">🗑</button>
+      </div>
+    </div>`).join('');
+}
+window.openEditPlayer = (id) => {
+  const p = id ? state.players.find(x=>x.id===id) : null;
+  $('pl-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  $('pl-id').value = p?.id||'';
+  $('pl-name').value = p?.name||'';
+  $('pl-dorsal').value = p?.dorsal||'';
+  $('pl-position').value = p?.position||'Portero';
+  $('pl-category').value = p?.categoryId||(state.categories[0]?.id||'');
+  $('pl-photo').value = p?.photo||'';
+  $('pl-goals').value = p?.goals||0;
+  $('pl-att-present').value = p?.attPresent||0;
+  $('pl-att-absent').value = p?.attAbsent||0;
+  $('pl-att-injured').value = p?.attInjured||0;
+  openModal('player-modal');
+};
+window.savePlayerForm = () => {
+  const data = {
+    name: $('pl-name').value.trim(),
+    dorsal: Number($('pl-dorsal').value)||null,
+    position: $('pl-position').value,
+    categoryId: $('pl-category').value,
+    photo: $('pl-photo').value.trim(),
+    goals: Number($('pl-goals').value)||0,
+    attPresent: Number($('pl-att-present').value)||0,
+    attAbsent: Number($('pl-att-absent').value)||0,
+    attInjured: Number($('pl-att-injured').value)||0
   };
-  window.submitProof = async () => {
-    const paymentId = state.pendingProofPaymentId;
-    const file = $('proof-file').files[0];
-    const notes = $('proof-notes').value.trim();
-    if (!file && !notes) return toast('Adjunta una foto o añade una nota','error');
-    try {
-      let proofUrl = '', proofPath = '';
-      if (file) {
-        proofPath = `proofs/${paymentId}/${Date.now()}_${file.name}`;
-        const ref = storageRef(storage, proofPath);
-        const task = uploadBytesResumable(ref, file);
-        $('proof-progress').classList.remove('hidden');
-        await new Promise((resolve, reject) => {
-          task.on('state_changed',
-            s => { const pct = Math.round((s.bytesTransferred / s.totalBytes)*100); $('proof-percent').textContent = pct; },
-            reject,
-            async () => { proofUrl = await getDownloadURL(task.snapshot.ref); resolve(); }
-          );
-        });
-      }
-      const updates = { status:'review', notes, submittedAt: Date.now(), submittedBy: state.user.uid };
-      if (proofUrl) { updates.proofUrl = proofUrl; updates.proofPath = proofPath; }
-      await updateDoc(doc(db,'pinar_payments',paymentId), updates);
-      closeModal('proof-modal'); toast('Justificante enviado. El club lo revisará.','success');
-      await loadAllParent(); switchParentTab(state.parentTab);
-    } catch(e) {
-      console.error(e); toast('Error subiendo: '+e.message,'error');
-    }
-  };
+  if (!data.name) return toast('Nombre obligatorio','error');
+  const id = $('pl-id').value;
+  if (id) { const i = state.players.findIndex(x=>x.id===id); state.players[i] = { ...state.players[i], ...data }; }
+  else { state.players.push({ id: uid(), ...data }); }
+  DB.set('players', state.players);
+  closeModal('player-modal'); renderPlayers(); toast('Jugador guardado','success');
+};
+window.deletePlayer = (id) => {
+  if (!confirm('¿Eliminar este jugador?')) return;
+  state.players = state.players.filter(x=>x.id!==id);
+  DB.set('players', state.players);
+  renderPlayers();
+};
 
-  // ─── INIT EVENT LISTENERS ───────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
-    $('player-search').addEventListener('input', e => { state.filters.playerSearch = e.target.value; renderPlayers(); });
-    $('player-cat-filter').addEventListener('change', e => { state.filters.playerCat = e.target.value; renderPlayers(); });
-    $('pay-cat-filter').addEventListener('change', e => { state.filters.payCat = e.target.value; renderPayments(); });
-    $('pay-status-filter').addEventListener('change', e => { state.filters.payStatus = e.target.value; renderPayments(); });
-    $('login-password').addEventListener('keypress', e => { if (e.key==='Enter') $('btn-login').click(); });
+/* ---------- Conceptos ---------- */
+function renderConcepts() {
+  $('cc-category').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  if (!state.concepts.length) { $('concept-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin conceptos.</p>'; return; }
+  $('concept-list').innerHTML = state.concepts.map(c=>`
+    <div class="card">
+      <div class="text-[10px] font-black text-green-500 uppercase">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.season||'')}</div>
+      <div class="font-black text-white text-lg">${escapeHtml(c.name)}</div>
+      <div class="text-2xl font-black text-white mt-1">${moneyFmt(c.amount)}</div>
+      <div class="text-[11px] text-gray-500 mt-1">Equipo: ${c.categoryId ? escapeHtml(teamName(c.categoryId)) : 'Todos'}</div>
+      ${c.deadline ? `<div class="text-[11px] text-yellow-500 mt-1">Límite: ${c.deadline}</div>` : ''}
+      <div class="flex gap-2 mt-3">
+        <button onclick="openEditConcept('${c.id}')" class="btn-secondary flex-1">Editar</button>
+        <button onclick="deleteConcept('${c.id}')" class="btn-danger">🗑</button>
+      </div>
+    </div>`).join('');
+}
+window.openEditConcept = (id) => {
+  $('cc-category').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  const c = id ? state.concepts.find(x=>x.id===id) : null;
+  $('cc-id').value = c?.id||'';
+  $('cc-month').value = c?.month||1;
+  $('cc-name').value = c?.name||'';
+  $('cc-amount').value = c?.amount||'';
+  $('cc-category').value = c?.categoryId||'';
+  $('cc-season').value = c?.season||'2025-2026';
+  $('cc-deadline').value = c?.deadline||'';
+  openModal('concept-modal');
+};
+window.saveConceptForm = () => {
+  const data = {
+    month: Number($('cc-month').value),
+    name: $('cc-name').value.trim(),
+    amount: Number($('cc-amount').value)||0,
+    categoryId: $('cc-category').value || null,
+    season: $('cc-season').value.trim(),
+    deadline: $('cc-deadline').value
+  };
+  if (!data.name || !data.amount) return toast('Concepto e importe son obligatorios','error');
+  const id = $('cc-id').value;
+  if (id) { const i = state.concepts.findIndex(x=>x.id===id); state.concepts[i] = { ...state.concepts[i], ...data }; }
+  else { state.concepts.push({ id: uid(), ...data }); }
+  DB.set('concepts', state.concepts);
+  closeModal('concept-modal'); renderConcepts(); toast('Concepto guardado','success');
+};
+window.deleteConcept = (id) => {
+  if (!confirm('¿Eliminar este concepto?')) return;
+  state.concepts = state.concepts.filter(x=>x.id!==id);
+  DB.set('concepts', state.concepts);
+  renderConcepts();
+};
+
+/* ---------- Cobros ---------- */
+function renderPayments() {
+  $('pay-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  $('pay-cat-filter').value = state.filters.payCat;
+  $('pay-status-filter').value = state.filters.payStatus;
+
+  let list = [...state.payments];
+  if (state.filters.payCat) {
+    const playersInCat = state.players.filter(p=>p.categoryId===state.filters.payCat).map(p=>p.id);
+    list = list.filter(p=> playersInCat.includes(p.playerId));
+  }
+  if (state.filters.payStatus) list = list.filter(p=>p.status===state.filters.payStatus);
+
+  const total = list.reduce((s,p)=>s+(p.amount||0),0);
+  const approved = list.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
+  $('pay-summary').innerHTML = `<div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Total</div><div class="text-xl font-black text-white">${moneyFmt(total)}</div></div>
+    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Aprobado</div><div class="text-xl font-black text-green-400">${moneyFmt(approved)}</div></div>
+    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(total-approved)}</div></div>
+  </div>`;
+
+  if (!list.length) { $('pay-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin cobros.</p>'; return; }
+  $('pay-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500">
+        <tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Mes/Concepto</th><th class="px-3 py-3 text-right">Importe</th><th class="px-3 py-3 text-center">Estado</th><th class="px-3 py-3 text-center">Acción</th></tr>
+      </thead>
+      <tbody>
+        ${list.map(p=>{
+          const pl = state.players.find(x=>x.id===p.playerId);
+          return `<tr class="border-b border-slate-800">
+            <td class="px-3 py-2 font-bold text-white">${escapeHtml(pl?.name||'(borrado)')}</td>
+            <td class="px-3 py-2 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
+            <td class="px-3 py-2 text-gray-300">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')}</td>
+            <td class="px-3 py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
+            <td class="px-3 py-2 text-center">${statusBadge(p.status)}</td>
+            <td class="px-3 py-2 text-center">
+              ${p.proofData || p.notes ? `<button onclick="openReview('${p.id}')" class="btn-secondary">Ver</button>` : ''}
+              ${p.status!=='approved' ? `<button onclick="markApproved('${p.id}')" class="btn-success ml-1">OK</button>` : ''}
+              <button onclick="deletePayment('${p.id}')" class="btn-danger ml-1">🗑</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+window.openGeneratePayments = () => {
+  $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
+  $('gen-category').innerHTML = '<option value="">Usar el del concepto</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  openModal('gen-modal');
+};
+window.generatePayments = () => {
+  const conceptId = $('gen-concept').value;
+  const overrideCat = $('gen-category').value;
+  const concept = state.concepts.find(c=>c.id===conceptId);
+  if (!concept) return toast('Selecciona un concepto','error');
+  const targetCat = overrideCat || concept.categoryId;
+  const targetPlayers = targetCat ? state.players.filter(p=>p.categoryId===targetCat) : state.players;
+  let created = 0;
+  targetPlayers.forEach(pl=>{
+    const exists = state.payments.some(p=> p.playerId===pl.id && p.conceptId===concept.id);
+    if (exists) return;
+    state.payments.push({
+      id: uid(), playerId: pl.id, conceptId: concept.id, conceptName: concept.name,
+      month: concept.month, amount: concept.amount, season: concept.season,
+      status: 'pending', createdAt: Date.now()
+    });
+    created++;
   });
+  DB.set('payments', state.payments);
+  closeModal('gen-modal');
+  toast(`${created} cobros generados`, 'success');
+  renderPayments();
+};
+window.markApproved = (id) => {
+  const p = state.payments.find(x=>x.id===id); if (!p) return;
+  p.status='approved'; p.approvedAt = Date.now();
+  DB.set('payments', state.payments); renderPayments(); toast('Pago aprobado','success');
+};
+window.deletePayment = (id) => {
+  if (!confirm('¿Eliminar este cobro?')) return;
+  state.payments = state.payments.filter(x=>x.id!==id);
+  DB.set('payments', state.payments); renderPayments();
+};
+window.openReview = (paymentId) => {
+  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
+  state.currentReviewPayment = paymentId;
+  const pl = state.players.find(x=>x.id===p.playerId);
+  $('review-content').innerHTML = `
+    <div class="space-y-3">
+      <div><span class="text-[10px] font-black text-gray-500 uppercase">Jugador</span><div class="font-bold text-white">${escapeHtml(pl?.name||'')} · ${escapeHtml(teamName(pl?.categoryId))}</div></div>
+      <div><span class="text-[10px] font-black text-gray-500 uppercase">Concepto</span><div class="font-bold text-white">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} · ${moneyFmt(p.amount)}</div></div>
+      <div><span class="text-[10px] font-black text-gray-500 uppercase">Estado</span><div>${statusBadge(p.status)}</div></div>
+      ${p.notes ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Notas del padre</span><div class="text-gray-300 text-sm">${escapeHtml(p.notes)}</div></div>` : ''}
+      ${p.proofData ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Justificante</span><a href="${p.proofData}" target="_blank"><img src="${p.proofData}" class="w-full max-h-96 object-contain rounded-lg border border-slate-700 mt-2" /></a></div>` : '<p class="text-gray-500 text-sm">Sin justificante</p>'}
+    </div>`;
+  openModal('review-modal');
+};
+window.approvePayment = () => {
+  if (!state.currentReviewPayment) return;
+  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
+  p.status='approved'; p.approvedAt=Date.now();
+  DB.set('payments', state.payments);
+  closeModal('review-modal'); renderPayments(); toast('Pago aprobado','success');
+};
+window.rejectPayment = () => {
+  if (!state.currentReviewPayment) return;
+  const reason = prompt('Motivo del rechazo (opcional):','') || '';
+  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
+  p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason;
+  DB.set('payments', state.payments);
+  closeModal('review-modal'); renderPayments(); toast('Pago rechazado','info');
+};
+
+/* ---------- Partidos ---------- */
+function renderMatches() {
+  const list = [...state.matches].sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  if (!list.length) { $('match-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin partidos.</p>'; return; }
+  $('match-list').innerHTML = list.map(m=>`
+    <div class="card flex flex-col md:flex-row md:items-center gap-4">
+      <div class="text-center md:w-24">
+        <div class="text-[10px] font-black text-green-500 uppercase">${m.date||''}</div>
+        <div class="text-2xl font-black text-white">${m.time||''}</div>
+      </div>
+      <div class="flex-1">
+        <div class="text-[10px] font-black text-gray-500 uppercase">${escapeHtml(teamName(m.categoryId))} · ${m.home==='home'?'LOCAL':'VISITANTE'}</div>
+        <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
+        <div class="text-gray-400 text-sm">${escapeHtml(m.location||'')}</div>
+        <div class="text-[10px] text-gray-500 mt-1">Equipación: ${escapeHtml(m.kit||'Titular')}${m.notes?` · ${escapeHtml(m.notes)}`:''}</div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="openEditMatch('${m.id}')" class="btn-secondary">Editar</button>
+        <button onclick="deleteMatch('${m.id}')" class="btn-danger">🗑</button>
+      </div>
+    </div>`).join('');
+}
+window.openEditMatch = (id) => {
+  const m = id ? state.matches.find(x=>x.id===id) : null;
+  $('mt-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  openModal('match-modal');
+  $('mt-id').value = m?.id||'';
+  $('mt-category').value = m?.categoryId||(state.categories[0]?.id||'');
+  $('mt-date').value = m?.date||'';
+  $('mt-time').value = m?.time||'';
+  $('mt-rival').value = m?.rival||'';
+  $('mt-location').value = m?.location||'';
+  $('mt-address').value = m?.address||'';
+  $('mt-kit').value = m?.kit||'Titular';
+  $('mt-home').value = m?.home||'home';
+  $('mt-notes').value = m?.notes||'';
+};
+window.saveMatchForm = () => {
+  const data = {
+    categoryId: $('mt-category').value, date: $('mt-date').value, time: $('mt-time').value,
+    rival: $('mt-rival').value.trim(), location: $('mt-location').value.trim(), address: $('mt-address').value.trim(),
+    kit: $('mt-kit').value, home: $('mt-home').value, notes: $('mt-notes').value.trim()
+  };
+  if (!data.date) return toast('La fecha es obligatoria','error');
+  const id = $('mt-id').value;
+  if (id) { const i = state.matches.findIndex(x=>x.id===id); state.matches[i] = { ...state.matches[i], ...data }; }
+  else { state.matches.push({ id: uid(), ...data }); }
+  DB.set('matches', state.matches);
+  renderMatches(); closeModal('match-modal'); toast('Partido guardado','success');
+};
+window.deleteMatch = (id) => {
+  if (!confirm('¿Eliminar este partido?')) return;
+  state.matches = state.matches.filter(x=>x.id!==id);
+  DB.set('matches', state.matches); renderMatches();
+};
+
+/* ---------- Morosos ---------- */
+function renderMorosos() {
+  const debts = state.payments.filter(p => p.status !== 'approved');
+  if (!debts.length) { $('morosos-list').innerHTML = '<p class="text-gray-500 text-center py-8">¡Sin morosos! 🎉</p>'; return; }
+  const byPlayer = {};
+  debts.forEach(p => { (byPlayer[p.playerId] = byPlayer[p.playerId]||[]).push(p); });
+  const rows = Object.entries(byPlayer).map(([pid, ps])=>{
+    const pl = state.players.find(x=>x.id===pid);
+    const total = ps.reduce((s,p)=>s+(p.amount||0),0);
+    const conceptList = ps.map(p=>`${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} (${statusBadge(p.status)})`).join('<br/>');
+    return `<tr class="border-b border-slate-800">
+      <td class="px-3 py-3 font-bold text-white">${escapeHtml(pl?.name||'(eliminado)')}</td>
+      <td class="px-3 py-3 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
+      <td class="px-3 py-3 text-sm">${conceptList}</td>
+      <td class="px-3 py-3 text-right font-black text-red-400">${moneyFmt(total)}</td>
+    </tr>`;
+  }).join('');
+  $('morosos-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
+    <table class="w-full">
+      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Pendiente</th><th class="px-3 py-3 text-right">Total</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+/* ---------- Usuarios ---------- */
+function renderUsers() {
+  if (!state.users.length) { $('users-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin usuarios.</p>'; return; }
+  $('users-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Nombre</th><th class="px-3 py-3 text-left">Email</th><th class="px-3 py-3 text-left">Rol</th><th class="px-3 py-3 text-left">Jugadores</th><th class="px-3 py-3 text-center">Acción</th></tr></thead>
+      <tbody>
+        ${state.users.map(u=>{
+          const linked = (u.playerIds||[]).map(pid => state.players.find(p=>p.id===pid)?.name || '(?)').join(', ');
+          return `<tr class="border-b border-slate-800">
+            <td class="px-3 py-2 font-bold text-white">${escapeHtml(u.name||'')}</td>
+            <td class="px-3 py-2 text-gray-400">${escapeHtml(u.email||'')}</td>
+            <td class="px-3 py-2">${roleBadge(u.role)}</td>
+            <td class="px-3 py-2 text-gray-300">${escapeHtml(linked||'—')}</td>
+            <td class="px-3 py-2 text-center">
+              <button onclick="openEditUser('${u.id}')" class="btn-secondary">Editar</button>
+              ${u.id !== state.user.id ? `<button onclick="deleteUserDoc('${u.id}')" class="btn-danger ml-1">🗑</button>` : ''}
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+window.openEditUser = (id) => {
+  const u = id ? state.users.find(x=>x.id===id) : null;
+  $('us-id').value = u?.id||'';
+  $('us-name').value = u?.name||'';
+  $('us-email').value = u?.email||'';
+  $('us-password').value = u?.password||'';
+  $('us-role').value = u?.role||'parent';
+  $('us-players').innerHTML = state.players.map(p=>`
+    <label class="flex items-center gap-2 text-sm text-gray-300">
+      <input type="checkbox" value="${p.id}" class="us-player-chk accent-green-600" ${u?.playerIds?.includes(p.id)?'checked':''} />
+      ${escapeHtml(p.name)} <span class="text-gray-500 text-xs">· ${escapeHtml(teamName(p.categoryId))}</span>
+    </label>`).join('') || '<p class="text-gray-500 text-xs">Crea primero algún jugador.</p>';
+  openModal('user-modal');
+};
+window.saveUserForm = () => {
+  const id = $('us-id').value;
+  const email = $('us-email').value.trim().toLowerCase();
+  const name = $('us-name').value.trim();
+  const password = $('us-password').value;
+  const role = $('us-role').value;
+  const playerIds = [...document.querySelectorAll('.us-player-chk:checked')].map(i=>i.value);
+  if (!email || !name) return toast('Email y nombre son obligatorios','error');
+  if (!id && password.length < 4) return toast('Contraseña mínima 4 caracteres','error');
+  if (state.users.some(u=> u.email.toLowerCase()===email && u.id!==id)) return toast('Email ya registrado','error');
+  if (id) {
+    const i = state.users.findIndex(x=>x.id===id);
+    state.users[i] = { ...state.users[i], name, email, role, playerIds, ...(password?{password}:{}) };
+  } else {
+    state.users.push({ id: uid(), name, email, password, role, playerIds, createdAt: Date.now() });
+  }
+  DB.set('users', state.users);
+  closeModal('user-modal'); renderUsers(); toast('Usuario guardado','success');
+};
+window.deleteUserDoc = (id) => {
+  if (!confirm('¿Eliminar este usuario?')) return;
+  state.users = state.users.filter(x=>x.id!==id);
+  DB.set('users', state.users); renderUsers();
+};
+
+/* ---------- Config ---------- */
+function renderConfig() {
+  const c = state.clubInfo || {};
+  $('cfg-iban').value = c.iban||'';
+  $('cfg-holder').value = c.holder||'';
+  $('cfg-bank').value = c.bank||'';
+  $('cfg-concept').value = c.concept||'';
+  $('cfg-bizum').value = c.bizum||'';
+}
+window.saveClubConfig = () => {
+  const data = { iban: $('cfg-iban').value.trim(), holder: $('cfg-holder').value.trim(), bank: $('cfg-bank').value.trim(), concept: $('cfg-concept').value.trim(), bizum: $('cfg-bizum').value.trim() };
+  DB.set('config', data); state.clubInfo = data;
+  toast('Configuración guardada','success');
+};
+
+/* ---------- Copia de seguridad ---------- */
+window.exportBackup = () => {
+  const data = {
+    _meta: { app: 'ClubPinarFS', version: 1, exportedAt: new Date().toISOString() },
+    users: state.users,
+    categories: state.categories,
+    players: state.players,
+    concepts: state.concepts,
+    payments: state.payments,
+    matches: state.matches,
+    config: state.clubInfo
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+  a.href = url; a.download = `pinar_backup_${ts}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Copia descargada','success');
+};
+
+window.importBackup = (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (data._meta?.app !== 'ClubPinarFS') {
+        if (!confirm('El archivo no parece una copia de Club Pinar FS. ¿Importar de todos modos?')) return;
+      }
+      if (!confirm('Esto SOBRESCRIBIRÁ todos los datos actuales (usuarios, jugadores, cobros...). ¿Continuar?')) return;
+      if (Array.isArray(data.users))      { state.users = data.users;           DB.set('users', state.users); }
+      if (Array.isArray(data.categories)) { state.categories = data.categories; DB.set('categories', state.categories); }
+      if (Array.isArray(data.players))    { state.players = data.players;       DB.set('players', state.players); }
+      if (Array.isArray(data.concepts))   { state.concepts = data.concepts;     DB.set('concepts', state.concepts); }
+      if (Array.isArray(data.payments))   { state.payments = data.payments;     DB.set('payments', state.payments); }
+      if (Array.isArray(data.matches))    { state.matches = data.matches;       DB.set('matches', state.matches); }
+      if (data.config && typeof data.config === 'object') { state.clubInfo = data.config; DB.set('config', state.clubInfo); }
+      $('backup-info').textContent = `Importado: ${state.users.length} usuarios · ${state.players.length} jugadores · ${state.payments.length} cobros · ${state.matches.length} partidos`;
+      toast('Copia importada. Vuelve a iniciar sesión.','success');
+      setTimeout(()=> logout(), 1500);
+    } catch(err) {
+      toast('Archivo inválido: '+err.message,'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+window.wipeAll = () => {
+  if (!confirm('⚠️ Esto borra TODOS los datos (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
+  if (!confirm('Últim<response clipped><NOTE>To save on context only part of this file has been shown to you. You should retry this tool after you have searched inside the file with `grep -n` in order to find the line numbers of what you are looking for.</NOTE>
+
+window.wipeAll = () => {
+  if (!confirm('⚠️ Esto borra TODOS los datos (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
+  if (!confirm('Última oportunidad. ¿Confirmas que quieres borrar TODO?')) return;
+  ['users','categories','players','concepts','payments','matches','config','session'].forEach(k => localStorage.removeItem('pinar_'+k));
+  toast('Todo borrado','info');
+  setTimeout(()=> location.reload(), 800);
+};
+
+/* ---------- Export Excel ---------- */
+window.exportPlayers = () => {
+  const rows = state.players.map(p=>({ Nombre: p.name, Dorsal: p.dorsal, Posición: p.position, Equipo: teamName(p.categoryId), Goles: p.goals||0, Presencias: p.attPresent||0, Faltas: p.attAbsent||0, Lesiones: p.attInjured||0 }));
+  downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
+};
+window.exportPayments = () => {
+  const rows = state.payments.map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status, Notas: p.notes||'' }; });
+  downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
+};
+window.exportMorosos = () => {
+  const rows = state.payments.filter(p=>p.status!=='approved').map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status }; });
+  downloadXlsx(rows, 'morosos_pinar.xlsx', 'Morosos');
+};
+function downloadXlsx(rows, filename, sheet) {
+  if (!rows.length) return toast('Sin datos para exportar','info');
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheet);
+  XLSX.writeFile(wb, filename);
+}
+
+/* ════════════════════ PARENT ════════════════════ */
+window.switchParentTab = (tab) => {
+  state.parentTab = tab;
+  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.pane===tab));
+  document.querySelectorAll('.parent-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'parent-pane-'+tab));
+  const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
+  if (myPlayers.length>1) {
+    const sel = $('parent-player-select');
+    sel.innerHTML = myPlayers.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${escapeHtml(teamName(p.categoryId))}</option>`).join('');
+    sel.value = state.parentSelectedPlayer || myPlayers[0].id;
+    $('parent-player-selector').classList.remove('hidden');
+    sel.onchange = (e)=>{ state.parentSelectedPlayer = e.target.value; switchParentTab(state.parentTab); };
+  }
+  const map = { home: renderParentHome, payments: renderParentPayments, matches: renderParentMatches, history: renderParentHistory, bank: renderParentBank };
+  map[tab] && map[tab]();
+};
+function currentParentPlayer() {
+  const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
+  return myPlayers.find(p=>p.id===state.parentSelectedPlayer) || myPlayers[0];
+}
+function renderParentHome() {
+  const pl = currentParentPlayer();
+  if (!pl) { $('parent-pane-home').innerHTML = '<div class="card text-center py-12"><p class="text-gray-400 font-bold">Tu cuenta aún no está vinculada a ningún jugador.</p><p class="text-gray-500 text-xs mt-2">Contacta con el administrador.</p></div>'; return; }
+  const myPayments = state.payments.filter(p=>p.playerId===pl.id);
+  const nextPending = myPayments.filter(p=>p.status!=='approved').sort((a,b)=>(a.month||0)-(b.month||0))[0];
+  const upcomingMatch = state.matches.filter(m=>m.categoryId===pl.categoryId && m.date && new Date(m.date+'T'+(m.time||'23:59'))>=new Date()).sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0];
+  const totalPendiente = myPayments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
+  const totalPagado = myPayments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
+  $('parent-pane-home').innerHTML = `
+    <div class="card mb-4 flex items-center gap-4">
+      <img src="${pl.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(pl.name)+'&background=7f1d1d&color=fff'}" class="w-16 h-16 rounded-2xl object-cover" />
+      <div>
+        <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(teamName(pl.categoryId))}</div>
+        <h2 class="text-2xl font-black text-white tracking-tight">${escapeHtml(pl.name)}</h2>
+        <div class="text-[11px] text-gray-500">#${pl.dorsal||'S/N'} · ${escapeHtml(pl.position||'')}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pagado</div><div class="text-xl font-black text-green-400">${moneyFmt(totalPagado)}</div></div>
+      <div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(totalPendiente)}</div></div>
+    </div>
+    ${nextPending ? `<div class="card border-l-4 border-l-yellow-500 mb-4">
+      <div class="text-[10px] font-black text-yellow-500 uppercase tracking-widest mb-1">Próximo Pago</div>
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="font-black text-white text-lg">${escapeHtml(nextPending.conceptName)}</div>
+          <div class="text-[10px] text-gray-500">${MONTH_NAMES[(nextPending.month||1)-1]} · ${statusBadge(nextPending.status)}</div>
+        </div>
+        <div class="text-2xl font-black text-white">${moneyFmt(nextPending.amount)}</div>
+      </div>
+      ${nextPending.status==='pending' || nextPending.status==='rejected' ? `<button onclick="openProof('${nextPending.id}')" class="w-full btn-primary mt-3">Subir Justificante</button>` : ''}
+    </div>` : `<div class="card text-center mb-4"><p class="text-green-400 font-black">¡Estás al corriente! 🎉</p></div>`}
+    ${upcomingMatch ? `<div class="card border-l-4 border-l-green-600 mb-4">
+      <div class="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">Próximo Partido</div>
+      <div class="font-black text-white text-lg">vs ${escapeHtml(upcomingMatch.rival||'?')} (${upcomingMatch.home==='home'?'Local':'Visitante'})</div>
+      <div class="text-sm text-gray-300">${upcomingMatch.date} · ${upcomingMatch.time||''}</div>
+      <div class="text-[11px] text-gray-500 mt-1">${escapeHtml(upcomingMatch.location||'')}</div>
+      <div class="text-[11px] text-gray-500 mt-1">Equipación: <span class="text-white font-bold">${escapeHtml(upcomingMatch.kit||'Titular')}</span></div>
+    </div>` : ''}`;
+}
+function renderParentPayments() {
+  const pl = currentParentPlayer();
+  if (!pl) { $('parent-pane-payments').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
+  const myPayments = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=>(a.month||0)-(b.month||0));
+  if (!myPayments.length) { $('parent-pane-payments').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin cobros generados aún.</p></div>'; return; }
+  $('parent-pane-payments').innerHTML = myPayments.map(p=>`
+    <div class="card mb-3">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${MONTH_NAMES[(p.month||1)-1]}</div>
+          <div class="font-black text-white text-lg">${escapeHtml(p.conceptName||'')}</div>
+          <div class="mt-1">${statusBadge(p.status)}</div>
+          ${p.rejectionReason ? `<div class="text-[11px] text-red-400 mt-1">Rechazo: ${escapeHtml(p.rejectionReason)}</div>` : ''}
+        </div>
+        <div class="text-right"><div class="text-2xl font-black text-white">${moneyFmt(p.amount)}</div></div>
+      </div>
+      ${p.proofData ? `<a href="${p.proofData}" target="_blank" class="block mt-3"><img src="${p.proofData}" class="rounded-lg max-h-48 object-contain border border-slate-700" /></a>` : ''}
+      ${p.status!=='approved' ? `<button onclick="openProof('${p.id}')" class="w-full btn-primary mt-3">${p.proofData?'Reemplazar Justificante':'Subir Justificante'}</button>` : ''}
+    </div>`).join('');
+}
+function renderParentMatches() {
+  const pl = currentParentPlayer();
+  if (!pl) { $('parent-pane-matches').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
+  const list = state.matches.filter(m=>m.categoryId===pl.categoryId).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  if (!list.length) { $('parent-pane-matches').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">No hay partidos.</p></div>'; return; }
+  $('parent-pane-matches').innerHTML = list.map(m=>{
+    const past = m.date && new Date(m.date+'T'+(m.time||'23:59'))<new Date();
+    return `<div class="card mb-3 ${past?'opacity-60':''}">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="text-[10px] font-black ${past?'text-gray-500':'text-green-500'} uppercase tracking-widest">${m.date} · ${m.time||''}</div>
+          <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
+          <div class="text-[11px] text-gray-500">${m.home==='home'?'Local':'Visitante'} · Equipación ${escapeHtml(m.kit||'Titular')}</div>
+        </div>
+      </div>
+      <div class="mt-2 text-sm text-gray-300">${escapeHtml(m.location||'')}</div>
+      ${m.notes ? `<div class="text-[11px] text-gray-500 mt-2">${escapeHtml(m.notes)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function renderParentHistory() {
+  const pl = currentParentPlayer();
+  if (!pl) { $('parent-pane-history').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
+  const list = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+  if (!list.length) { $('parent-pane-history').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin historial.</p></div>'; return; }
+  $('parent-pane-history').innerHTML = `<div class="card overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead><tr class="text-[10px] font-black uppercase text-gray-500"><th class="py-2 text-left">Concepto</th><th class="py-2 text-left">Mes</th><th class="py-2 text-right">Importe</th><th class="py-2 text-center">Estado</th></tr></thead>
+      <tbody>
+        ${list.map(p=>`<tr class="border-t border-slate-800">
+          <td class="py-2 font-bold text-white">${escapeHtml(p.conceptName||'')}</td>
+          <td class="py-2 text-gray-400">${MONTH_NAMES[(p.month||1)-1]}</td>
+          <td class="py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
+          <td class="py-2 text-center">${statusBadge(p.status)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function renderParentBank() {
+  const c = state.clubInfo || {};
+  $('parent-pane-bank').innerHTML = `<div class="card">
+    <h3 class="section-title">💳 Datos para el Pago</h3>
+    ${c.iban ? `<div class="mb-4"><div class="text-[10px] font-black uppercase text-gray-500">IBAN</div>
+      <div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.iban)}</code><button onclick="copyText('${escapeHtml(c.iban)}')" class="btn-secondary">Copiar</button></div></div>` : ''}
+    ${c.holder ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Titular</div><div class="text-white font-bold">${escapeHtml(c.holder)}</div></div>` : ''}
+    ${c.bank ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Banco</div><div class="text-white">${escapeHtml(c.bank)}</div></div>` : ''}
+    ${c.concept ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Concepto</div><div class="text-white">${escapeHtml(c.concept)}</div></div>` : ''}
+    ${c.bizum ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Bizum</div><div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.bizum)}</code><button onclick="copyText('${escapeHtml(c.bizum)}')" class="btn-secondary">Copiar</button></div></div>` : ''}
+    ${!c.iban && !c.bizum ? '<p class="text-gray-500 text-sm text-center py-4">El club aún no ha configurado los datos bancarios.</p>' : ''}
+    <div class="mt-6 p-3 bg-blue-900/20 border border-blue-800 rounded-lg text-[11px] text-blue-300">
+      💡 Tras pagar, ve a <b>Pagos</b> y sube la foto del justificante.
+    </div>
+  </div>`;
+}
+window.copyText = (t) => { navigator.clipboard.writeText(t).then(()=> toast('Copiado','success')); };
+
+/* ---------- Subir justificante (base64) ---------- */
+window.openProof = (paymentId) => {
+  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
+  state.pendingProofPaymentId = paymentId;
+  $('proof-payment-id').value = paymentId;
+  $('proof-info').textContent = `${MONTH_NAMES[(p.month||1)-1]} · ${p.conceptName} · ${moneyFmt(p.amount)}`;
+  $('proof-file').value = '';
+  $('proof-notes').value = p.notes||'';
+  openModal('proof-modal');
+};
+window.submitProof = async () => {
+  const paymentId = state.pendingProofPaymentId;
+  const file = $('proof-file').files[0];
+  const notes = $('proof-notes').value.trim();
+  if (!file && !notes) return toast('Adjunta una foto o añade una nota','error');
+  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
+  p.status='review'; p.notes=notes; p.submittedAt=Date.now();
+  if (file) {
+    try {
+      const dataUrl = await fileToBase64Resized(file, 1200, 0.8);
+      p.proofData = dataUrl;
+    } catch(e) {
+      return toast('Error al procesar imagen: '+e.message,'error');
+    }
+  }
+  DB.set('payments', state.payments);
+  closeModal('proof-modal'); toast('Justificante enviado.','success');
+  switchParentTab(state.parentTab);
+};
+function fileToBase64Resized(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const r = Math.min(maxDim/width, maxDim/height);
+          width = Math.round(width*r); height = Math.round(height*r);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ════════════════════ INIT ════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  loadAll();
+
+  // sesión persistente
+  const sess = DB.get('session', null);
+  if (sess?.id) {
+    const u = state.users.find(x=>x.id===sess.id);
+    if (u) { state.user = u; state.role = u.role; enterApp(); }
+    else showView('view-login');
+  } else {
+    showView('view-login');
+  }
+
+  // listeners
+  $('btn-login').addEventListener('click', doLogin);
+  $('login-password').addEventListener('keypress', e => { if (e.key==='Enter') doLogin(); });
+  $('player-search').addEventListener('input', e => { state.filters.playerSearch = e.target.value; renderPlayers(); });
+  $('player-cat-filter').addEventListener('change', e => { state.filters.playerCat = e.target.value; renderPlayers(); });
+  $('pay-cat-filter').addEventListener('change', e => { state.filters.payCat = e.target.value; renderPayments(); });
+  $('pay-status-filter').addEventListener('change', e => { state.filters.payStatus = e.target.value; renderPayments(); });
+});
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
 
