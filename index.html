@@ -1043,7 +1043,43 @@ window.importBackup = (e) => {
 
 window.wipeAll = () => {
   if (!confirm('⚠️ Esto borra TODOS los datos (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
-  if (!confirm('Últim<response clipped><NOTE>To save on context only part of this file has been shown to you. You should retry this tool after you have searched inside the file with `grep -n` in order to find the line numbers of what you are looking for.</NOTE>
+  if (!confirm('⚠️ ¿Borrar ABSOLUTAMENTE TODO? Esta acción es irreversible y eliminará jugadores, pagos y usuarios.')) return;
+  localStorage.clear();
+  location.reload();
+};
+
+/* ---------- Export Excel ---------- */
+window.exportPlayers = () => {
+  const rows = state.players.map(p => ({ 
+    Nombre: p.name, 
+    Dorsal: p.dorsal, 
+    Equipo: teamName(p.categoryId), 
+    Goles: p.goals || 0 
+  }));
+  downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
+};
+
+window.exportPayments = () => {
+  const rows = state.payments.map(p => { 
+    const pl = state.players.find(x => x.id === p.playerId); 
+    return { 
+      Jugador: pl?.name || '', 
+      Mes: MONTH_NAMES[(p.month || 1) - 1], 
+      Concepto: p.conceptName || '', 
+      Importe: p.amount || 0, 
+      Estado: p.status 
+    }; 
+  });
+  downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
+};
+
+function downloadXlsx(rows, filename, sheet) {
+  if (!rows.length) return toast('Sin datos para exportar', 'info');
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheet);
+  XLSX.writeFile(wb, filename);
+}
 
 window.wipeAll = () => {
   if (!confirm('⚠️ Esto borra TODOS los datos (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
