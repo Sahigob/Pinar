@@ -476,6 +476,7 @@ const DB = {
   }
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+/* ---------- Sincronización con Alerta de Errores ---------- */
 async function descargarDatosDeLaNube() {
   const colecciones = ['users', 'categories', 'players', 'matches', 'payments', 'config'];
   
@@ -483,23 +484,20 @@ async function descargarDatosDeLaNube() {
 
   for (const k of colecciones) {
     try {
-      // Consensuamos la petición limpia directo al documento
       const doc = await db.collection(k).doc('global_data').get();
       
       if (doc.exists && doc.data() && doc.data().data) {
         localStorage.setItem('pinar_' + k, JSON.stringify(doc.data().data));
         console.log(`📥 [OK] Descargado: ${k}`);
-      } else {
-        console.log(`ℹ️ [Vacío] ${k} no tiene datos en la nube. Se mantiene local.`);
       }
     } catch (err) {
-      console.warn(`⚠️ [Aviso] No se pudo descargar ${k} directamente:`, err.message);
+      console.warn(`⚠️ Error en ${k}:`, err.message);
+      // 🎯 ESTA LÍNEA TE MOSTRARÁ EL ERROR EN EL MÓVIL:
+      alert(`Error en nube (${k}): ${err.message}`);
     }
   }
 
-  console.log("🔄 Sincronización terminada. Arrancando interfaz del Club Pinar...");
-  
-  // Ejecutamos las funciones de renderizado de tu app
+  console.log("🔄 Sincronización terminada.");
   if (typeof render === 'function') render();
   if (typeof initApp === 'function') initApp();
   if (typeof showData === 'function') showData();
@@ -507,7 +505,6 @@ async function descargarDatosDeLaNube() {
 
 // Arrancamos el proceso
 descargarDatosDeLaNube();
-
 /* ---------- estado ---------- */
 let state = {
   user: null, role: null,
