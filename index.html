@@ -486,18 +486,22 @@ async function descargarDatosDeLaNube() {
     try {
       const doc = await db.collection(k).doc('global_data').get();
       
-      if (doc.exists && doc.data() && doc.data().data) {
+      // Comprobamos meticulosamente que el documento exista y tenga datos reales
+      if (doc.exists && doc.data() && doc.data().data !== undefined && doc.data().data !== null) {
         localStorage.setItem('pinar_' + k, JSON.stringify(doc.data().data));
         console.log(`📥 [OK] Descargado: ${k}`);
+      } else {
+        console.log(`ℹ️ [Vacío] ${k} no tiene datos válidos en la nube. Se salta.`);
       }
     } catch (err) {
-      console.warn(`⚠️ Error en ${k}:`, err.message);
-      // 🎯 ESTA LÍNEA TE MOSTRARÁ EL ERROR EN EL MÓVIL:
-      alert(`Error en nube (${k}): ${err.message}`);
+      // Si falla una colección individual, avisamos pero NO paramos el bucle
+      console.warn(`⚠️ Error individual en ${k}:`, err.message);
     }
   }
 
-  console.log("🔄 Sincronización terminada.");
+  console.log("🔄 Sincronización terminada. Renderizando interfaz...");
+  
+  // Forzamos el arranque de la pantalla pase lo que pase
   if (typeof render === 'function') render();
   if (typeof initApp === 'function') initApp();
   if (typeof showData === 'function') showData();
