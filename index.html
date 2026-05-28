@@ -1,11 +1,34 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
   <title>Club Pinar Fútbol Sala | Gestión Premium</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Inicializamos EmailJS
+    emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
+
+    // Datos de conexión de Firebase de tu club
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "tu-club.firebaseapp.com",
+      projectId: "tu-club",
+      storageBucket: "tu-club.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234:web:abcd"
+    };
+
+    // Arrancamos Firebase globalmente
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(); 
+  </script>
 
   <style>
     body { background: #08080a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
@@ -1326,4 +1349,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
