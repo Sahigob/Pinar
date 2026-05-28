@@ -461,16 +461,16 @@ const DB = {
     localStorage.setItem('pinar_'+k, JSON.stringify(v)); 
     
     if (['players', 'payments', 'matches', 'categories', 'config', 'users'].includes(k)) {
-      // Apuntamos directamente a la ruta blindada por la regla de Firebase
-      const documentoRef = db.collection(k).doc('PinarFS_Secure_2026_Premium_Key_c6165');
+      const documentoRef = db.collection(k).doc('global_data');
       
       documentoRef.set({ 
         data: v,
-        _lastUpdated: Date.now()
+        _lastUpdated: Date.now(),
+        _clubId: "pinar-c6165" // Pasaporte de acceso para la regla de Firebase
       })
-      .then(() => console.log(`🔒 Sincronizado ${k} en la nube de forma segura.`))
+      .then(() => console.log(`🔒 Respaldado ${k} en la nube.`))
       .catch(err => {
-        console.error("⚠️ Error de seguridad en la nube:", err.message);
+        console.error("⚠️ Error de guardado:", err.message);
       });
     }
   }
