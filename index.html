@@ -579,9 +579,34 @@ function doLogin() {
   const pass  = $('login-password').value;
   const err = $('login-error');
   err.classList.add('hidden');
-  const u = state.users.find(x=> x.email.toLowerCase()===email && x.password===pass);
-  if (!u) { err.textContent = 'Email o contraseña incorrectos.'; err.classList.remove('hidden'); return; }
-  state.user = u; state.role = u.role;
+
+  // 🎯 INYECCIÓN Y DIAGNÓSTICO: Forzamos a la app a leer lo descargado de la nube
+  console.log("=== DIAGNÓSTICO DE LOGIN ===");
+  try {
+    const usuariosDescargados = JSON.parse(localStorage.getItem('pinar_users'));
+    console.log("Usuarios en localStorage:", usuariosDescargados);
+    
+    // Si hay usuarios en el almacenamiento, se los inyectamos al "state"
+    if (usuariosDescargados) {
+      state.users = usuariosDescargados;
+    }
+  } catch(e) {
+    console.error("Error al leer pinar_users:", e.message);
+  }
+  console.log("Usuarios actuales en state.users:", state.users);
+  console.log("============================");
+
+  // Tu código original que busca al usuario
+  const u = state.users.find(x => x.email.toLowerCase() === email && x.password === pass);
+  
+  if (!u) { 
+    err.textContent = 'Email o contraseña incorrectos.'; 
+    err.classList.remove('hidden'); 
+    return; 
+  }
+  
+  state.user = u; 
+  state.role = u.role;
   DB.set('session', { id: u.id });
   enterApp();
 }
