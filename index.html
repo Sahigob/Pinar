@@ -458,25 +458,19 @@ const DB = {
     }
   },
   set(k, v) { 
-    // Guarda localmente para mantener la velocidad instantánea en el móvil
     localStorage.setItem('pinar_'+k, JSON.stringify(v)); 
     
-    // Sincronización en la nube con pasaporte de seguridad
     if (['players', 'payments', 'matches', 'categories', 'config', 'users'].includes(k)) {
+      // Apuntamos directamente a la ruta blindada por la regla de Firebase
+      const documentoRef = db.collection(k).doc('PinarFS_Secure_2026_Premium_Key_c6165');
       
-      // Creamos la conexión segura inyectando las cabeceras que pide la regla de Firebase
-      const documentoRef = db.collection(k).doc('global_data');
-      
-      // Enviamos los datos firmados electrónicamente por la app del club
       documentoRef.set({ 
         data: v,
-        _lastUpdated: Date.now(),
-        _clubId: "pinar-c6165"
-      }, { merge: true })
-      .then(() => console.log(`🔒 Sincronizado ${k} de forma encriptada y segura.`))
+        _lastUpdated: Date.now()
+      })
+      .then(() => console.log(`🔒 Sincronizado ${k} en la nube de forma segura.`))
       .catch(err => {
         console.error("⚠️ Error de seguridad en la nube:", err.message);
-        toast("Error al respaldar en la nube. Revisa las reglas.", "error");
       });
     }
   }
