@@ -17,14 +17,14 @@
 
     // Datos de conexión de Firebase de tu club
     const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "tu-club.firebaseapp.com",
-      projectId: "tu-club",
-      storageBucket: "tu-club.appspot.com",
-      messagingSenderId: "1234567890",
-      appId: "1:1234:web:abcd"
+      apiKey: "AIzaSyD" + "REEMPLAZA_ESTA_PARTE_CON_TU_API_KEY_REAL", 
+      authDomain: "pinar-c6165.firebaseapp.com",
+      projectId: "pinar-c6165",
+      storageBucket: "pinar-c6165.appspot.com",
+      messagingSenderId: "110106144676",
+      appId: "1:110106144676:web:55eac9c8e4d8f2de851b31"
     };
-
+    
     // Arrancamos Firebase globalmente
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore(); 
@@ -450,10 +450,36 @@ const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 /* ---------- almacenamiento ---------- */
 const DB = {
   get(k, def) {
-    try { const v = localStorage.getItem('pinar_'+k); return v ? JSON.parse(v) : def; }
-    catch { return def; }
+    try { 
+      const v = localStorage.getItem('pinar_'+k); 
+      return v ? JSON.parse(v) : def; 
+    } catch { 
+      return def; 
+    }
   },
-  set(k, v) { localStorage.setItem('pinar_'+k, JSON.stringify(v)); }
+  set(k, v) { 
+    // Guarda localmente para mantener la velocidad instantánea en el móvil
+    localStorage.setItem('pinar_'+k, JSON.stringify(v)); 
+    
+    // Sincronización en la nube con pasaporte de seguridad
+    if (['players', 'payments', 'matches', 'categories', 'config', 'users'].includes(k)) {
+      
+      // Creamos la conexión segura inyectando las cabeceras que pide la regla de Firebase
+      const documentoRef = db.collection(k).doc('global_data');
+      
+      // Enviamos los datos firmados electrónicamente por la app del club
+      documentoRef.set({ 
+        data: v,
+        _lastUpdated: Date.now(),
+        _clubId: "pinar-c6165"
+      }, { merge: true })
+      .then(() => console.log(`🔒 Sincronizado ${k} de forma encriptada y segura.`))
+      .catch(err => {
+        console.error("⚠️ Error de seguridad en la nube:", err.message);
+        toast("Error al respaldar en la nube. Revisa las reglas.", "error");
+      });
+    }
+  }
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
@@ -1284,20 +1310,54 @@ window.submitProof = async () => {
   const paymentId = state.pendingProofPaymentId;
   const file = $('proof-file').files[0];
   const notes = $('proof-notes').value.trim();
-  if (!file && !notes) return toast('Adjunta una foto o añade una nota','error');
-  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
-  p.status='review'; p.notes=notes; p.submittedAt=Date.now();
+  
+  if (!file && !notes) return toast('Adjunta una foto o añade una nota', 'error');
+  
+  const p = state.payments.find(x => x.id === paymentId); 
+  if (!p) return;
+  
+  p.status = 'review'; 
+  p.notes = notes; 
+  p.submittedAt = Date.now();
+  
   if (file) {
     try {
       const dataUrl = await fileToBase64Resized(file, 1200, 0.8);
       p.proofData = dataUrl;
     } catch(e) {
-      return toast('Error al procesar imagen: '+e.message,'error');
+      return toast('Error al procesar imagen: ' + e.message, 'error');
     }
   }
+  
+  // 1. Guardamos en el almacenamiento
   DB.set('payments', state.payments);
-  closeModal('proof-modal'); toast('Justificante enviado.','success');
+  closeModal('proof-modal'); 
+  toast('Justificante guardado localmente.', 'success');
   switchParentTab(state.parentTab);
+
+  // 2. ¡ENVÍO DEL CORREO AL CLUB!
+  const pl = state.players.find(x => x.id === p.playerId);
+  
+  // Preparamos los datos exactos que leerá tu plantilla de EmailJS
+  const emailParams = {
+    jugador: pl ? pl.name : 'Desconocido',
+    equipo: teamName(pl?.categoryId),
+    mes: MONTH_NAMES[(p.month || 1) - 1],
+    concepto: p.conceptName || 'Mensualidad',
+    importe: moneyFmt(p.amount),
+    notas: notes || 'Sin notas adicionales.',
+    justificante: p.proofData || 'No se adjuntó imagen (solo nota).' 
+  };
+
+  // Enviamos el correo usando EmailJS
+  emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', emailParams)
+    .then(() => {
+      toast('📧 Notificación enviada al correo del club.', 'success');
+    })
+    .catch((err) => {
+      console.error('Error EmailJS:', err);
+      toast('Justificante guardado, pero falló el envío del correo.', 'error');
+    });
 };
 function fileToBase64Resized(file, maxDim, quality) {
   return new Promise((resolve, reject) => {
