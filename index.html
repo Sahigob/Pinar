@@ -477,37 +477,46 @@ const DB = {
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 /* ---------- Sincronización con Alerta de Errores ---------- */
-async function descargarDatosDeLaNube() {
-  const colecciones = ['users', 'categories', 'players', 'matches', 'payments', 'config'];
-  
-  console.log("⏳ Iniciando descarga segura desde la nube...");
+function descargarDatosDeLaNube() {
+  const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
+  let descargasCompletadas = 0;
 
-  for (const k of colecciones) {
-    try {
-      const doc = await db.collection(k).doc('global_data').get();
-      
-      // Comprobamos meticulosamente que el documento exista y tenga datos reales
-      if (doc.exists && doc.data() && doc.data().data !== undefined && doc.data().data !== null) {
-        localStorage.setItem('pinar_' + k, JSON.stringify(doc.data().data));
-        console.log(`📥 [OK] Descargado: ${k}`);
-      } else {
-        console.log(`ℹ️ [Vacío] ${k} no tiene datos válidos en la nube. Se salta.`);
-      }
-    } catch (err) {
-      // Si falla una colección individual, avisamos pero NO paramos el bucle
-      console.warn(`⚠️ Error individual en ${k}:`, err.message);
-    }
-  }
-
-  console.log("🔄 Sincronización terminada. Renderizando interfaz...");
-  
-  // Forzamos el arranque de la pantalla pase lo que pase
-  if (typeof render === 'function') render();
-  if (typeof initApp === 'function') initApp();
-  if (typeof showData === 'function') showData();
+  colecciones.forEach(k => {
+    db.collection(k).doc('global_data').get()
+      .then(doc => {
+        // Si el documento existe en la nube y contiene datos reales...
+        if (doc.exists && doc.data()) {
+          // Extraemos los datos EXACTAMENTE como lo hacía tu app original
+          const datosNube = doc.data();
+          
+          // Corrección vital: si los datos vienen envueltos en el ".data" que metimos antes, los extraemos; si no, los usamos directos
+          const datosLimpios = datosNube.data ? datosNube.data : datosNube;
+          
+          localStorage.setItem('pinar_' + k, JSON.stringify(datosLimpios));
+          console.log(`📥 Descargado ${k} desde la nube con éxito.`);
+        } else {
+          console.log(`ℹ️ ${k} está vacío en la nube. Se mantiene la copia local.`);
+        }
+        
+        descargasCompletadas++;
+        if (descargasCompletadas === colecciones.length) {
+          console.log("🔄 Todos los datos sincronizados. Renderizando app...");
+          if (typeof render === 'function') render();
+          if (typeof initApp === 'function') initApp();
+          if (typeof showData === 'function') showData();
+        }
+      })
+      .catch(err => {
+        console.error(`⚠️ Error al descargar ${k}:`, err.message);
+        descargasCompletadas++;
+        if (descargasCompletadas === colecciones.length) {
+          if (typeof render === 'function') render();
+        }
+      });
+  });
 }
 
-// Arrancamos el proceso
+// Arrancamos la descarga original
 descargarDatosDeLaNube();
 /* ---------- estado ---------- */
 let state = {
