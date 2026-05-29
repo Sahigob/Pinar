@@ -60,11 +60,11 @@
     .bottom-nav button.active { color:#fff; background: linear-gradient(135deg,#b91c1c,#166534); }
     .bottom-nav button svg { width: 22px; height: 22px; margin-bottom: 4px; }
     @media print { .no-print { display:none !important; } body { background:#fff; color:#000; } .card { background:#fff; border:1px solid #ddd; color:#000; } }
-  </style>
+  
+</style>
 </head>
 <body class="pb-24">
 
-<!-- ╔═════════════════════════════ LOGIN VIEW ═════════════════════════════╗ -->
 <div id="view-login" class="hidden min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-md">
     <div class="text-center mb-8">
@@ -91,7 +91,6 @@
   </div>
 </div>
 
-<!-- ╔════════════════════════════ ADMIN VIEW ══════════════════════════════╗ -->
 <div id="view-admin" class="hidden">
   <header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -104,6 +103,9 @@
       </div>
       <div class="flex items-center gap-3">
         <span id="admin-email-badge" class="hidden sm:inline text-[10px] font-black text-green-500 tracking-widest"></span>
+        <button onclick="subirTodoALaNube()" style="background-color: #16a34a; color: white; font-size: 10px; font-weight: bold; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
+          ☁️ Sincronizar Nube
+        </button>
         <button onclick="logout()" class="btn-secondary">Salir</button>
       </div>
     </div>
@@ -227,7 +229,6 @@
   </main>
 </div>
 
-<!-- ╔════════════════════════════ PARENT VIEW ═════════════════════════════╗ -->
 <div id="view-parent" class="hidden">
   <header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
     <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -253,7 +254,7 @@
     <div id="parent-pane-bank" class="parent-pane hidden"></div>
   </main>
 
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 50 !important; background-color: #000000 !important; display: flex !important;">
     <button data-pane="home" onclick="switchParentTab('home')" class="active">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8a2 2 0 002 2h2a2 2 0 002-2v-8"/></svg>Inicio
     </button>
@@ -272,7 +273,6 @@
   </nav>
 </div>
 
-<!-- ╔═════════════════════════════ MODALES ════════════════════════════════╗ -->
 <div id="cat-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
   <div class="card w-full max-w-md">
     <h3 class="text-xl font-black mb-6 uppercase italic">Configurar Equipo</h3>
@@ -441,8 +441,8 @@
 
 <script>
 /* ════════════════════════════════════════════════════════════════════════
-   CLUB PINAR FS · Versión 100% local (sin Firebase)
-   Almacenamiento: localStorage del navegador
+   CLUB PINAR FS · Versión Corregida para Sincronización Completa
+   Almacenamiento: localStorage del navegador + Firebase Back-end
    ════════════════════════════════════════════════════════════════════════ */
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -476,7 +476,8 @@ const DB = {
   }
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-/* ---------- Sincronización con Alerta de Errores ---------- */
+
+/* ---------- Sincronización Completa ---------- */
 function descargarDatosDeLaNube() {
   const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
   let descargasCompletadas = 0;
@@ -484,13 +485,14 @@ function descargarDatosDeLaNube() {
   colecciones.forEach(k => {
     db.collection(k).doc('global_data').get()
       .then(doc => {
-        // Si el documento existe en la nube y contiene datos reales...
         if (doc.exists && doc.data()) {
-          // Extraemos los datos EXACTAMENTE como lo hacía tu app original
           const datosNube = doc.data();
           
-          // Corrección vital: si los datos vienen envueltos en el ".data" que metimos antes, los extraemos; si no, los usamos directos
-          const datosLimpios = datosNube.data ? datosNube.data : datosNube;
+          // 🎯 ARREGLO CRÍTICO: Forzamos la extracción correcta sin importar si es Array u Objeto
+          let datosLimpios = datosNube;
+          if (datosNube && datosNube.hasOwnProperty('data')) {
+            datosLimpios = datosNube.data;
+          }
           
           localStorage.setItem('pinar_' + k, JSON.stringify(datosLimpios));
           console.log(`📥 Descargado ${k} desde la nube con éxito.`);
@@ -516,7 +518,28 @@ function descargarDatosDeLaNube() {
   });
 }
 
-// Arrancamos la descarga original
+/* 🎯 FUNCIÓN GLOBAL PARA FORZAR LA SUBIDA MANUAL DESDE EL BOTÓN VERDE */
+function subirTodoALaNube() {
+  const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
+  console.log("🚀 Forzando subida masiva de datos locales a Firebase...");
+  
+  colecciones.forEach(k => {
+    const datosLocales = localStorage.getItem('pinar_' + k);
+    if (datosLocales) {
+      const datosParseados = JSON.parse(datosLocales);
+      db.collection(k).doc('global_data').set({
+        data: datosParseados,
+        _lastUpdated: Date.now(),
+        _clubId: "pinar-c6165"
+      })
+      .then(() => console.log(`✅ [SUBIDA MANUAL OK] ${k} subido a Firebase.`))
+      .catch(err => console.error(`❌ Error en subida manual de ${k}:`, err.message));
+    }
+  });
+  alert("Sincronización manual completada. ¡Los cambios ya están en internet!");
+}
+
+// Arrancamos la descarga al cargar
 descargarDatosDeLaNube();
 /* ---------- estado ---------- */
 let state = {
