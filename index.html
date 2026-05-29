@@ -447,12 +447,16 @@
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-/* ---------- almacenamiento ---------- */
+/* ---------- Almacenamiento Base ---------- */
 const DB = {
   get(k, def) {
     try { 
       const v = localStorage.getItem('pinar_'+k); 
-      return v ? JSON.parse(v) : def; 
+      if (!v) return def;
+      const parsed = JSON.parse(v);
+      // Si por error se guardó el envoltorio de Firebase en local, lo limpiamos al leer
+      if (parsed && parsed.hasOwnProperty('data')) return parsed.data;
+      return parsed; 
     } catch { 
       return def; 
     }
@@ -461,23 +465,34 @@ const DB = {
     localStorage.setItem('pinar_'+k, JSON.stringify(v)); 
     
     if (['players', 'payments', 'matches', 'categories', 'config', 'users'].includes(k)) {
-      const documentoRef = db.collection(k).doc('global_data');
-      
-      documentoRef.set({ 
+      db.collection(k).doc('global_data').set({ 
         data: v,
         _lastUpdated: Date.now(),
-        _clubId: "pinar-c6165" // Pasaporte de acceso para la regla de Firebase
+        _clubId: "pinar-c6165"
       })
       .then(() => console.log(`🔒 Respaldado ${k} en la nube.`))
-      .catch(err => {
-        console.error("⚠️ Error de guardado:", err.message);
-      });
+      .catch(err => console.error("⚠️ Error de guardado:", err.message));
     }
   }
 };
+
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
-/* ---------- Sincronización Completa ---------- */
+// Carga segura de datos en memoria local asegurando que sean Arrays limpios
+let categories = DB.get('categories', []);
+let players    = DB.get('players', []);
+let concepts   = DB.get('concepts', []);
+let payments   = DB.get('payments', []);
+let matches    = DB.get('matches', []);
+let users      = DB.get('users', []);
+let clubConfig = DB.get('config', { iban:'', holder:'', bank:'', concept:'', bizum:'' });
+
+let currentUser = null;
+let currentAdminTab = 'dashboard';
+let currentParentTab = 'home';
+let selectedParentPlayerId = null;
+
+/* ---------- Sincronización Completa y Extracción Limpia ---------- */
 function descargarDatosDeLaNube() {
   const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
   let descargasCompletadas = 0;
@@ -487,1007 +502,844 @@ function descargarDatosDeLaNube() {
       .then(doc => {
         if (doc.exists && doc.data()) {
           const datosNube = doc.data();
-          
-          // 🎯 ARREGLO CRÍTICO: Forzamos la extracción correcta sin importar si es Array u Objeto
           let datosLimpios = datosNube;
+          
+          // Desenvolvemos la propiedad 'data' de Firebase de forma estricta
           if (datosNube && datosNube.hasOwnProperty('data')) {
             datosLimpios = datosNube.data;
           }
           
           localStorage.setItem('pinar_' + k, JSON.stringify(datosLimpios));
-          console.log(`📥 Descargado ${k} desde la nube con éxito.`);
-        } else {
-          console.log(`ℹ️ ${k} está vacío en la nube. Se mantiene la copia local.`);
+          console.log(`📥 Descargado y limpiado ${k} desde la nube.`);
         }
         
         descargasCompletadas++;
         if (descargasCompletadas === colecciones.length) {
-          console.log("🔄 Todos los datos sincronizados. Renderizando app...");
-          if (typeof render === 'function') render();
-          if (typeof initApp === 'function') initApp();
-          if (typeof showData === 'function') showData();
+          console.log("🔄 Sincronización completa. Actualizando variables globales...");
+          // Forzamos la recarga de las variables en memoria
+          categories = DB.get('categories', []);
+          players    = DB.get('players', []);
+          concepts   = DB.get('concepts', []);
+          payments   = DB.get('payments', []);
+          matches    = DB.get('matches', []);
+          users      = DB.get('users', []);
+          clubConfig = DB.get('config', { iban:'', holder:'', bank:'', concept:'', bizum:'' });
+          
+          initApp();
         }
       })
       .catch(err => {
         console.error(`⚠️ Error al descargar ${k}:`, err.message);
         descargasCompletadas++;
-        if (descargasCompletadas === colecciones.length) {
-          if (typeof render === 'function') render();
-        }
+        if (descargasCompletadas === colecciones.length) initApp();
       });
   });
 }
 
-/* 🎯 FUNCIÓN GLOBAL PARA FORZAR LA SUBIDA MANUAL DESDE EL BOTÓN VERDE */
 function subirTodoALaNube() {
   const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
-  console.log("🚀 Forzando subida masiva de datos locales a Firebase...");
-  
   colecciones.forEach(k => {
     const datosLocales = localStorage.getItem('pinar_' + k);
     if (datosLocales) {
-      const datosParseados = JSON.parse(datosLocales);
+      let parsed = JSON.parse(datosLocales);
+      if (parsed && parsed.hasOwnProperty('data')) parsed = parsed.data;
+      
       db.collection(k).doc('global_data').set({
-        data: datosParseados,
+        data: parsed,
         _lastUpdated: Date.now(),
         _clubId: "pinar-c6165"
-      })
-      .then(() => console.log(`✅ [SUBIDA MANUAL OK] ${k} subido a Firebase.`))
-      .catch(err => console.error(`❌ Error en subida manual de ${k}:`, err.message));
+      });
     }
   });
-  alert("Sincronización manual completada. ¡Los cambios ya están en internet!");
-}
-
-// Arrancamos la descarga al cargar
-descargarDatosDeLaNube();
-/* ---------- estado ---------- */
-let state = {
-  user: null, role: null,
-  categories: [], players: [], concepts: [], payments: [], matches: [], users: [], clubInfo: {},
-  parentSelectedPlayer: null,
-  pendingProofPaymentId: null, currentReviewPayment: null,
-  adminTab: 'dashboard', parentTab: 'home',
-  filters: { playerCat:'', playerSearch:'', payCat:'', payStatus:'' }
-};
-
-/* ---------- helpers ---------- */
-const $ = (id) => document.getElementById(id);
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const moneyFmt = (n) => (Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
-const teamName = (catId) => { const c = state.categories.find(c=>c.id===catId); return c ? `${c.base} ${c.sub||''}`.trim() : 'Sin equipo'; };
-
-function toast(msg, type='info') {
-  const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(()=> t.remove(), 3500);
-}
-function showView(id) { ['view-login','view-admin','view-parent'].forEach(v=> $(v).classList.toggle('hidden', v!==id)); }
-function openModal(id){ $(id).classList.remove('hidden'); }
-function closeModal(id){ $(id).classList.add('hidden'); }
-window.openModal = openModal; window.closeModal = closeModal;
-
-function statusBadge(s) {
-  const map = { pending:['Pendiente','badge-pending'], review:['En revisión','badge-review'], approved:['Aprobado','badge-approved'], rejected:['Rechazado','badge-rejected'] };
-  const [t,c] = map[s]||['?','badge-pending'];
-  return `<span class="badge ${c}">${t}</span>`;
-}
-function roleBadge(role) {
-  const map = { admin:['Admin','badge-approved'], parent:['Padre/Tutor','badge-review'], player:['Jugador','badge-pending'] };
-  const [t,c] = map[role]||['?','badge-pending'];
-  return `<span class="badge ${c}">${t}</span>`;
-}
-
-/* ---------- carga datos ---------- */
-function loadAll() {
-  state.users      = DB.get('users', []);
-  state.categories = DB.get('categories', []);
-  state.players    = DB.get('players', []);
-  state.concepts   = DB.get('concepts', []);
-  state.payments   = DB.get('payments', []);
-  state.matches    = DB.get('matches', []);
-  state.clubInfo   = DB.get('config', {});
-  // crear admin por defecto si no hay
-  if (!state.users.some(u=>u.role==='admin')) {
-    state.users.push({ id: uid(), email:'admin@pinarfs.es', password:'Pinar2026!', name:'Administrador', role:'admin', playerIds:[], createdAt: Date.now() });
-    DB.set('users', state.users);
-  }
-}
-
-/* ════════════════════ AUTH ════════════════════ */
-function doLogin() {
-  const email = $('login-email').value.trim().toLowerCase();
-  const pass  = $('login-password').value;
-  const err = $('login-error');
-  err.classList.add('hidden');
-
-  // 🎯 INYECCIÓN Y DIAGNÓSTICO: Forzamos a la app a leer lo descargado de la nube
-  console.log("=== DIAGNÓSTICO DE LOGIN ===");
-  try {
-    const usuariosDescargados = JSON.parse(localStorage.getItem('pinar_users'));
-    console.log("Usuarios en localStorage:", usuariosDescargados);
-    
-    // Si hay usuarios en el almacenamiento, se los inyectamos al "state"
-    if (usuariosDescargados) {
-      state.users = usuariosDescargados;
-    }
-  } catch(e) {
-    console.error("Error al leer pinar_users:", e.message);
-  }
-  console.log("Usuarios actuales en state.users:", state.users);
-  console.log("============================");
-
-  // Tu código original que busca al usuario
-  const u = state.users.find(x => x.email.toLowerCase() === email && x.password === pass);
-  
-  if (!u) { 
-    err.textContent = 'Email o contraseña incorrectos.'; 
-    err.classList.remove('hidden'); 
-    return; 
-  }
-  
-  state.user = u; 
-  state.role = u.role;
-  DB.set('session', { id: u.id });
-  enterApp();
-}
-function logout() {
-  localStorage.removeItem('pinar_session');
-  state.user = null; state.role = null;
-  showView('view-login');
-}
-window.logout = logout;
-
-function enterApp() {
-  if (state.role === 'admin') {
-    showView('view-admin');
-    $('admin-email-badge').textContent = state.user.email;
-    $('admin-email-badge').classList.remove('hidden');
-    switchAdminTab('dashboard');
-  } else {
-    showView('view-parent');
-    const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-    state.parentSelectedPlayer = myPlayers[0]?.id || null;
-    switchParentTab('home');
-  }
-}
-
-/* ════════════════════ ADMIN: TABS ════════════════════ */
-window.switchAdminTab = (tab) => {
-  state.adminTab = tab;
-  document.querySelectorAll('[data-tab]').forEach(b=> b.classList.toggle('tab-active', b.dataset.tab===tab));
-  document.querySelectorAll('.admin-pane').forEach(p=> p.classList.toggle('hidden', p.id !== 'admin-tab-'+tab));
-  const map = { dashboard: renderDash, categories: renderCategories, players: renderPlayers, concepts: renderConcepts, payments: renderPayments, matches: renderMatches, morosos: renderMorosos, users: renderUsers, config: renderConfig };
-  map[tab] && map[tab]();
-};
-
-/* ---------- Dashboard ---------- */
-function renderDash() {
-  const totalApproved = state.payments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  const totalPending  = state.payments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
-  const numMorosos = new Set(state.payments.filter(p=>p.status!=='approved').map(p=>p.playerId)).size;
-  $('dash-content').innerHTML = `
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Equipos</div><div class="text-3xl font-black text-white">${state.categories.length}</div></div>
-      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Jugadores</div><div class="text-3xl font-black text-white">${state.players.length}</div></div>
-      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Cobrado</div><div class="text-2xl font-black text-green-400">${moneyFmt(totalApproved)}</div></div>
-      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-2xl font-black text-yellow-400">${moneyFmt(totalPending)}</div></div>
-    </div>
-    <div class="card">
-      <h3 class="section-title">Morosos</h3>
-      <p class="text-gray-300">${numMorosos} jugador(es) con pagos pendientes.</p>
-    </div>`;
-}
-
-/* ---------- Equipos ---------- */
-function renderCategories() {
-  if (!state.categories.length) { $('cat-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin equipos. Crea el primero.</p>'; return; }
-  $('cat-list').innerHTML = state.categories.map(c=>`
-    <div class="card">
-      <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(c.base)}</div>
-      <div class="text-2xl font-black text-white tracking-tighter">${escapeHtml(c.sub||'—')}</div>
-      <div class="text-xs text-gray-500 mt-1">${state.players.filter(p=>p.categoryId===c.id).length} jugadores</div>
-      <div class="flex gap-2 mt-4">
-        <button onclick="openEditCategory('${c.id}')" class="btn-secondary flex-1">Editar</button>
-        <button onclick="deleteCategory('${c.id}')" class="btn-danger">🗑</button>
-      </div>
-    </div>`).join('');
-}
-window.openEditCategory = (id) => {
-  const c = id ? state.categories.find(x=>x.id===id) : null;
-  $('cat-form-id').value = c?.id||'';
-  $('cat-base').value = c?.base||'Prebenjamín';
-  $('cat-sub').value = c?.sub||'';
-  openModal('cat-modal');
-};
-window.saveCategoryForm = () => {
-  const id = $('cat-form-id').value;
-  const data = { base: $('cat-base').value, sub: $('cat-sub').value.trim() };
-  if (id) {
-    const i = state.categories.findIndex(x=>x.id===id);
-    state.categories[i] = { ...state.categories[i], ...data };
-  } else {
-    state.categories.push({ id: uid(), ...data });
-  }
-  DB.set('categories', state.categories);
-  closeModal('cat-modal'); renderCategories(); toast('Equipo guardado','success');
-};
-window.deleteCategory = (id) => {
-  if (!confirm('¿Eliminar este equipo?')) return;
-  state.categories = state.categories.filter(x=>x.id!==id);
-  DB.set('categories', state.categories);
-  renderCategories();
-};
-
-/* ---------- Jugadores ---------- */
-function renderPlayers() {
-  // poblar filtros
-  $('player-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('player-cat-filter').value = state.filters.playerCat;
-
-  let list = [...state.players];
-  if (state.filters.playerCat) list = list.filter(p=>p.categoryId===state.filters.playerCat);
-  if (state.filters.playerSearch) {
-    const q = state.filters.playerSearch.toLowerCase();
-    list = list.filter(p=> (p.name||'').toLowerCase().includes(q));
-  }
-  if (!list.length) { $('player-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin jugadores.</p>'; return; }
-  $('player-list').innerHTML = list.map(p=>`
-    <div class="card">
-      <div class="flex items-center gap-3">
-        <img src="${p.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(p.name)+'&background=7f1d1d&color=fff'}" class="w-14 h-14 rounded-xl object-cover" />
-        <div class="flex-1">
-          <div class="text-[10px] font-black uppercase text-green-500">${escapeHtml(teamName(p.categoryId))}</div>
-          <div class="font-black text-white">${escapeHtml(p.name)}</div>
-          <div class="text-[11px] text-gray-500">#${p.dorsal||'S/N'} · ${escapeHtml(p.position||'')}</div>
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-2 mt-3 text-center text-[10px]">
-        <div><div class="text-gray-500">GOL</div><div class="font-black text-white">${p.goals||0}</div></div>
-        <div><div class="text-gray-500">PRE</div><div class="font-black text-white">${p.attPresent||0}</div></div>
-        <div><div class="text-gray-500">FAL</div><div class="font-black text-white">${p.attAbsent||0}</div></div>
-        <div><div class="text-gray-500">LES</div><div class="font-black text-white">${p.attInjured||0}</div></div>
-      </div>
-      <div class="flex gap-2 mt-3">
-        <button onclick="openEditPlayer('${p.id}')" class="btn-secondary flex-1">Editar</button>
-        <button onclick="deletePlayer('${p.id}')" class="btn-danger">🗑</button>
-      </div>
-    </div>`).join('');
-}
-window.openEditPlayer = (id) => {
-  const p = id ? state.players.find(x=>x.id===id) : null;
-  $('pl-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('pl-id').value = p?.id||'';
-  $('pl-name').value = p?.name||'';
-  $('pl-dorsal').value = p?.dorsal||'';
-  $('pl-position').value = p?.position||'Portero';
-  $('pl-category').value = p?.categoryId||(state.categories[0]?.id||'');
-  $('pl-photo').value = p?.photo||'';
-  $('pl-goals').value = p?.goals||0;
-  $('pl-att-present').value = p?.attPresent||0;
-  $('pl-att-absent').value = p?.attAbsent||0;
-  $('pl-att-injured').value = p?.attInjured||0;
-  openModal('player-modal');
-};
-window.savePlayerForm = () => {
-  const data = {
-    name: $('pl-name').value.trim(),
-    dorsal: Number($('pl-dorsal').value)||null,
-    position: $('pl-position').value,
-    categoryId: $('pl-category').value,
-    photo: $('pl-photo').value.trim(),
-    goals: Number($('pl-goals').value)||0,
-    attPresent: Number($('pl-att-present').value)||0,
-    attAbsent: Number($('pl-att-absent').value)||0,
-    attInjured: Number($('pl-att-injured').value)||0
-  };
-  if (!data.name) return toast('Nombre obligatorio','error');
-  const id = $('pl-id').value;
-  if (id) { const i = state.players.findIndex(x=>x.id===id); state.players[i] = { ...state.players[i], ...data }; }
-  else { state.players.push({ id: uid(), ...data }); }
-  DB.set('players', state.players);
-  closeModal('player-modal'); renderPlayers(); toast('Jugador guardado','success');
-};
-window.deletePlayer = (id) => {
-  if (!confirm('¿Eliminar este jugador?')) return;
-  state.players = state.players.filter(x=>x.id!==id);
-  DB.set('players', state.players);
-  renderPlayers();
-};
-
-/* ---------- Conceptos ---------- */
-function renderConcepts() {
-  $('cc-category').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  if (!state.concepts.length) { $('concept-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin conceptos.</p>'; return; }
-  $('concept-list').innerHTML = state.concepts.map(c=>`
-    <div class="card">
-      <div class="text-[10px] font-black text-green-500 uppercase">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.season||'')}</div>
-      <div class="font-black text-white text-lg">${escapeHtml(c.name)}</div>
-      <div class="text-2xl font-black text-white mt-1">${moneyFmt(c.amount)}</div>
-      <div class="text-[11px] text-gray-500 mt-1">Equipo: ${c.categoryId ? escapeHtml(teamName(c.categoryId)) : 'Todos'}</div>
-      ${c.deadline ? `<div class="text-[11px] text-yellow-500 mt-1">Límite: ${c.deadline}</div>` : ''}
-      <div class="flex gap-2 mt-3">
-        <button onclick="openEditConcept('${c.id}')" class="btn-secondary flex-1">Editar</button>
-        <button onclick="deleteConcept('${c.id}')" class="btn-danger">🗑</button>
-      </div>
-    </div>`).join('');
-}
-window.openEditConcept = (id) => {
-  $('cc-category').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  const c = id ? state.concepts.find(x=>x.id===id) : null;
-  $('cc-id').value = c?.id||'';
-  $('cc-month').value = c?.month||1;
-  $('cc-name').value = c?.name||'';
-  $('cc-amount').value = c?.amount||'';
-  $('cc-category').value = c?.categoryId||'';
-  $('cc-season').value = c?.season||'2025-2026';
-  $('cc-deadline').value = c?.deadline||'';
-  openModal('concept-modal');
-};
-window.saveConceptForm = () => {
-  const data = {
-    month: Number($('cc-month').value),
-    name: $('cc-name').value.trim(),
-    amount: Number($('cc-amount').value)||0,
-    categoryId: $('cc-category').value || null,
-    season: $('cc-season').value.trim(),
-    deadline: $('cc-deadline').value
-  };
-  if (!data.name || !data.amount) return toast('Concepto e importe son obligatorios','error');
-  const id = $('cc-id').value;
-  if (id) { const i = state.concepts.findIndex(x=>x.id===id); state.concepts[i] = { ...state.concepts[i], ...data }; }
-  else { state.concepts.push({ id: uid(), ...data }); }
-  DB.set('concepts', state.concepts);
-  closeModal('concept-modal'); renderConcepts(); toast('Concepto guardado','success');
-};
-window.deleteConcept = (id) => {
-  if (!confirm('¿Eliminar este concepto?')) return;
-  state.concepts = state.concepts.filter(x=>x.id!==id);
-  DB.set('concepts', state.concepts);
-  renderConcepts();
-};
-
-/* ---------- Cobros ---------- */
-function renderPayments() {
-  $('pay-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('pay-cat-filter').value = state.filters.payCat;
-  $('pay-status-filter').value = state.filters.payStatus;
-
-  let list = [...state.payments];
-  if (state.filters.payCat) {
-    const playersInCat = state.players.filter(p=>p.categoryId===state.filters.payCat).map(p=>p.id);
-    list = list.filter(p=> playersInCat.includes(p.playerId));
-  }
-  if (state.filters.payStatus) list = list.filter(p=>p.status===state.filters.payStatus);
-
-  const total = list.reduce((s,p)=>s+(p.amount||0),0);
-  const approved = list.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  $('pay-summary').innerHTML = `<div class="grid grid-cols-3 gap-3 mb-6">
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Total</div><div class="text-xl font-black text-white">${moneyFmt(total)}</div></div>
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Aprobado</div><div class="text-xl font-black text-green-400">${moneyFmt(approved)}</div></div>
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(total-approved)}</div></div>
-  </div>`;
-
-  if (!list.length) { $('pay-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin cobros.</p>'; return; }
-  $('pay-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500">
-        <tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Mes/Concepto</th><th class="px-3 py-3 text-right">Importe</th><th class="px-3 py-3 text-center">Estado</th><th class="px-3 py-3 text-center">Acción</th></tr>
-      </thead>
-      <tbody>
-        ${list.map(p=>{
-          const pl = state.players.find(x=>x.id===p.playerId);
-          return `<tr class="border-b border-slate-800">
-            <td class="px-3 py-2 font-bold text-white">${escapeHtml(pl?.name||'(borrado)')}</td>
-            <td class="px-3 py-2 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
-            <td class="px-3 py-2 text-gray-300">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')}</td>
-            <td class="px-3 py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
-            <td class="px-3 py-2 text-center">${statusBadge(p.status)}</td>
-            <td class="px-3 py-2 text-center">
-              ${p.proofData || p.notes ? `<button onclick="openReview('${p.id}')" class="btn-secondary">Ver</button>` : ''}
-              ${p.status!=='approved' ? `<button onclick="markApproved('${p.id}')" class="btn-success ml-1">OK</button>` : ''}
-              <button onclick="deletePayment('${p.id}')" class="btn-danger ml-1">🗑</button>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
-window.openGeneratePayments = () => {
-  $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
-  $('gen-category').innerHTML = '<option value="">Usar el del concepto</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  openModal('gen-modal');
-};
-window.generatePayments = () => {
-  const conceptId = $('gen-concept').value;
-  const overrideCat = $('gen-category').value;
-  const concept = state.concepts.find(c=>c.id===conceptId);
-  if (!concept) return toast('Selecciona un concepto','error');
-  const targetCat = overrideCat || concept.categoryId;
-  const targetPlayers = targetCat ? state.players.filter(p=>p.categoryId===targetCat) : state.players;
-  let created = 0;
-  targetPlayers.forEach(pl=>{
-    const exists = state.payments.some(p=> p.playerId===pl.id && p.conceptId===concept.id);
-    if (exists) return;
-    state.payments.push({
-      id: uid(), playerId: pl.id, conceptId: concept.id, conceptName: concept.name,
-      month: concept.month, amount: concept.amount, season: concept.season,
-      status: 'pending', createdAt: Date.now()
-    });
-    created++;
-  });
-  DB.set('payments', state.payments);
-  closeModal('gen-modal');
-  toast(`${created} cobros generados`, 'success');
-  renderPayments();
-};
-window.markApproved = (id) => {
-  const p = state.payments.find(x=>x.id===id); if (!p) return;
-  p.status='approved'; p.approvedAt = Date.now();
-  DB.set('payments', state.payments); renderPayments(); toast('Pago aprobado','success');
-};
-window.deletePayment = (id) => {
-  if (!confirm('¿Eliminar este cobro?')) return;
-  state.payments = state.payments.filter(x=>x.id!==id);
-  DB.set('payments', state.payments); renderPayments();
-};
-window.openReview = (paymentId) => {
-  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
-  state.currentReviewPayment = paymentId;
-  const pl = state.players.find(x=>x.id===p.playerId);
-  $('review-content').innerHTML = `
-    <div class="space-y-3">
-      <div><span class="text-[10px] font-black text-gray-500 uppercase">Jugador</span><div class="font-bold text-white">${escapeHtml(pl?.name||'')} · ${escapeHtml(teamName(pl?.categoryId))}</div></div>
-      <div><span class="text-[10px] font-black text-gray-500 uppercase">Concepto</span><div class="font-bold text-white">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} · ${moneyFmt(p.amount)}</div></div>
-      <div><span class="text-[10px] font-black text-gray-500 uppercase">Estado</span><div>${statusBadge(p.status)}</div></div>
-      ${p.notes ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Notas del padre</span><div class="text-gray-300 text-sm">${escapeHtml(p.notes)}</div></div>` : ''}
-      ${p.proofData ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Justificante</span><a href="${p.proofData}" target="_blank"><img src="${p.proofData}" class="w-full max-h-96 object-contain rounded-lg border border-slate-700 mt-2" /></a></div>` : '<p class="text-gray-500 text-sm">Sin justificante</p>'}
-    </div>`;
-  openModal('review-modal');
-};
-window.approvePayment = () => {
-  if (!state.currentReviewPayment) return;
-  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
-  p.status='approved'; p.approvedAt=Date.now();
-  DB.set('payments', state.payments);
-  closeModal('review-modal'); renderPayments(); toast('Pago aprobado','success');
-};
-window.rejectPayment = () => {
-  if (!state.currentReviewPayment) return;
-  const reason = prompt('Motivo del rechazo (opcional):','') || '';
-  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
-  p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason;
-  DB.set('payments', state.payments);
-  closeModal('review-modal'); renderPayments(); toast('Pago rechazado','info');
-};
-
-/* ---------- Partidos ---------- */
-function renderMatches() {
-  const list = [...state.matches].sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  if (!list.length) { $('match-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin partidos.</p>'; return; }
-  $('match-list').innerHTML = list.map(m=>`
-    <div class="card flex flex-col md:flex-row md:items-center gap-4">
-      <div class="text-center md:w-24">
-        <div class="text-[10px] font-black text-green-500 uppercase">${m.date||''}</div>
-        <div class="text-2xl font-black text-white">${m.time||''}</div>
-      </div>
-      <div class="flex-1">
-        <div class="text-[10px] font-black text-gray-500 uppercase">${escapeHtml(teamName(m.categoryId))} · ${m.home==='home'?'LOCAL':'VISITANTE'}</div>
-        <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
-        <div class="text-gray-400 text-sm">${escapeHtml(m.location||'')}</div>
-        <div class="text-[10px] text-gray-500 mt-1">Equipación: ${escapeHtml(m.kit||'Titular')}${m.notes?` · ${escapeHtml(m.notes)}`:''}</div>
-      </div>
-      <div class="flex gap-2">
-        <button onclick="openEditMatch('${m.id}')" class="btn-secondary">Editar</button>
-        <button onclick="deleteMatch('${m.id}')" class="btn-danger">🗑</button>
-      </div>
-    </div>`).join('');
-}
-window.openEditMatch = (id) => {
-  const m = id ? state.matches.find(x=>x.id===id) : null;
-  $('mt-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  openModal('match-modal');
-  $('mt-id').value = m?.id||'';
-  $('mt-category').value = m?.categoryId||(state.categories[0]?.id||'');
-  $('mt-date').value = m?.date||'';
-  $('mt-time').value = m?.time||'';
-  $('mt-rival').value = m?.rival||'';
-  $('mt-location').value = m?.location||'';
-  $('mt-address').value = m?.address||'';
-  $('mt-kit').value = m?.kit||'Titular';
-  $('mt-home').value = m?.home||'home';
-  $('mt-notes').value = m?.notes||'';
-};
-window.saveMatchForm = () => {
-  const data = {
-    categoryId: $('mt-category').value, date: $('mt-date').value, time: $('mt-time').value,
-    rival: $('mt-rival').value.trim(), location: $('mt-location').value.trim(), address: $('mt-address').value.trim(),
-    kit: $('mt-kit').value, home: $('mt-home').value, notes: $('mt-notes').value.trim()
-  };
-  if (!data.date) return toast('La fecha es obligatoria','error');
-  const id = $('mt-id').value;
-  if (id) { const i = state.matches.findIndex(x=>x.id===id); state.matches[i] = { ...state.matches[i], ...data }; }
-  else { state.matches.push({ id: uid(), ...data }); }
-  DB.set('matches', state.matches);
-  renderMatches(); closeModal('match-modal'); toast('Partido guardado','success');
-};
-window.deleteMatch = (id) => {
-  if (!confirm('¿Eliminar este partido?')) return;
-  state.matches = state.matches.filter(x=>x.id!==id);
-  DB.set('matches', state.matches); renderMatches();
-};
-
-/* ---------- Morosos ---------- */
-function renderMorosos() {
-  const debts = state.payments.filter(p => p.status !== 'approved');
-  if (!debts.length) { $('morosos-list').innerHTML = '<p class="text-gray-500 text-center py-8">¡Sin morosos! 🎉</p>'; return; }
-  const byPlayer = {};
-  debts.forEach(p => { (byPlayer[p.playerId] = byPlayer[p.playerId]||[]).push(p); });
-  const rows = Object.entries(byPlayer).map(([pid, ps])=>{
-    const pl = state.players.find(x=>x.id===pid);
-    const total = ps.reduce((s,p)=>s+(p.amount||0),0);
-    const conceptList = ps.map(p=>`${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} (${statusBadge(p.status)})`).join('<br/>');
-    return `<tr class="border-b border-slate-800">
-      <td class="px-3 py-3 font-bold text-white">${escapeHtml(pl?.name||'(eliminado)')}</td>
-      <td class="px-3 py-3 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
-      <td class="px-3 py-3 text-sm">${conceptList}</td>
-      <td class="px-3 py-3 text-right font-black text-red-400">${moneyFmt(total)}</td>
-    </tr>`;
-  }).join('');
-  $('morosos-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
-    <table class="w-full">
-      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Pendiente</th><th class="px-3 py-3 text-right">Total</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>`;
-}
-
-/* ---------- Usuarios ---------- */
-function renderUsers() {
-  if (!state.users.length) { $('users-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin usuarios.</p>'; return; }
-  $('users-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Nombre</th><th class="px-3 py-3 text-left">Email</th><th class="px-3 py-3 text-left">Rol</th><th class="px-3 py-3 text-left">Jugadores</th><th class="px-3 py-3 text-center">Acción</th></tr></thead>
-      <tbody>
-        ${state.users.map(u=>{
-          const linked = (u.playerIds||[]).map(pid => state.players.find(p=>p.id===pid)?.name || '(?)').join(', ');
-          return `<tr class="border-b border-slate-800">
-            <td class="px-3 py-2 font-bold text-white">${escapeHtml(u.name||'')}</td>
-            <td class="px-3 py-2 text-gray-400">${escapeHtml(u.email||'')}</td>
-            <td class="px-3 py-2">${roleBadge(u.role)}</td>
-            <td class="px-3 py-2 text-gray-300">${escapeHtml(linked||'—')}</td>
-            <td class="px-3 py-2 text-center">
-              <button onclick="openEditUser('${u.id}')" class="btn-secondary">Editar</button>
-              ${u.id !== state.user.id ? `<button onclick="deleteUserDoc('${u.id}')" class="btn-danger ml-1">🗑</button>` : ''}
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
-window.openEditUser = (id) => {
-  const u = id ? state.users.find(x=>x.id===id) : null;
-  $('us-id').value = u?.id||'';
-  $('us-name').value = u?.name||'';
-  $('us-email').value = u?.email||'';
-  $('us-password').value = u?.password||'';
-  $('us-role').value = u?.role||'parent';
-  $('us-players').innerHTML = state.players.map(p=>`
-    <label class="flex items-center gap-2 text-sm text-gray-300">
-      <input type="checkbox" value="${p.id}" class="us-player-chk accent-green-600" ${u?.playerIds?.includes(p.id)?'checked':''} />
-      ${escapeHtml(p.name)} <span class="text-gray-500 text-xs">· ${escapeHtml(teamName(p.categoryId))}</span>
-    </label>`).join('') || '<p class="text-gray-500 text-xs">Crea primero algún jugador.</p>';
-  openModal('user-modal');
-};
-window.saveUserForm = () => {
-  const id = $('us-id').value;
-  const email = $('us-email').value.trim().toLowerCase();
-  const name = $('us-name').value.trim();
-  const password = $('us-password').value;
-  const role = $('us-role').value;
-  const playerIds = [...document.querySelectorAll('.us-player-chk:checked')].map(i=>i.value);
-  if (!email || !name) return toast('Email y nombre son obligatorios','error');
-  if (!id && password.length < 4) return toast('Contraseña mínima 4 caracteres','error');
-  if (state.users.some(u=> u.email.toLowerCase()===email && u.id!==id)) return toast('Email ya registrado','error');
-  if (id) {
-    const i = state.users.findIndex(x=>x.id===id);
-    state.users[i] = { ...state.users[i], name, email, role, playerIds, ...(password?{password}:{}) };
-  } else {
-    state.users.push({ id: uid(), name, email, password, role, playerIds, createdAt: Date.now() });
-  }
-  DB.set('users', state.users);
-  closeModal('user-modal'); renderUsers(); toast('Usuario guardado','success');
-};
-window.deleteUserDoc = (id) => {
-  if (!confirm('¿Eliminar este usuario?')) return;
-  state.users = state.users.filter(x=>x.id!==id);
-  DB.set('users', state.users); renderUsers();
-};
-
-/* ---------- Config ---------- */
-function renderConfig() {
-  const c = state.clubInfo || {};
-  $('cfg-iban').value = c.iban||'';
-  $('cfg-holder').value = c.holder||'';
-  $('cfg-bank').value = c.bank||'';
-  $('cfg-concept').value = c.concept||'';
-  $('cfg-bizum').value = c.bizum||'';
-}
-window.saveClubConfig = () => {
-  const data = { iban: $('cfg-iban').value.trim(), holder: $('cfg-holder').value.trim(), bank: $('cfg-bank').value.trim(), concept: $('cfg-concept').value.trim(), bizum: $('cfg-bizum').value.trim() };
-  DB.set('config', data); state.clubInfo = data;
-  toast('Configuración guardada','success');
-};
-
-/* ---------- Copia de seguridad ---------- */
-window.exportBackup = () => {
-  const data = {
-    _meta: { app: 'ClubPinarFS', version: 1, exportedAt: new Date().toISOString() },
-    users: state.users,
-    categories: state.categories,
-    players: state.players,
-    concepts: state.concepts,
-    payments: state.payments,
-    matches: state.matches,
-    config: state.clubInfo
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const ts = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
-  a.href = url; a.download = `pinar_backup_${ts}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-  toast('Copia descargada','success');
-};
-
-window.importBackup = (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const data = JSON.parse(reader.result);
-      if (data._meta?.app !== 'ClubPinarFS') {
-        if (!confirm('El archivo no parece una copia de Club Pinar FS. ¿Importar de todos modos?')) return;
-      }
-      if (!confirm('Esto SOBRESCRIBIRÁ todos los datos actuales (usuarios, jugadores, cobros...). ¿Continuar?')) return;
-      if (Array.isArray(data.users))      { state.users = data.users;           DB.set('users', state.users); }
-      if (Array.isArray(data.categories)) { state.categories = data.categories; DB.set('categories', state.categories); }
-      if (Array.isArray(data.players))    { state.players = data.players;       DB.set('players', state.players); }
-      if (Array.isArray(data.concepts))   { state.concepts = data.concepts;     DB.set('concepts', state.concepts); }
-      if (Array.isArray(data.payments))   { state.payments = data.payments;     DB.set('payments', state.payments); }
-      if (Array.isArray(data.matches))    { state.matches = data.matches;       DB.set('matches', state.matches); }
-      if (data.config && typeof data.config === 'object') { state.clubInfo = data.config; DB.set('config', state.clubInfo); }
-      $('backup-info').textContent = `Importado: ${state.users.length} usuarios · ${state.players.length} jugadores · ${state.payments.length} cobros · ${state.matches.length} partidos`;
-      toast('Copia importada. Vuelve a iniciar sesión.','success');
-      setTimeout(()=> logout(), 1500);
-    } catch(err) {
-      toast('Archivo inválido: '+err.message,'error');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-};
-
-window.wipeAll = () => {
-  if (!confirm('⚠️ Esto borra TODOS los datos (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
-  if (!confirm('⚠️ ¿Borrar ABSOLUTAMENTE TODO? Esta acción es irreversible y eliminará jugadores, pagos y usuarios.')) return;
-  localStorage.clear();
+  alert("¡Nube actualizada! Reinicia la app en el móvil de los padres para ver los cambios.");
   location.reload();
-};
-
-/* ---------- Export Excel ---------- */
-window.exportPlayers = () => {
-  const rows = state.players.map(p => ({ 
-    Nombre: p.name, 
-    Dorsal: p.dorsal, 
-    Equipo: teamName(p.categoryId), 
-    Goles: p.goals || 0 
-  }));
-  downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
-};
-
-window.exportPayments = () => {
-  const rows = state.payments.map(p => { 
-    const pl = state.players.find(x => x.id === p.playerId); 
-    return { 
-      Jugador: pl?.name || '', 
-      Mes: MONTH_NAMES[(p.month || 1) - 1], 
-      Concepto: p.conceptName || '', 
-      Importe: p.amount || 0, 
-      Estado: p.status 
-    }; 
-  });
-  downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
-};
-
-function downloadXlsx(rows, filename, sheet) {
-  if (!rows.length) return toast('Sin datos para exportar', 'info');
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet);
-  XLSX.writeFile(wb, filename);
 }
 
-window.wipeAll = () => {
-  if (!confirm('⚠️ Esto borra TODOS los datos (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
-  if (!confirm('Última oportunidad. ¿Confirmas que quieres borrar TODO?')) return;
-  ['users','categories','players','concepts','payments','matches','config','session'].forEach(k => localStorage.removeItem('pinar_'+k));
-  toast('Todo borrado','info');
-  setTimeout(()=> location.reload(), 800);
-};
-
-/* ---------- Export Excel ---------- */
-window.exportPlayers = () => {
-  const rows = state.players.map(p=>({ Nombre: p.name, Dorsal: p.dorsal, Posición: p.position, Equipo: teamName(p.categoryId), Goles: p.goals||0, Presencias: p.attPresent||0, Faltas: p.attAbsent||0, Lesiones: p.attInjured||0 }));
-  downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
-};
-window.exportPayments = () => {
-  const rows = state.payments.map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status, Notas: p.notes||'' }; });
-  downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
-};
-window.exportMorosos = () => {
-  const rows = state.payments.filter(p=>p.status!=='approved').map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status }; });
-  downloadXlsx(rows, 'morosos_pinar.xlsx', 'Morosos');
-};
-function downloadXlsx(rows, filename, sheet) {
-  if (!rows.length) return toast('Sin datos para exportar','info');
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet);
-  XLSX.writeFile(wb, filename);
-}
-
-/* ════════════════════ PARENT ════════════════════ */
-window.switchParentTab = (tab) => {
-  state.parentTab = tab;
-  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.pane===tab));
-  document.querySelectorAll('.parent-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'parent-pane-'+tab));
-  const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-  if (myPlayers.length>1) {
-    const sel = $('parent-player-select');
-    sel.innerHTML = myPlayers.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${escapeHtml(teamName(p.categoryId))}</option>`).join('');
-    sel.value = state.parentSelectedPlayer || myPlayers[0].id;
-    $('parent-player-selector').classList.remove('hidden');
-    sel.onchange = (e)=>{ state.parentSelectedPlayer = e.target.value; switchParentTab(state.parentTab); };
-  }
-  const map = { home: renderParentHome, payments: renderParentPayments, matches: renderParentMatches, history: renderParentHistory, bank: renderParentBank };
-  map[tab] && map[tab]();
-};
-function currentParentPlayer() {
-  const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-  return myPlayers.find(p=>p.id===state.parentSelectedPlayer) || myPlayers[0];
-}
-function renderParentHome() {
-  const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-home').innerHTML = '<div class="card text-center py-12"><p class="text-gray-400 font-bold">Tu cuenta aún no está vinculada a ningún jugador.</p><p class="text-gray-500 text-xs mt-2">Contacta con el administrador.</p></div>'; return; }
-  const myPayments = state.payments.filter(p=>p.playerId===pl.id);
-  const nextPending = myPayments.filter(p=>p.status!=='approved').sort((a,b)=>(a.month||0)-(b.month||0))[0];
-  const upcomingMatch = state.matches.filter(m=>m.categoryId===pl.categoryId && m.date && new Date(m.date+'T'+(m.time||'23:59'))>=new Date()).sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0];
-  const totalPendiente = myPayments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
-  const totalPagado = myPayments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  $('parent-pane-home').innerHTML = `
-    <div class="card mb-4 flex items-center gap-4">
-      <img src="${pl.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(pl.name)+'&background=7f1d1d&color=fff'}" class="w-16 h-16 rounded-2xl object-cover" />
-      <div>
-        <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(teamName(pl.categoryId))}</div>
-        <h2 class="text-2xl font-black text-white tracking-tight">${escapeHtml(pl.name)}</h2>
-        <div class="text-[11px] text-gray-500">#${pl.dorsal||'S/N'} · ${escapeHtml(pl.position||'')}</div>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pagado</div><div class="text-xl font-black text-green-400">${moneyFmt(totalPagado)}</div></div>
-      <div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(totalPendiente)}</div></div>
-    </div>
-    ${nextPending ? `<div class="card border-l-4 border-l-yellow-500 mb-4">
-      <div class="text-[10px] font-black text-yellow-500 uppercase tracking-widest mb-1">Próximo Pago</div>
-      <div class="flex justify-between items-center">
-        <div>
-          <div class="font-black text-white text-lg">${escapeHtml(nextPending.conceptName)}</div>
-          <div class="text-[10px] text-gray-500">${MONTH_NAMES[(nextPending.month||1)-1]} · ${statusBadge(nextPending.status)}</div>
-        </div>
-        <div class="text-2xl font-black text-white">${moneyFmt(nextPending.amount)}</div>
-      </div>
-      ${nextPending.status==='pending' || nextPending.status==='rejected' ? `<button onclick="openProof('${nextPending.id}')" class="w-full btn-primary mt-3">Subir Justificante</button>` : ''}
-    </div>` : `<div class="card text-center mb-4"><p class="text-green-400 font-black">¡Estás al corriente! 🎉</p></div>`}
-    ${upcomingMatch ? `<div class="card border-l-4 border-l-green-600 mb-4">
-      <div class="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">Próximo Partido</div>
-      <div class="font-black text-white text-lg">vs ${escapeHtml(upcomingMatch.rival||'?')} (${upcomingMatch.home==='home'?'Local':'Visitante'})</div>
-      <div class="text-sm text-gray-300">${upcomingMatch.date} · ${upcomingMatch.time||''}</div>
-      <div class="text-[11px] text-gray-500 mt-1">${escapeHtml(upcomingMatch.location||'')}</div>
-      <div class="text-[11px] text-gray-500 mt-1">Equipación: <span class="text-white font-bold">${escapeHtml(upcomingMatch.kit||'Titular')}</span></div>
-    </div>` : ''}`;
-}
-function renderParentPayments() {
-  const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-payments').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-  const myPayments = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=>(a.month||0)-(b.month||0));
-  if (!myPayments.length) { $('parent-pane-payments').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin cobros generados aún.</p></div>'; return; }
-  $('parent-pane-payments').innerHTML = myPayments.map(p=>`
-    <div class="card mb-3">
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${MONTH_NAMES[(p.month||1)-1]}</div>
-          <div class="font-black text-white text-lg">${escapeHtml(p.conceptName||'')}</div>
-          <div class="mt-1">${statusBadge(p.status)}</div>
-          ${p.rejectionReason ? `<div class="text-[11px] text-red-400 mt-1">Rechazo: ${escapeHtml(p.rejectionReason)}</div>` : ''}
-        </div>
-        <div class="text-right"><div class="text-2xl font-black text-white">${moneyFmt(p.amount)}</div></div>
-      </div>
-      ${p.proofData ? `<a href="${p.proofData}" target="_blank" class="block mt-3"><img src="${p.proofData}" class="rounded-lg max-h-48 object-contain border border-slate-700" /></a>` : ''}
-      ${p.status!=='approved' ? `<button onclick="openProof('${p.id}')" class="w-full btn-primary mt-3">${p.proofData?'Reemplazar Justificante':'Subir Justificante'}</button>` : ''}
-    </div>`).join('');
-}
-function renderParentMatches() {
-  const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-matches').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-  const list = state.matches.filter(m=>m.categoryId===pl.categoryId).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  if (!list.length) { $('parent-pane-matches').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">No hay partidos.</p></div>'; return; }
-  $('parent-pane-matches').innerHTML = list.map(m=>{
-    const past = m.date && new Date(m.date+'T'+(m.time||'23:59'))<new Date();
-    return `<div class="card mb-3 ${past?'opacity-60':''}">
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="text-[10px] font-black ${past?'text-gray-500':'text-green-500'} uppercase tracking-widest">${m.date} · ${m.time||''}</div>
-          <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
-          <div class="text-[11px] text-gray-500">${m.home==='home'?'Local':'Visitante'} · Equipación ${escapeHtml(m.kit||'Titular')}</div>
-        </div>
-      </div>
-      <div class="mt-2 text-sm text-gray-300">${escapeHtml(m.location||'')}</div>
-      ${m.notes ? `<div class="text-[11px] text-gray-500 mt-2">${escapeHtml(m.notes)}</div>` : ''}
-    </div>`;
-  }).join('');
-}
-function renderParentHistory() {
-  const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-history').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-  const list = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
-  if (!list.length) { $('parent-pane-history').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin historial.</p></div>'; return; }
-  $('parent-pane-history').innerHTML = `<div class="card overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead><tr class="text-[10px] font-black uppercase text-gray-500"><th class="py-2 text-left">Concepto</th><th class="py-2 text-left">Mes</th><th class="py-2 text-right">Importe</th><th class="py-2 text-center">Estado</th></tr></thead>
-      <tbody>
-        ${list.map(p=>`<tr class="border-t border-slate-800">
-          <td class="py-2 font-bold text-white">${escapeHtml(p.conceptName||'')}</td>
-          <td class="py-2 text-gray-400">${MONTH_NAMES[(p.month||1)-1]}</td>
-          <td class="py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
-          <td class="py-2 text-center">${statusBadge(p.status)}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
-function renderParentBank() {
-  const c = state.clubInfo || {};
-  $('parent-pane-bank').innerHTML = `<div class="card">
-    <h3 class="section-title">💳 Datos para el Pago</h3>
-    ${c.iban ? `<div class="mb-4"><div class="text-[10px] font-black uppercase text-gray-500">IBAN</div>
-      <div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.iban)}</code><button onclick="copyText('${escapeHtml(c.iban)}')" class="btn-secondary">Copiar</button></div></div>` : ''}
-    ${c.holder ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Titular</div><div class="text-white font-bold">${escapeHtml(c.holder)}</div></div>` : ''}
-    ${c.bank ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Banco</div><div class="text-white">${escapeHtml(c.bank)}</div></div>` : ''}
-    ${c.concept ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Concepto</div><div class="text-white">${escapeHtml(c.concept)}</div></div>` : ''}
-    ${c.bizum ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Bizum</div><div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.bizum)}</code><button onclick="copyText('${escapeHtml(c.bizum)}')" class="btn-secondary">Copiar</button></div></div>` : ''}
-    ${!c.iban && !c.bizum ? '<p class="text-gray-500 text-sm text-center py-4">El club aún no ha configurado los datos bancarios.</p>' : ''}
-    <div class="mt-6 p-3 bg-blue-900/20 border border-blue-800 rounded-lg text-[11px] text-blue-300">
-      💡 Tras pagar, ve a <b>Pagos</b> y sube la foto del justificante.
-    </div>
-  </div>`;
-}
-window.copyText = (t) => { navigator.clipboard.writeText(t).then(()=> toast('Copiado','success')); };
-
-/* ---------- Subir justificante (base64) ---------- */
-window.openProof = (paymentId) => {
-  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
-  state.pendingProofPaymentId = paymentId;
-  $('proof-payment-id').value = paymentId;
-  $('proof-info').textContent = `${MONTH_NAMES[(p.month||1)-1]} · ${p.conceptName} · ${moneyFmt(p.amount)}`;
-  $('proof-file').value = '';
-  $('proof-notes').value = p.notes||'';
-  openModal('proof-modal');
-};
-window.submitProof = async () => {
-  const paymentId = state.pendingProofPaymentId;
-  const file = $('proof-file').files[0];
-  const notes = $('proof-notes').value.trim();
-  
-  if (!file && !notes) return toast('Adjunta una foto o añade una nota', 'error');
-  
-  const p = state.payments.find(x => x.id === paymentId); 
-  if (!p) return;
-  
-  p.status = 'review'; 
-  p.notes = notes; 
-  p.submittedAt = Date.now();
-  
-  if (file) {
-    try {
-      const dataUrl = await fileToBase64Resized(file, 1200, 0.8);
-      p.proofData = dataUrl;
-    } catch(e) {
-      return toast('Error al procesar imagen: ' + e.message, 'error');
+/* ---------- Autenticación y Arranque ---------- */
+function initApp() {
+  const session = localStorage.getItem('pinar_session');
+  if (session) {
+    currentUser = JSON.parse(session);
+    showView(currentUser.role === 'admin' ? 'view-admin' : 'view-parent');
+    if (currentUser.role === 'admin') {
+      document.getElementById('admin-email-badge').innerText = currentUser.email.toUpperCase();
+      switchAdminTab(currentAdminTab);
+    } else {
+      initParentView();
     }
-  }
-  
-  // 1. Guardamos en el almacenamiento
-  DB.set('payments', state.payments);
-  closeModal('proof-modal'); 
-  toast('Justificante guardado localmente.', 'success');
-  switchParentTab(state.parentTab);
-
-  // 2. ¡ENVÍO DEL CORREO AL CLUB!
-  const pl = state.players.find(x => x.id === p.playerId);
-  
-  // Preparamos los datos exactos que leerá tu plantilla de EmailJS
-  const emailParams = {
-    jugador: pl ? pl.name : 'Desconocido',
-    equipo: teamName(pl?.categoryId),
-    mes: MONTH_NAMES[(p.month || 1) - 1],
-    concepto: p.conceptName || 'Mensualidad',
-    importe: moneyFmt(p.amount),
-    notas: notes || 'Sin notas adicionales.',
-    justificante: p.proofData || 'No se adjuntó imagen (solo nota).' 
-  };
-
-  // Enviamos el correo usando EmailJS
-  emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', emailParams)
-    .then(() => {
-      toast('📧 Notificación enviada al correo del club.', 'success');
-    })
-    .catch((err) => {
-      console.error('Error EmailJS:', err);
-      toast('Justificante guardado, pero falló el envío del correo.', 'error');
-    });
-};
-function fileToBase64Resized(file, maxDim, quality) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          const r = Math.min(maxDim/width, maxDim/height);
-          width = Math.round(width*r); height = Math.round(height*r);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-/* ════════════════════ INIT ════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  loadAll();
-
-  // sesión persistente
-  const sess = DB.get('session', null);
-  if (sess?.id) {
-    const u = state.users.find(x=>x.id===sess.id);
-    if (u) { state.user = u; state.role = u.role; enterApp(); }
-    else showView('view-login');
   } else {
     showView('view-login');
   }
+}
 
-  // listeners
-  $('btn-login').addEventListener('click', doLogin);
-  $('login-password').addEventListener('keypress', e => { if (e.key==='Enter') doLogin(); });
-  $('player-search').addEventListener('input', e => { state.filters.playerSearch = e.target.value; renderPlayers(); });
-  $('player-cat-filter').addEventListener('change', e => { state.filters.playerCat = e.target.value; renderPlayers(); });
-  $('pay-cat-filter').addEventListener('change', e => { state.filters.payCat = e.target.value; renderPayments(); });
-  $('pay-status-filter').addEventListener('change', e => { state.filters.payStatus = e.target.value; renderPayments(); });
+document.getElementById('btn-login').addEventListener('click', () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const errDiv = document.getElementById('login-error');
+  errDiv.classList.add('hidden');
+
+  if(email === 'admin@pinarfs.es' && pass === 'Pinar2026!') {
+    currentUser = { id:'admin', email, role:'admin', name:'Administrador' };
+    localStorage.setItem('pinar_session', JSON.stringify(currentUser));
+    showView('view-admin');
+    switchAdminTab('dashboard');
+    return;
+  }
+
+  // Login de Familias
+  const u = users.find(x => x.email.toLowerCase() === email.toLowerCase() && x.password === pass);
+  if(u) {
+    currentUser = u;
+    localStorage.setItem('pinar_session', JSON.stringify(currentUser));
+    showView('view-parent');
+    initParentView();
+  } else {
+    errDiv.innerText = "Credenciales incorrectas o usuario no registrado.";
+    errDiv.classList.remove('hidden');
+  }
 });
+
+function logout() {
+  localStorage.removeItem('pinar_session');
+  currentUser = null;
+  showView('view-login');
+}
+
+function showView(id) {
+  ['view-login', 'view-admin', 'view-parent'].forEach(v => document.getElementById(v).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+/* ---------- Auxiliares de Datos Corregidos ---------- */
+function getPlayerCategoryName(catId) {
+  if(!catId) return "Sin Equipo";
+  const c = categories.find(x => x.id === catId);
+  return c ? `${c.base} ${c.sub || ''}`.trim() : "Sin Equipo";
+}
+
+function updateCategoryDropdowns() {
+  const selects = ['player-cat-filter', 'pl-category', 'cc-category', 'gen-category', 'mt-category', 'pay-cat-filter'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const valPrevio = el.value;
+    el.innerHTML = '';
+    
+    if(['player-cat-filter', 'pay-cat-filter'].includes(id)) {
+      el.innerHTML = '<option value="">Todos los equipos</option>';
+    } else if(['cc-category', 'gen-category'].includes(id)) {
+      el.innerHTML = '<option value="">Todos los equipos</option>';
+    } else {
+      el.innerHTML = '<option value="">-- Seleccionar Equipo --</option>';
+    }
+
+    categories.forEach(c => {
+      el.innerHTML += `<option value="${c.id}">${c.base} ${c.sub || ''}</option>`;
+    });
+    if(valPrevio) el.value = valPrevio;
+  });
+}
+
+/* ---------- Vistas de Administración ---------- */
+function switchAdminTab(tab) {
+  currentAdminTab = tab;
+  document.querySelectorAll('.admin-pane').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+  
+  const activePane = document.getElementById(`admin-tab-${tab}`);
+  if(activePane) activePane.classList.remove('hidden');
+  
+  const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+  if(activeBtn) activeBtn.classList.add('tab-active');
+
+  updateCategoryDropdowns();
+  renderAdminData();
+}
+
+function renderAdminData() {
+  if(currentAdminTab === 'dashboard') renderDashboard();
+  if(currentAdminTab === 'categories') renderCategories();
+  if(currentAdminTab === 'players') renderPlayers();
+  if(currentAdminTab === 'concepts') renderConcepts();
+  if(currentAdminTab === 'payments') renderPayments();
+  if(currentAdminTab === 'matches') renderMatches();
+  if(currentAdminTab === 'users') renderUsers();
+}
+
+// --- Gestión de Equipos ---
+function renderCategories() {
+  const container = document.getElementById('cat-list');
+  container.innerHTML = '';
+  if(categories.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-xs">No hay equipos creados todavía.</p>';
+    return;
+  }
+  categories.forEach(c => {
+    const count = players.filter(p => p.categoryId === c.id).length;
+    container.innerHTML += `
+      <div class="card flex flex-col justify-between">
+        <div>
+          <span class="badge badge-pending mb-2 block w-fit">ID: ${c.id}</span>
+          <h4 class="text-xl font-black italic uppercase">${c.base} ${c.sub || ''}</h4>
+          <p class="text-xs text-gray-400 mt-1">${count} Jugadores asignados</p>
+        </div>
+        <div class="flex gap-2 mt-4 pt-4 border-t border-slate-800">
+          <button onclick="openEditCategory('${c.id}')" class="text-xs font-bold text-blue-400 hover:underline">Editar</button>
+          <button onclick="deleteCategory('${c.id}')" class="text-xs font-bold text-red-400 hover:underline ml-auto">Eliminar</button>
+        </div>
+      </div>`;
+  });
+}
+
+function openEditCategory(id) {
+  document.getElementById('cat-form-id').value = id || '';
+  if(id) {
+    const c = categories.find(x => x.id === id);
+    document.getElementById('cat-base').value = c.base;
+    document.getElementById('cat-sub').value = c.sub || '';
+  } else {
+    document.getElementById('cat-base').value = 'Prebenjamín';
+    document.getElementById('cat-sub').value = '';
+  }
+  document.getElementById('cat-modal').classList.remove('hidden');
+}
+
+function saveCategoryForm() {
+  const id = document.getElementById('cat-form-id').value;
+  const base = document.getElementById('cat-base').value;
+  const sub = document.getElementById('cat-sub').value.trim();
+
+  if(id) {
+    const idx = categories.findIndex(x => x.id === id);
+    if(idx !== -1) categories[idx] = { ...categories[idx], base, sub };
+  } else {
+    categories.push({ id: 'cat-' + uid(), base, sub });
+  }
+  DB.set('categories', categories);
+  closeModal('cat-modal');
+  renderCategories();
+}
+
+function deleteCategory(id) {
+  if(!confirm("¿Seguro que quieres eliminar este equipo? Los niños se quedarán sin equipo asignado.")) return;
+  categories = categories.filter(x => x.id !== id);
+  players.forEach(p => { if(p.categoryId === id) p.categoryId = ''; });
+  DB.set('categories', categories);
+  DB.set('players', players);
+  renderCategories();
+}
+
+// --- Gestión de Plantillas ---
+function renderPlayers() {
+  const container = document.getElementById('player-list');
+  container.innerHTML = '';
+  const search = document.getElementById('player-search').value.toLowerCase();
+  const filterCat = document.getElementById('player-cat-filter').value;
+
+  const filtered = players.filter(p => {
+    const mSearch = p.name.toLowerCase().includes(search);
+    const mCat = !filterCat || p.categoryId === filterCat;
+    return mSearch && mCat;
+  });
+
+  filtered.forEach(p => {
+    container.innerHTML += `
+      <div class="card flex gap-4 items-center">
+        <img src="${p.photo || 'https://via.placeholder.com/80/1e293b/ffffff?text=' + p.name[0]}" class="w-16 h-16 rounded-xl object-cover bg-slate-800" />
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-black text-green-500">#${p.dorsal || '0'}</span>
+            <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">${p.position || 'Pista'}</span>
+          </div>
+          <h4 class="font-black text-sm truncate uppercase mt-0.5">${p.name}</h4>
+          <p class="text-[11px] text-gray-400 truncate">${getPlayerCategoryName(p.categoryId)}</p>
+          <div class="flex gap-3 mt-2 text-[10px] text-gray-500">
+            <span>⚽ <b>${p.goals || 0}</b></span>
+            <span>⏱ <b>${p.attendance?.present || 0}</b></span>
+          </div>
+        </div>
+        <button onclick="openEditPlayer('${p.id}')" class="text-xs font-bold text-blue-400 hover:underline">Editar</button>
+      </div>`;
+  });
+}
+
+document.getElementById('player-search').addEventListener('input', renderPlayers);
+document.getElementById('player-cat-filter').addEventListener('change', renderPlayers);
+
+function openEditPlayer(id) {
+  document.getElementById('pl-id').value = id || '';
+  updateCategoryDropdowns();
+  
+  if(id) {
+    const p = players.find(x => x.id === id);
+    document.getElementById('pl-name').value = p.name;
+    document.getElementById('pl-dorsal').value = p.dorsal || '';
+    document.getElementById('pl-position').value = p.position || 'Portero';
+    document.getElementById('pl-category').value = p.categoryId || '';
+    document.getElementById('pl-photo').value = p.photo || '';
+    document.getElementById('pl-goals').value = p.goals || 0;
+    document.getElementById('pl-att-present').value = p.attendance?.present || 0;
+    document.getElementById('pl-att-absent').value = p.attendance?.absent || 0;
+    document.getElementById('pl-att-injured').value = p.attendance?.injured || 0;
+  } else {
+    document.getElementById('pl-name').value = '';
+    document.getElementById('pl-dorsal').value = '';
+    document.getElementById('pl-category').value = '';
+    document.getElementById('pl-photo').value = '';
+    document.getElementById('pl-goals').value = 0;
+    document.getElementById('pl-att-present').value = 0;
+    document.getElementById('pl-att-absent').value = 0;
+    document.getElementById('pl-att-injured').value = 0;
+  }
+  document.getElementById('player-modal').classList.remove('hidden');
+}
+
+function savePlayerForm() {
+  const id = document.getElementById('pl-id').value;
+  const rawData = {
+    name: document.getElementById('pl-name').value.trim(),
+    dorsal: parseInt(document.getElementById('pl-dorsal').value) || 0,
+    position: document.getElementById('pl-position').value,
+    categoryId: document.getElementById('pl-category').value,
+    photo: document.getElementById('pl-photo').value.trim(),
+    goals: parseInt(document.getElementById('pl-goals').value) || 0,
+    attendance: {
+      present: parseInt(document.getElementById('pl-att-present').value) || 0,
+      absent: parseInt(document.getElementById('pl-att-absent').value) || 0,
+      injured: parseInt(document.getElementById('pl-att-injured').value) || 0,
+    }
+  };
+
+  if(!rawData.name) return alert("El nombre es obligatorio.");
+
+  if(id) {
+    const idx = players.findIndex(x => x.id === id);
+    if(idx !== -1) players[idx] = { ...players[idx], ...rawData };
+  } else {
+    players.push({ id: 'ply-' + uid(), ...rawData });
+  }
+  
+  DB.set('players', players);
+  closeModal('player-modal');
+  renderPlayers();
+}
+
+// --- Resto de Funciones de Gestión Estándar (Resumen) ---
+function renderDashboard() {
+  const container = document.getElementById('dash-content');
+  const totalRecaudado = payments.filter(p => p.status === 'approved').reduce((acc, p) => acc + p.amount, 0);
+  const totalPendiente = payments.filter(p => p.status === 'pending' || p.status === 'review').reduce((acc, p) => acc + p.amount, 0);
+  
+  container.innerHTML = `
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="card text-center"><p class="text-[10px] uppercase font-black text-gray-500">Jugadores</p><p class="text-3xl font-black mt-1">${players.length}</p></div>
+      <div class="card text-center"><p class="text-[10px] uppercase font-black text-gray-500">Equipos</p><p class="text-3xl font-black mt-1">${categories.length}</p></div>
+      <div class="card text-center"><p class="text-[10px] uppercase font-black text-green-500">Cobrado</p><p class="text-3xl font-black mt-1 text-green-500">${totalRecaudado.toFixed(2)}€</p></div>
+      <div class="card text-center"><p class="text-[10px] uppercase font-black text-red-400">Pendiente</p><p class="text-3xl font-black mt-1 text-red-400">${totalPendiente.toFixed(2)}€</p></div>
+    </div>`;
+}
+
+function renderConcepts() {
+  const container = document.getElementById('concept-list');
+  container.innerHTML = '';
+  concepts.forEach(c => {
+    container.innerHTML += `
+      <div class="card">
+        <div class="flex justify-between items-start">
+          <span class="badge badge-approved">${MONTH_NAMES[c.month-1]}</span>
+          <span class="text-lg font-black">${c.amount.toFixed(2)}€</span>
+        </div>
+        <h4 class="font-black mt-2 uppercase text-sm">${c.name}</h4>
+        <p class="text-xs text-gray-400 mt-1">Filtro: ${getPlayerCategoryName(c.categoryId)}</p>
+        <button onclick="deleteConcept('${c.id}')" class="text-xs font-bold text-red-400 hover:underline mt-4 block">Eliminar</button>
+      </div>`;
+  });
+}
+
+function openEditConcept(id) {
+  document.getElementById('cc-id').value = '';
+  document.getElementById('cc-name').value = '';
+  document.getElementById('cc-amount').value = '';
+  updateCategoryDropdowns();
+  document.getElementById('concept-modal').classList.remove('hidden');
+}
+
+function saveConceptForm() {
+  const name = document.getElementById('cc-name').value.trim();
+  const amount = parseFloat(document.getElementById('cc-amount').value) || 0;
+  const month = parseInt(document.getElementById('cc-month').value);
+  const categoryId = document.getElementById('cc-category').value;
+  
+  if(!name || amount <= 0) return alert("Rellena los datos correctamente.");
+  
+  concepts.push({ id:'con-'+uid(), name, amount, month, categoryId });
+  DB.set('concepts', concepts);
+  closeModal('concept-modal');
+  renderConcepts();
+}
+
+function deleteConcept(id) {
+  concepts = concepts.filter(c => c.id !== id);
+  DB.set('concepts', concepts);
+  renderConcepts();
+}
+
+function openGeneratePayments() {
+  const sel = document.getElementById('gen-concept');
+  sel.innerHTML = '';
+  concepts.forEach(c => {
+    sel.innerHTML += `<option value="${c.id}">${c.name} (${c.amount}€)</option>`;
+  });
+  updateCategoryDropdowns();
+  document.getElementById('gen-modal').classList.remove('hidden');
+}
+
+function generatePayments() {
+  const conceptId = document.getElementById('gen-concept').value;
+  const c = concepts.find(x => x.id === conceptId);
+  if(!c) return;
+
+  const targetCatId = document.getElementById('gen-category').value || c.categoryId;
+  const kids = targetCatId ? players.filter(p => p.categoryId === targetCatId) : players;
+
+  let creados = 0;
+  kids.forEach(k => {
+    const existe = payments.some(p => p.playerId === k.id && p.conceptName === c.name && p.month === c.month);
+    if(!existe) {
+      payments.push({
+        id: 'pay-'+uid(),
+        playerId: k.id,
+        playerName: k.name,
+        categoryId: k.categoryId,
+        conceptName: c.name,
+        amount: c.amount,
+        month: c.month,
+        status: 'pending',
+        proofUrl: null,
+        notes: ''
+      });
+      creados++;
+    }
+  });
+
+  DB.set('payments', payments);
+  closeModal('gen-modal');
+  alert(`Se han generado ${creados} nuevos cobros.`);
+  renderPayments();
+}
+
+function renderPayments() {
+  const container = document.getElementById('pay-list');
+  container.innerHTML = '';
+  const catFilter = document.getElementById('pay-cat-filter').value;
+  const statusFilter = document.getElementById('pay-status-filter').value;
+
+  const filtered = payments.filter(p => {
+    const mCat = !catFilter || p.categoryId === catFilter;
+    const mStat = !statusFilter || p.status === statusFilter;
+    return mCat && mStat;
+  });
+
+  if(filtered.length === 0) {
+    container.innerHTML = '<p class="text-xs text-gray-500">Ningún recibo coincide con los filtros.</p>';
+    return;
+  }
+
+  filtered.forEach(p => {
+    let badgeClass = 'badge-pending';
+    if(p.status === 'review') badgeClass = 'badge-review';
+    if(p.status === 'approved') badgeClass = 'badge-approved';
+    if(p.status === 'rejected') badgeClass = 'badge-rejected';
+
+    container.innerHTML += `
+      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2">
+        <div>
+          <span class="badge ${badgeClass} uppercase text-[9px]">${p.status}</span>
+          <h4 class="font-bold text-sm mt-1">${p.playerName}</h4>
+          <p class="text-xs text-gray-400">${p.conceptName} · ${MONTH_NAMES[p.month-1]}</p>
+        </div>
+        <div class="text-right flex items-center gap-4">
+          <span class="font-black text-sm">${p.amount.toFixed(2)}€</span>
+          ${p.status === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3">Revisar</button>` : ''}
+          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:underline">🗑</button>
+        </div>
+      </div>`;
+  });
+}
+document.getElementById('pay-cat-filter')?.addEventListener('change', renderPayments);
+document.getElementById('pay-status-filter')?.addEventListener('change', renderPayments);
+
+function deletePayment(id) {
+  if(!confirm("¿Borrar este registro de cobro?")) return;
+  payments = payments.filter(p => p.id !== id);
+  DB.set('payments', payments);
+  renderPayments();
+}
+
+let activeReviewId = null;
+function openReview(id) {
+  activeReviewId = id;
+  const p = payments.find(x => x.id === id);
+  const content = document.getElementById('review-content');
+  content.innerHTML = `
+    <p class="text-sm mb-2"><b>Jugador:</b> ${p.playerName}</p>
+    <p class="text-sm mb-2"><b>Concepto:</b> ${p.conceptName} (${p.amount}€)</p>
+    ${p.notes ? `<p class="text-xs bg-slate-900 p-2 rounded mb-3 text-yellow-400"><b>Nota del padre:</b> ${p.notes}</p>` : ''}
+    <img src="${p.proofUrl}" class="w-full h-auto rounded-lg border border-slate-800 object-contain max-h-96" />`;
+  document.getElementById('review-modal').classList.remove('hidden');
+}
+
+function approvePayment() {
+  const p = payments.find(x => x.id === activeReviewId);
+  if(p) p.status = 'approved';
+  DB.set('payments', payments);
+  closeModal('review-modal');
+  renderPayments();
+}
+
+function rejectPayment() {
+  const p = payments.find(x => x.id === activeReviewId);
+  if(p) p.status = 'rejected';
+  DB.set('payments', payments);
+  closeModal('review-modal');
+  renderPayments();
+}
+
+// --- Gestión de Partidos ---
+function renderMatches() {
+  const container = document.getElementById('match-list');
+  container.innerHTML = '';
+  if(matches.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-xs">No hay partidos planificados.</p>';
+    return;
+  }
+  matches.forEach(m => {
+    container.innerHTML += `
+      <div class="card flex justify-between items-center">
+        <div>
+          <span class="badge badge-review text-[9px] uppercase">${getPlayerCategoryName(m.categoryId)}</span>
+          <h4 class="font-black text-base mt-1">vs ${m.rival}</h4>
+          <p class="text-xs text-gray-400">${m.date} a las ${m.time} | Campo: ${m.location}</p>
+        </div>
+        <button onclick="deleteMatch('${m.id}')" class="text-xs font-bold text-red-400 hover:underline">Eliminar</button>
+      </div>`;
+  });
+}
+
+function openEditMatch(id) {
+  document.getElementById('mt-id').value = '';
+  document.getElementById('mt-rival').value = '';
+  document.getElementById('mt-location').value = '';
+  updateCategoryDropdowns();
+  document.getElementById('match-modal').classList.remove('hidden');
+}
+
+function saveMatchForm() {
+  const categoryId = document.getElementById('mt-category').value;
+  const rival = document.getElementById('mt-rival').value.trim();
+  const date = document.getElementById('mt-date').value;
+  const time = document.getElementById('mt-time').value;
+  const location = document.getElementById('mt-location').value.trim();
+
+  if(!categoryId || !rival || !date) return alert("Completa el formulario.");
+
+  matches.push({ id:'mat-'+uid(), categoryId, rival, date, time, location });
+  DB.set('matches', matches);
+  closeModal('match-modal');
+  renderMatches();
+}
+
+function deleteMatch(id) {
+  matches = matches.filter(m => m.id !== id);
+  DB.set('matches', matches);
+  renderMatches();
+}
+
+// --- Gestión de Usuarios ---
+function renderUsers() {
+  const container = document.getElementById('users-list');
+  container.innerHTML = '';
+  users.forEach(u => {
+    const vKids = u.playerIds ? u.playerIds.map(id => players.find(p=>p.id===id)?.name || id).join(', ') : 'Ninguno';
+    container.innerHTML += `
+      <div class="card mb-2 flex justify-between items-center">
+        <div>
+          <h4 class="font-bold text-sm">${u.name} <span class="text-xs text-gray-500">(${u.email})</span></h4>
+          <p class="text-[11px] text-green-400 font-mono mt-0.5">Clave: ${u.password} | Hijos: ${vKids}</p>
+        </div>
+        <button onclick="deleteUser('${u.id}')" class="text-xs font-bold text-red-400 hover:underline">Eliminar</button>
+      </div>`;
+  });
+}
+
+function openEditUser(id) {
+  document.getElementById('us-id').value = '';
+  document.getElementById('us-name').value = '';
+  document.getElementById('us-email').value = '';
+  document.getElementById('us-password').value = '';
+  
+  const box = document.getElementById('us-players');
+  box.innerHTML = '';
+  players.forEach(p => {
+    box.innerHTML += `<label class="flex items-center gap-2 text-xs"><input type="checkbox" name="us-p-check" value="${p.id}" /> ${p.name} [${getPlayerCategoryName(p.categoryId)}]</label>`;
+  });
+  document.getElementById('user-modal').classList.remove('hidden');
+}
+
+function saveUserForm() {
+  const name = document.getElementById('us-name').value.trim();
+  const email = document.getElementById('us-email').value.trim().toLowerCase();
+  const password = document.getElementById('us-password').value.trim();
+  const role = document.getElementById('us-role').value;
+  
+  const checked = Array.from(document.querySelectorAll('input[name="us-p-check"]:checked')).map(el => el.value);
+
+  if(!name || !email || !password) return alert("Rellena todos los campos.");
+
+  users.push({ id:'usr-'+uid(), name, email, password, role, playerIds: checked });
+  DB.set('users', users);
+  closeModal('user-modal');
+  renderUsers();
+}
+
+function deleteUser(id) {
+  users = users.filter(u => u.id !== id);
+  DB.set('users', users);
+  renderUsers();
+}
+
+function saveClubConfig() {
+  clubConfig = {
+    iban: document.getElementById('cfg-iban').value.trim(),
+    holder: document.getElementById('cfg-holder').value.trim(),
+    bank: document.getElementById('cfg-bank').value.trim(),
+    concept: document.getElementById('cfg-concept').value.trim(),
+    bizum: document.getElementById('cfg-bizum').value.trim(),
+  };
+  DB.set('config', clubConfig);
+  alert("Configuración del club guardada.");
+}
+
+/* ---------- Área del Padre (Familias) ---------- */
+function initParentView() {
+  const select = document.getElementById('parent-player-select');
+  select.innerHTML = '';
+  
+  const mKidsIds = currentUser.playerIds || [];
+  const misNiños = players.filter(p => mKidsIds.includes(p.id));
+
+  if(misNiños.length === 0) {
+    document.getElementById('parent-player-selector').classList.add('hidden');
+    document.getElementById('parent-pane-home').innerHTML = `
+      <div class="card text-center p-8">
+        ⚠️ Tu usuario no tiene asignado ningún jugador. Contacta con el administrador del club.
+      </div>`;
+    return;
+  }
+
+  document.getElementById('parent-player-selector').classList.remove('hidden');
+  misNiños.forEach(p => {
+    select.innerHTML += `<option value="${p.id}">${p.name.toUpperCase()} [${getPlayerCategoryName(p.categoryId)}]</option>`;
+  });
+
+  selectedParentPlayerId = select.value;
+  select.addEventListener('change', (e) => {
+    selectedParentPlayerId = e.target.value;
+    switchParentTab(currentParentTab);
+  });
+
+  switchParentTab('home');
+}
+
+function switchParentTab(pane) {
+  currentParentTab = pane;
+  document.querySelectorAll('.parent-pane').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+
+  const actPane = document.getElementById(`parent-pane-${pane}`);
+  if(actPane) actPane.classList.remove('hidden');
+
+  const actBtn = document.querySelector(`[data-pane="${pane}"]`);
+  if(actBtn) actBtn.classList.add('active');
+
+  if(!selectedParentPlayerId) return;
+  const p = players.find(x => x.id === selectedParentPlayerId);
+
+  if(pane === 'home') {
+    actPane.innerHTML = `
+      <div class="card flex gap-4 items-center mb-6">
+        <img src="${p.photo || 'https://via.placeholder.com/100/1e293b/ffffff?text=' + p.name[0]}" class="w-20 h-20 rounded-2xl object-cover bg-slate-800" />
+        <div>
+          <span class="text-xs font-black text-green-500">DORSAL #${p.dorsal || '0'}</span>
+          <h2 class="text-2xl font-black italic uppercase tracking-tighter mt-0.5">${p.name}</h2>
+          <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">${getPlayerCategoryName(p.categoryId)} · ${p.position || 'Pista'}</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="card text-center"><p class="text-[10px] text-gray-500 font-black uppercase">Goles Marcados</p><p class="text-4xl font-black text-green-500 mt-2">⚽ ${p.goals || 0}</p></div>
+        <div class="card text-center"><p class="text-[10px] text-gray-500 font-black uppercase">Asistencia</p><p class="text-4xl font-black text-blue-400 mt-2">⏱ ${p.attendance?.present || 0}</p></div>
+      </div>`;
+  }
+
+  if(pane === 'payments') {
+    const misPagos = payments.filter(x => x.playerId === p.id);
+    actPane.innerHTML = '<h3 class="text-xl font-black mb-4 uppercase italic">Control de Cuotas</h3>';
+    if(misPagos.length === 0) {
+      actPane.innerHTML += '<p class="text-xs text-gray-500">No hay cuotas emitidas para este jugador.</p>';
+      return;
+    }
+    misPagos.forEach(x => {
+      let statusMarkup = '';
+      if(x.status === 'pending') statusMarkup = `<button onclick="openUploadProof('${x.id}')" class="btn-primary text-[10px] py-1 px-3">Subir Justificante</button>`;
+      if(x.status === 'review') statusMarkup = `<span class="badge badge-review uppercase text-[9px]">En Revisión</span>`;
+      if(x.status === 'approved') statusMarkup = `<span class="badge badge-approved uppercase text-[9px]">Aprobado ✓</span>`;
+      if(x.status === 'rejected') statusMarkup = `<button onclick="openUploadProof('${x.id}')" class="btn-danger text-[10px] py-1 px-3">Rechazado (Reenviar)</button>`;
+
+      actPane.innerHTML += `
+        <div class="card flex justify-between items-center mb-3">
+          <div>
+            <h4 class="font-black text-sm uppercase">${x.conceptName}</h4>
+            <p class="text-xs text-gray-400">${MONTH_NAMES[x.month-1]} · <b class="text-white">${x.amount.toFixed(2)}€</b></p>
+          </div>
+          <div>${statusMarkup}</div>
+        </div>`;
+    });
+  }
+
+  if(pane === 'matches') {
+    // Buscamos los partidos del equipo del niño
+    const misPartidos = matches.filter(x => x.categoryId === p.categoryId);
+    actPane.innerHTML = '<h3 class="text-xl font-black mb-4 uppercase italic">Próximos Partidos</h3>';
+    if(misPartidos.length === 0) {
+      actPane.innerHTML += '<p class="text-xs text-gray-500">No hay partidos programados para este equipo.</p>';
+      return;
+    }
+    misPartidos.forEach(m => {
+      actPane.innerHTML += `
+        <div class="card mb-3">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-black text-red-500 uppercase">Liga Local</span>
+            <span class="text-xs text-gray-400 font-mono">${m.date} - ${m.time}</span>
+          </div>
+          <h4 class="text-lg font-black uppercase italic mt-1">vs ${m.rival}</h4>
+          <p class="text-xs text-gray-300 mt-2">📍 ${m.location}</p>
+        </div>`;
+    });
+  }
+
+  if(pane === 'history') {
+    actPane.innerHTML = `
+      <h3 class="text-xl font-black mb-4 uppercase italic">Historial y Datos médicos</h3>
+      <div class="card">
+        <p class="text-xs text-gray-400">Asistencias totales: <b class="text-white">${p.attendance?.present || 0}</b> partidos/entrenamientos.</p>
+        <p class="text-xs text-gray-400 mt-2">Ausencias justificadas: <b class="text-white">${p.attendance?.absent || 0}</b></p>
+        <p class="text-xs text-gray-400 mt-2">Bajas por lesión: <b class="text-white">${p.attendance?.injured || 0}</b></p>
+      </div>`;
+  }
+
+  if(pane === 'bank') {
+    const cfg = DB.get('config', { iban:'', holder:'', bank:'', concept:'', bizum:'' });
+    actPane.innerHTML = `
+      <h3 class="text-xl font-black mb-4 uppercase italic">Información de Pago</h3>
+      <div class="card space-y-4">
+        <div><span class="text-[9px] font-black text-gray-500 block uppercase">Banco</span><p class="text-sm font-bold text-white">${cfg.bank || 'No configurado'}</p></div>
+        <div><span class="text-[9px] font-black text-gray-500 block uppercase">Titular</span><p class="text-sm font-bold text-white">${cfg.holder || 'No configurado'}</p></div>
+        <div><span class="text-[9px] font-black text-gray-500 block uppercase">Cuenta IBAN</span><p class="text-base font-black text-green-400 tracking-wider font-mono bg-black/40 p-3 rounded-lg border border-white/5 mt-1 select-all">${cfg.iban || 'No configurado'}</p></div>
+        ${cfg.bizum ? `<div><span class="text-[9px] font-black text-gray-500 block uppercase">Bizum Club</span><p class="text-sm font-bold text-blue-400">${cfg.bizum}</p></div>` : ''}
+        <div class="pt-2 border-t border-slate-800"><span class="text-[9px] font-black text-yellow-500 block uppercase">Concepto Obligatorio en Transferencia</span><p class="text-xs text-gray-300 italic mt-0.5">${cfg.concept || 'Nombre del Jugador + Categoría'}</p></div>
+      </div>`;
+  }
+}
+
+function openUploadProof(payId) {
+  const pay = payments.find(x => x.id === payId);
+  document.getElementById('proof-payment-id').value = payId;
+  document.getElementById('proof-info').innerText = `${pay.conceptName} - ${pay.amount.toFixed(2)}€`;
+  document.getElementById('proof-notes').value = '';
+  document.getElementById('proof-file').value = '';
+  document.getElementById('proof-modal').classList.remove('hidden');
+}
+
+function submitProof() {
+  const payId = document.getElementById('proof-payment-id').value;
+  const fileEl = document.getElementById('proof-file');
+  const notes = document.getElementById('proof-notes').value.trim();
+
+  if(fileEl.files.length === 0) return alert("Por favor, selecciona o toma una foto del recibo bancario.");
+
+  const file = fileEl.files[0];
+  const reader = new FileReader();
+  reader.onloadend = function() {
+    const pay = payments.find(x => x.id === payId);
+    if(pay) {
+      pay.status = 'review';
+      pay.proofUrl = reader.result; // Almacenamiento base64 local/nube simplificado
+      pay.notes = notes;
+    }
+    DB.set('payments', payments);
+    closeModal('proof-modal');
+    switchParentTab('payments');
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+/* ---------- Explotación de Ficheros (Seguridad) ---------- */
+function exportBackup() {
+  const fullData = {
+    categories: DB.get('categories', []),
+    players: DB.get('players', []),
+    concepts: DB.get('concepts', []),
+    payments: DB.get('payments', []),
+    matches: DB.get('matches', []),
+    users: DB.get('users', []),
+    config: DB.get('config', {})
+  };
+  const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pinarfs_backup_${Date.now()}.json`;
+  a.click();
+}
+
+function importBackup(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const data = JSON.parse(evt.target.result);
+      if(data.categories) DB.set('categories', data.categories);
+      if(data.players) DB.set('players', data.players);
+      if(data.concepts) DB.set('concepts', data.concepts);
+      if(data.payments) DB.set('payments', data.payments);
+      if(data.matches) DB.set('matches', data.matches);
+      if(data.users) DB.set('users', data.users);
+      if(data.config) DB.set('config', data.config);
+      
+      alert("Copia de seguridad restaurada de forma impecable.");
+      location.reload();
+    } catch {
+      alert("Archivo JSON inválido o corrupto.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function wipeAll() {
+  if(!confirm("⚠️ ESTO BORRARÁ TODO EL CLUB DEL TELÉFONO Y DE FIREBASE. ¿Estás absolutamente seguro?")) return;
+  const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
+  colecciones.forEach(k => {
+    localStorage.removeItem('pinar_' + k);
+    db.collection(k).doc('global_data').delete();
+  });
+  localStorage.removeItem('pinar_session');
+  alert("Sistema reseteado.");
+  location.reload();
+}
 </script>
 
 </body>
