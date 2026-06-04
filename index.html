@@ -502,22 +502,7 @@ function descargarDatosDeLaNube() {
         
         descargasCompletadas++;
         if (descargasCompletadas === colecciones.length) {
-          console.log("🔄 Todos los datos sincronizados. Actualizando memoria global...");
-          
-          // CORRECCIÓN: Volvemos a llenar las variables con los datos frescos que acaban de bajar
-          categories = DB.get('categories', []);
-          players    = DB.get('players', []);
-          concepts   = DB.get('concepts', []);
-          
-          // Aquí nos aseguramos de que pagos sea un array limpio sí o sí
-          let pRaw   = DB.get('payments', []);
-          payments   = Array.isArray(pRaw) ? pRaw : (pRaw.data || []);
-          
-          matches    = DB.get('matches', []);
-          users      = DB.get('users', []);
-          clubConfig = DB.get('config', { iban:'', holder:'', bank:'', concept:'', bizum:'' });
-
-          console.log("🔄 Renderizando app...");
+          console.log("🔄 Todos los datos sincronizados. Renderizando app...");
           if (typeof render === 'function') render();
           if (typeof initApp === 'function') initApp();
           if (typeof showData === 'function') showData();
@@ -532,6 +517,7 @@ function descargarDatosDeLaNube() {
       });
   });
 }
+
 /* 🎯 FUNCIÓN GLOBAL PARA FORZAR LA SUBIDA MANUAL DESDE EL BOTÓN VERDE */
 function subirTodoALaNube() {
   const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
@@ -862,320 +848,54 @@ window.deleteConcept = (id) => {
   DB.set('concepts', state.concepts);
   renderConcepts();
 };
-/* ════════════════════════════════════════════════════════════════════════
-   FUNCIONES DE GESTIÓN DE PAGOS (REPARADA)
-   ════════════════════════════════════════════════════════════════════════ */
-
-function renderPayments() {
-  const container = document.getElementById('pay-list');
-  if(!container) return;
-  container.innerHTML = '';
-  
-  const catFilterEl = document.getElementById('pay-cat-filter');
-  const statusFilterEl = document.getElementById('pay-status-filter');
-  
-  const catFilter = catFilterEl ? catFilterEl.value : '';
-  const statusFilter = statusFilterEl ? statusFilterEl.value : '';
-
-  // 1. EXTRACCIÓN ULTRA-SEGURA: Desenvolvemos CUALQUIER formato raro que venga de Firebase
-  let listaPagos = [];
-  if (payments) {
-    if (Array.isArray(payments)) {
-      listaPagos = payments;
-    } else if (payments.data && Array.isArray(payments.data)) {
-      listaPagos = payments.data;
-    } else if (typeof payments === 'object') {
-      // Si Firebase lo transformó en un objeto de objetos {0: {...}, 1: {...}}
-      listaPagos = Object.values(payments).filter(p => p && typeof p === 'object');
-    }
-  }
-
-  // 2. FILTRADO INTELIGENTE
-  const filtered = listaPagos.filter(p => {
-    // Si el registro está totalmente vacío o corrupto, lo saltamos
-    if (!p || (!p.playerName && !p.conceptName)) return false;
-    
-    // Normalizamos los campos por si acaso vienen vacíos
-    const statusToCheck = p.status || 'pending';
-    const catToCheck = p.categoryId || '';
-
-    // Filtro de Equipo
-    const mCat = !catFilter || catToCheck === catFilter;
-    
-    // Filtro de Estado (Si está vacío el filtro, mostramos todo lo que sea DEUDA)
-    let mStat = false;
-    if (statusFilter) {
-      mStat = statusToCheck === statusFilter;
-    } else {
-      mStat = statusToCheck === 'pending' || statusToCheck === 'rejected' || statusToCheck === 'review';
-    }
-    
-    return mCat && mStat;
-  });
-
-  // 3. Si no hay nada que mostrar, pintamos el contador de control
-  if(filtered.length === 0) {
-    container.innerHTML = `
-      <div class="p-6 text-center text-xs text-gray-500">
-        <p class="font-bold text-green-500 text-sm">✓ ¡Al día!</p>
-        <p class="mt-1">Ningún jugador debe recibos con los filtros seleccionados.</p>
-        <p class="text-[10px] text-gray-600 mt-2">(Total detectado en el sistema: ${listaPagos.length} recibos)</p>
-      </div>`;
-    return;
-  }
-
-  // 4. DIBUJAMOS LOS MOROSOS
-  filtered.forEach(p => {
-    const estado = p.status || 'pending';
-    const nombreJugador = p.playerName || 'Jugador Desconocido';
-    const concepto = p.conceptName || 'Cuota';
-    const mesOriginal = p.month || 1;
-    
-    let badgeClass = 'badge-pending';
-    let estadoTexto = 'Pendiente';
-    
-    if(estado === 'review') { badgeClass = 'badge-review'; estadoTexto = 'En Revisión'; }
-    if(estado === 'approved') { badgeClass = 'badge-approved'; estadoTexto = 'Aprobado'; }
-    if(estado === 'rejected') { badgeClass = 'badge-rejected'; estadoTexto = 'Rechazado'; }
-
-    const mesIndex = parseInt(mesOriginal) - 1;
-    const nombreMes = MONTH_NAMES[mesIndex] || 'Mes';
-    const importe = typeof p.amount === 'number' ? p.amount : parseFloat(p.amount) || 0;
-
-    container.innerHTML += `
-      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2 border-l-4 ${estado === 'rejected' ? 'border-red-500' : 'border-yellow-500'}">
-        <div>
-          <span class="badge ${badgeClass} uppercase text-[9px] tracking-wider">${estadoTexto}</span>
-          <h4 class="font-black text-sm mt-1 uppercase text-white">${nombreJugador}</h4>
-          <p class="text-xs text-gray-400 font-medium">${concepto} · ${nombreMes}</p>
-        </div>
-        <div class="text-right flex items-center gap-4">
-          <span class="font-black text-base text-yellow-400">${importe.toFixed(2)}€</span>
-          ${estado === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3 font-bold">Revisar</button>` : ''}
-          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:scale-110 transition-transform px-1" title="Eliminar deuda">🗑</button>
-        </div>
-      </div>`;
-  });
-}
-
-  // 4. Si no hay morosos con los filtros aplicados
-  if(filtered.length === 0) {
-    container.innerHTML = `
-      <div class="p-6 text-center text-xs text-gray-500">
-        <p class="font-bold text-green-500 text-sm">✓ ¡Al día!</p>
-        <p class="mt-1">Ningún jugador debe recibos con los filtros seleccionados.</p>
-        <p class="text-[10px] text-gray-600 mt-2">(Total global en el sistema: ${listaPagos.length} recibos)</p>
-      </div>`;
-    return;
-  }
-
-  function renderPayments() {
-  const container = document.getElementById('pay-list');
-  if(!container) return;
-  container.innerHTML = '';
-  
-  const catFilterEl = document.getElementById('pay-cat-filter');
-  const statusFilterEl = document.getElementById('pay-status-filter');
-  
-  const catFilter = catFilterEl ? catFilterEl.value : '';
-  const statusFilter = statusFilterEl ? statusFilterEl.value : '';
-
-  // 1. EXTRACCIÓN ULTRA-SEGURA: Convertimos cualquier formato raro de Firebase en un Array limpio
-  let listaPagos = [];
-  if (payments) {
-    if (Array.isArray(payments)) {
-      listaPagos = payments;
-    } else if (payments.data && Array.isArray(payments.data)) {
-      listaPagos = payments.data;
-    } else if (typeof payments === 'object') {
-      listaPagos = Object.values(payments).filter(p => p && typeof p === 'object');
-    }
-  }
-
-  // 2. FILTRADO INTELIGENTE
-  const filtered = listaPagos.filter(p => {
-    if (!p || (!p.playerName && !p.conceptName)) return false;
-    
-    const statusToCheck = p.status || 'pending';
-    const catToCheck = p.categoryId || '';
-
-    const mCat = !catFilter || catToCheck === catFilter;
-    
-    let mStat = false;
-    if (statusFilter) {
-      mStat = statusToCheck === statusFilter;
-    } else {
-      mStat = statusToCheck === 'pending' || statusToCheck === 'rejected' || statusToCheck === 'review';
-    }
-    
-    return mCat && mStat;
-  });
-
-  // 3. Si no hay nada que mostrar, pintamos el aviso con el total real detectado
-  if(filtered.length === 0) {
-    container.innerHTML = `
-      <div class="p-6 text-center text-xs text-gray-500">
-        <p class="font-bold text-green-500 text-sm">✓ ¡Al día!</p>
-        <p class="mt-1">Ningún jugador debe recibos con los filtros seleccionados.</p>
-        <p class="text-[10px] text-gray-600 mt-2">(Total detectado en el sistema: ${listaPagos.length} recibos)</p>
-      </div>`;
-    return;
-  }
-
-  // 4. DIBUJAMOS LA LISTA DE DEUDORES EN PANTALLA
-  filtered.forEach(p => {
-    let badgeClass = 'badge-pending';
-    let estadoTexto = 'Pendiente';
-    
-    if(p.status === 'review') { badgeClass = 'badge-review'; estadoTexto = 'En Revisión'; }
-    if(p.status === 'approved') { badgeClass = 'badge-approved'; estadoTexto = 'Aprobado'; }
-    if(p.status === 'rejected') { badgeClass = 'badge-rejected'; estadoTexto = 'Rechazado'; }
-
-    const mesIndex = parseInt(p.month) - 1;
-    const nombreMes = MONTH_NAMES[mesIndex] || 'Mes';
-    const importe = typeof p.amount === 'number' ? p.amount : parseFloat(p.amount) || 0;
-
-    container.innerHTML += `
-      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2 border-l-4 ${p.status === 'rejected' ? 'border-red-500' : 'border-yellow-500'}">
-        <div>
-          <span class="badge ${badgeClass} uppercase text-[9px] tracking-wider">${estadoTexto}</span>
-          <h4 class="font-black text-sm mt-1 uppercase text-white">${p.playerName}</h4>
-          <p class="text-xs text-gray-400 font-medium">${p.conceptName} · ${nombreMes}</p>
-        </div>
-        <div class="text-right flex items-center gap-4">
-          <span class="font-black text-base text-yellow-400">${importe.toFixed(2)}€</span>
-          ${p.status === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3 font-bold">Revisar</button>` : ''}
-          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:scale-110 transition-transform px-1" title="Eliminar deuda">🗑</button>
-        </div>
-      </div>`;
-  });
-} 
-  
-  filtered.forEach(p => {
-    let badgeClass = 'badge-pending';
-    let estadoTexto = 'Pendiente';
-    
-    if(p.status === 'review') { badgeClass = 'badge-review'; estadoTexto = 'En Revisión'; }
-    if(p.status === 'approved') { badgeClass = 'badge-approved'; estadoTexto = 'Aprobado'; }
-    if(p.status === 'rejected') { badgeClass = 'badge-rejected'; estadoTexto = 'Rechazado'; }
-
-    const mesIndex = parseInt(p.month) - 1;
-    const nombreMes = MONTH_NAMES[mesIndex] || 'Mes';
-    const importe = typeof p.amount === 'number' ? p.amount : parseFloat(p.amount) || 0;
-
-    container.innerHTML += `
-      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2 border-l-4 ${p.status === 'rejected' ? 'border-red-500' : 'border-yellow-500'}">
-        <div>
-          <span class="badge ${badgeClass} uppercase text-[9px] tracking-wider">${estadoTexto}</span>
-          <h4 class="font-black text-sm mt-1 uppercase text-white">${p.playerName}</h4>
-          <p class="text-xs text-gray-400 font-medium">${p.conceptName} · ${nombreMes}</p>
-        </div>
-        <div class="text-right flex items-center gap-4">
-          <span class="font-black text-base text-yellow-400">${importe.toFixed(2)}€</span>
-          ${p.status === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3 font-bold">Revisar</button>` : ''}
-          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:scale-110 transition-transform px-1" title="Eliminar deuda">🗑</button>
-        </div>
-      </div>`;
-  });
 
 /* ---------- Cobros ---------- */
-function generatePayments() {
-  const conceptId = document.getElementById('gen-concept').value;
-  const c = concepts.find(x => x.id === conceptId);
-  if (!c) {
-    alert("Por favor, selecciona un concepto válido.");
-    return;
+function renderPayments() {
+  $('pay-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  $('pay-cat-filter').value = state.filters.payCat;
+  $('pay-status-filter').value = state.filters.payStatus;
+
+  let list = [...state.payments];
+  if (state.filters.payCat) {
+    const playersInCat = state.players.filter(p=>p.categoryId===state.filters.payCat).map(p=>p.id);
+    list = list.filter(p=> playersInCat.includes(p.playerId));
   }
+  if (state.filters.payStatus) list = list.filter(p=>p.status===state.filters.payStatus);
 
-  const targetCatId = document.getElementById('gen-category').value || c.categoryId;
-  const kids = targetCatId ? players.filter(p => p.categoryId === targetCatId) : players;
+  const total = list.reduce((s,p)=>s+(p.amount||0),0);
+  const approved = list.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
+  $('pay-summary').innerHTML = `<div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Total</div><div class="text-xl font-black text-white">${moneyFmt(total)}</div></div>
+    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Aprobado</div><div class="text-xl font-black text-green-400">${moneyFmt(approved)}</div></div>
+    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(total-approved)}</div></div>
+  </div>`;
 
-  let listaPagos = [];
-  if (payments) {
-    listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
-  }
-  if (!Array.isArray(listaPagos)) listaPagos = [];
-
-  let creados = 0;
-
-  kids.forEach(k => {
-    const existe = listaPagos.some(p => {
-      if (!p) return false;
-      return p.playerId === k.id && 
-             p.conceptName === c.name && 
-             parseInt(p.month) === parseInt(c.month);
-    });
-
-    if (!existe) {
-      listaPagos.push({
-        id: 'pay-' + uid(),
-        playerId: k.id,
-        playerName: k.name,
-        categoryId: k.categoryId,
-        conceptName: c.name,
-        amount: parseFloat(c.amount) || 0,
-        month: parseInt(c.month),
-        status: 'pending',
-        proofUrl: null,
-        notes: ''
-      });
-      creados++;
-    }
-  });
-   
-  if (typeof renderPayments === 'function') {
-    renderPayments();
-  }
+  if (!list.length) { $('pay-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin cobros.</p>'; return; }
+  $('pay-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500">
+        <tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Mes/Concepto</th><th class="px-3 py-3 text-right">Importe</th><th class="px-3 py-3 text-center">Estado</th><th class="px-3 py-3 text-center">Acción</th></tr>
+      </thead>
+      <tbody>
+        ${list.map(p=>{
+          const pl = state.players.find(x=>x.id===p.playerId);
+          return `<tr class="border-b border-slate-800">
+            <td class="px-3 py-2 font-bold text-white">${escapeHtml(pl?.name||'(borrado)')}</td>
+            <td class="px-3 py-2 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
+            <td class="px-3 py-2 text-gray-300">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')}</td>
+            <td class="px-3 py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
+            <td class="px-3 py-2 text-center">${statusBadge(p.status)}</td>
+            <td class="px-3 py-2 text-center">
+              ${p.proofData || p.notes ? `<button onclick="openReview('${p.id}')" class="btn-secondary">Ver</button>` : ''}
+              ${p.status!=='approved' ? `<button onclick="markApproved('${p.id}')" class="btn-success ml-1">OK</button>` : ''}
+              <button onclick="deletePayment('${p.id}')" class="btn-danger ml-1">🗑</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
 }
-
-function deletePayment(id) {
-  if(!confirm("¿Borrar este registro de cobro?")) return;
-  let listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
-  listaPagos = listaPagos.filter(p => p.id !== id);
-  payments = listaPagos;
-  DB.set('payments', payments);
-  renderPayments();
-}
-
-let activeReviewId = null;
-//  ASÍ DEBE QUEDAR (REPARADA SIN BARRAS INVERTIDAS):
-function openReview(id) {
-  activeReviewId = id;
-  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
-  const p = listaPagos.find(x => x.id === id);
-  if(!p) return;
-  
-  const content = document.getElementById('review-content');
-  if(!content) return;
-  
-  content.innerHTML = `
-    <p class="text-sm mb-2"><b>Jugador:</b> ${p.playerName}</p>
-    <p class="text-sm mb-2"><b>Concepto:</b> ${p.conceptName} (${p.amount}€)</p>
-    ${p.notes ? `<p class="text-xs bg-slate-900 p-2 rounded mb-3 text-yellow-400"><b>Nota del padre:</b> ${p.notes}</p>` : ''}
-    <img src="${p.proofUrl}" class="w-full h-auto rounded-lg border border-slate-800 object-contain max-h-96" />`;
-    
-  document.getElementById('review-modal').classList.remove('hidden');
-}
-function approvePayment() {
-  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
-  const p = listaPagos.find(x => x.id === activeReviewId);
-  if(p) p.status = 'approved';
-  payments = listaPagos;
-  DB.set('payments', payments);
-  closeModal('review-modal');
-  renderPayments();
-}
-
-function rejectPayment() {
-  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
-  const p = listaPagos.find(x => x.id === activeReviewId);
-  if(p) p.status = 'rejected';
-  payments = listaPagos;
-  DB.set('payments', payments);
-  closeModal('review-modal');
-  renderPayments();
-}
- 
 window.openGeneratePayments = () => {
   $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
   $('gen-category').innerHTML = '<option value="">Usar el del concepto</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
