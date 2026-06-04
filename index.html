@@ -871,35 +871,92 @@ function renderPayments() {
   if(!container) return;
   container.innerHTML = '';
   
-  // 1. Capturamos los filtros de la pantalla (Equipo y Estado)
   const catFilterEl = document.getElementById('pay-cat-filter');
   const statusFilterEl = document.getElementById('pay-status-filter');
   
   const catFilter = catFilterEl ? catFilterEl.value : '';
-  // Si no hay filtro de estado seleccionado, por defecto asumimos que queremos ver los pendientes de cobro
-  let statusFilter = statusFilterEl ? statusFilterEl.value : '';
+  const statusFilter = statusFilterEl ? statusFilterEl.value : '';
 
-  // 2. Extraemos el Array de pagos de forma 100% segura
-  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+  // 1. EXTRACCIÓN ULTRA-SEGURA: Desenvolvemos CUALQUIER formato raro que venga de Firebase
+  let listaPagos = [];
+  if (payments) {
+    if (Array.isArray(payments)) {
+      listaPagos = payments;
+    } else if (payments.data && Array.isArray(payments.data)) {
+      listaPagos = payments.data;
+    } else if (typeof payments === 'object') {
+      // Si Firebase lo transformó en un objeto de objetos {0: {...}, 1: {...}}
+      listaPagos = Object.values(payments).filter(p => p && typeof p === 'object');
+    }
+  }
 
-  // 3. Filtramos los recibos para la sección de Morosos
+  // 2. FILTRADO INTELIGENTE
   const filtered = listaPagos.filter(p => {
-    if (!p || !p.playerName) return false; // Saltamos registros corruptos si los hay
+    // Si el registro está totalmente vacío o corrupto, lo saltamos
+    if (!p || (!p.playerName && !p.conceptName)) return false;
     
+    // Normalizamos los campos por si acaso vienen vacíos
+    const statusToCheck = p.status || 'pending';
+    const catToCheck = p.categoryId || '';
+
     // Filtro de Equipo
-    const mCat = !catFilter || p.categoryId === catFilter;
+    const mCat = !catFilter || catToCheck === catFilter;
     
-    // Filtro de Estado: Si el administrador elige un estado manual, usamos ese.
-    // Si está en "Todos" o vacío, mostramos por defecto los que DEBEN dinero ('pending' y 'rejected')
+    // Filtro de Estado (Si está vacío el filtro, mostramos todo lo que sea DEUDA)
     let mStat = false;
     if (statusFilter) {
-      mStat = p.status === statusFilter;
+      mStat = statusToCheck === statusFilter;
     } else {
-      mStat = p.status === 'pending' || p.status === 'rejected' || p.status === 'review';
+      mStat = statusToCheck === 'pending' || statusToCheck === 'rejected' || statusToCheck === 'review';
     }
     
     return mCat && mStat;
   });
+
+  // 3. Si no hay nada que mostrar, pintamos el contador de control
+  if(filtered.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center text-xs text-gray-500">
+        <p class="font-bold text-green-500 text-sm">✓ ¡Al día!</p>
+        <p class="mt-1">Ningún jugador debe recibos con los filtros seleccionados.</p>
+        <p class="text-[10px] text-gray-600 mt-2">(Total detectado en el sistema: ${listaPagos.length} recibos)</p>
+      </div>`;
+    return;
+  }
+
+  // 4. DIBUJAMOS LOS MOROSOS
+  filtered.forEach(p => {
+    const estado = p.status || 'pending';
+    const nombreJugador = p.playerName || 'Jugador Desconocido';
+    const concepto = p.conceptName || 'Cuota';
+    const mesOriginal = p.month || 1;
+    
+    let badgeClass = 'badge-pending';
+    let estadoTexto = 'Pendiente';
+    
+    if(estado === 'review') { badgeClass = 'badge-review'; estadoTexto = 'En Revisión'; }
+    if(estado === 'approved') { badgeClass = 'badge-approved'; estadoTexto = 'Aprobado'; }
+    if(estado === 'rejected') { badgeClass = 'badge-rejected'; estadoTexto = 'Rechazado'; }
+
+    const mesIndex = parseInt(mesOriginal) - 1;
+    const nombreMes = MONTH_NAMES[mesIndex] || 'Mes';
+    const importe = typeof p.amount === 'number' ? p.amount : parseFloat(p.amount) || 0;
+
+    container.innerHTML += `
+      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2 border-l-4 ${estado === 'rejected' ? 'border-red-500' : 'border-yellow-500'}">
+        <div>
+          <span class="badge ${badgeClass} uppercase text-[9px] tracking-wider">${estadoTexto}</span>
+          <h4 class="font-black text-sm mt-1 uppercase text-white">${nombreJugador}</h4>
+          <p class="text-xs text-gray-400 font-medium">${concepto} · ${nombreMes}</p>
+        </div>
+        <div class="text-right flex items-center gap-4">
+          <span class="font-black text-base text-yellow-400">${importe.toFixed(2)}€</span>
+          ${estado === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3 font-bold">Revisar</button>` : ''}
+          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:scale-110 transition-transform px-1" title="Eliminar deuda">🗑</button>
+        </div>
+      </div>`;
+  });
+}
 
   // 4. Si no hay morosos con los filtros aplicados
   if(filtered.length === 0) {
@@ -939,7 +996,7 @@ function renderPayments() {
         </div>
       </div>`;
   });
-}
+
 /* ---------- Cobros ---------- */
 function generatePayments() {
   const conceptId = document.getElementById('gen-concept').value;
@@ -984,7 +1041,7 @@ function generatePayments() {
       creados++;
     }
   });
-  
+   
   if (typeof renderPayments === 'function') {
     renderPayments();
   }
