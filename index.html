@@ -952,19 +952,15 @@ function generatePayments() {
   const targetCatId = document.getElementById('gen-category').value || c.categoryId;
   const kids = targetCatId ? players.filter(p => p.categoryId === targetCatId) : players;
 
-  // 1. Extraemos de forma 100% segura el array real de pagos actuales
   let listaPagos = [];
   if (payments) {
     listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
   }
-  // Si por algún motivo sigue sin ser un array, lo inicializamos vacío
   if (!Array.isArray(listaPagos)) listaPagos = [];
 
   let creados = 0;
 
-  // 2. Recorremos los niños y generamos los cobros de forma estricta
   kids.forEach(k => {
-    // Comprobación ultra-segura: miramos si ya existe el mismo concepto y mes para ESTE niño
     const existe = listaPagos.some(p => {
       if (!p) return false;
       return p.playerId === k.id && 
@@ -972,7 +968,6 @@ function generatePayments() {
              parseInt(p.month) === parseInt(c.month);
     });
 
-    // Si no existe, lo creamos e inyectamos
     if (!existe) {
       listaPagos.push({
         id: 'pay-' + uid(),
@@ -990,19 +985,62 @@ function generatePayments() {
     }
   });
 
-  // 3. Actualizamos la variable global y la base de datos (Local y Firebase)
   payments = listaPagos;
   DB.set('payments', payments);
   
-  // 4. Cerramos ventana y avisamos
   closeModal('gen-modal');
   alert(`¡Operación completada! Se han generado ${creados} nuevos cobros.`);
   
-  // 5. Forzamos a la pantalla a redibujarse con los nuevos datos
   if (typeof renderPayments === 'function') {
     renderPayments();
   }
-} // <--- ESTA LLAVE CIERRA LA FUNCIÓN PERFECTAMENTE
+}
+
+function deletePayment(id) {
+  if(!confirm("¿Borrar este registro de cobro?")) return;
+  let listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+  listaPagos = listaPagos.filter(p => p.id !== id);
+  payments = listaPagos;
+  DB.set('payments', payments);
+  renderPayments();
+}
+
+let activeReviewId = null;
+function openReview(id) {
+  activeReviewId = id;
+  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+  const p = listaPagos.find(x => x.id === id);
+  if(!p) return;
+  
+  const content = document.getElementById('review-content');
+  if(!content) return;
+  content.innerHTML = `
+    <p class="text-sm mb-2"><b>Jugador:</b> ${p.playerName}</p>
+    <p class="text-sm mb-2"><b>Concepto:</b> ${p.conceptName} (${p.amount}€)</p>
+    \${p.notes ? \`<p class="text-xs bg-slate-900 p-2 rounded mb-3 text-yellow-400"><b>Nota del padre:</b> \${p.notes}</p>\` : ''}
+    <img src="\${p.proofUrl}" class="w-full h-auto rounded-lg border border-slate-800 object-contain max-h-96" />`;
+  document.getElementById('review-modal').classList.remove('hidden');
+}
+
+function approvePayment() {
+  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+  const p = listaPagos.find(x => x.id === activeReviewId);
+  if(p) p.status = 'approved';
+  payments = listaPagos;
+  DB.set('payments', payments);
+  closeModal('review-modal');
+  renderPayments();
+}
+
+function rejectPayment() {
+  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+  const p = listaPagos.find(x => x.id === activeReviewId);
+  if(p) p.status = 'rejected';
+  payments = listaPagos;
+  DB.set('payments', payments);
+  closeModal('review-modal');
+  renderPayments();
+}
 
   // Guardamos la lista limpia y actualizamos la variable global
   payments = listaPagos;
@@ -1011,6 +1049,7 @@ function generatePayments() {
   closeModal('gen-modal');
   alert(`Se han generado ${creados} nuevos cobros.`);
   renderPayments();
+
 window.openGeneratePayments = () => {
   $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
   $('gen-category').innerHTML = '<option value="">Usar el del concepto</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
