@@ -969,7 +969,60 @@ function renderPayments() {
     return;
   }
 
-  // 5. Dibujamos la lista de deudores en pantalla
+  function renderPayments() {
+  const container = document.getElementById('pay-list');
+  if(!container) return;
+  container.innerHTML = '';
+  
+  const catFilterEl = document.getElementById('pay-cat-filter');
+  const statusFilterEl = document.getElementById('pay-status-filter');
+  
+  const catFilter = catFilterEl ? catFilterEl.value : '';
+  const statusFilter = statusFilterEl ? statusFilterEl.value : '';
+
+  // 1. EXTRACCIÓN ULTRA-SEGURA: Convertimos cualquier formato raro de Firebase en un Array limpio
+  let listaPagos = [];
+  if (payments) {
+    if (Array.isArray(payments)) {
+      listaPagos = payments;
+    } else if (payments.data && Array.isArray(payments.data)) {
+      listaPagos = payments.data;
+    } else if (typeof payments === 'object') {
+      listaPagos = Object.values(payments).filter(p => p && typeof p === 'object');
+    }
+  }
+
+  // 2. FILTRADO INTELIGENTE
+  const filtered = listaPagos.filter(p => {
+    if (!p || (!p.playerName && !p.conceptName)) return false;
+    
+    const statusToCheck = p.status || 'pending';
+    const catToCheck = p.categoryId || '';
+
+    const mCat = !catFilter || catToCheck === catFilter;
+    
+    let mStat = false;
+    if (statusFilter) {
+      mStat = statusToCheck === statusFilter;
+    } else {
+      mStat = statusToCheck === 'pending' || statusToCheck === 'rejected' || statusToCheck === 'review';
+    }
+    
+    return mCat && mStat;
+  });
+
+  // 3. Si no hay nada que mostrar, pintamos el aviso con el total real detectado
+  if(filtered.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center text-xs text-gray-500">
+        <p class="font-bold text-green-500 text-sm">✓ ¡Al día!</p>
+        <p class="mt-1">Ningún jugador debe recibos con los filtros seleccionados.</p>
+        <p class="text-[10px] text-gray-600 mt-2">(Total detectado en el sistema: ${listaPagos.length} recibos)</p>
+      </div>`;
+    return;
+  }
+
+  // 4. DIBUJAMOS LA LISTA DE DEUDORES (Tu código original integrado)
   filtered.forEach(p => {
     let badgeClass = 'badge-pending';
     let estadoTexto = 'Pendiente';
@@ -996,6 +1049,7 @@ function renderPayments() {
         </div>
       </div>`;
   });
+} // <-- Aquí termina de forma perfecta
 
 /* ---------- Cobros ---------- */
 function generatePayments() {
