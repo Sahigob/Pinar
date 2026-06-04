@@ -1011,7 +1011,6 @@ function generatePayments() {
   closeModal('gen-modal');
   alert(`Se han generado ${creados} nuevos cobros.`);
   renderPayments();
-}
 window.openGeneratePayments = () => {
   $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
   $('gen-category').innerHTML = '<option value="">Usar el del concepto</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
