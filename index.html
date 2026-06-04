@@ -944,27 +944,44 @@ function renderPayments() {
 function generatePayments() {
   const conceptId = document.getElementById('gen-concept').value;
   const c = concepts.find(x => x.id === conceptId);
-  if(!c) return;
+  if (!c) {
+    alert("Por favor, selecciona un concepto válido.");
+    return;
+  }
 
   const targetCatId = document.getElementById('gen-category').value || c.categoryId;
   const kids = targetCatId ? players.filter(p => p.categoryId === targetCatId) : players;
 
-  // CORRECCIÓN: Nos aseguramos de que 'payments' sea un Array limpio antes de hacer los .push()
-  let listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+  // 1. Extraemos de forma 100% segura el array real de pagos actuales
+  let listaPagos = [];
+  if (payments) {
+    listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+  }
+  // Si por algún motivo sigue sin ser un array, lo inicializamos vacío
   if (!Array.isArray(listaPagos)) listaPagos = [];
 
   let creados = 0;
+
+  // 2. Recorremos los niños y generamos los cobros de forma estricta
   kids.forEach(k => {
-    const existe = listaPagos.some(p => p.playerId === k.id && p.conceptName === c.name && p.month === c.month);
-    if(!existe) {
+    // Comprobación ultra-segura: miramos si ya existe el mismo concepto y mes para ESTE niño
+    const existe = listaPagos.some(p => {
+      if (!p) return false;
+      return p.playerId === k.id && 
+             p.conceptName === c.name && 
+             parseInt(p.month) === parseInt(c.month);
+    });
+
+    // Si no existe, lo creamos e inyectamos
+    if (!existe) {
       listaPagos.push({
-        id: 'pay-'+uid(),
+        id: 'pay-' + uid(),
         playerId: k.id,
         playerName: k.name,
         categoryId: k.categoryId,
         conceptName: c.name,
-        amount: c.amount,
-        month: c.month,
+        amount: parseFloat(c.amount) || 0,
+        month: parseInt(c.month),
         status: 'pending',
         proofUrl: null,
         notes: ''
@@ -972,6 +989,20 @@ function generatePayments() {
       creados++;
     }
   });
+
+  // 3. Actualizamos la variable global y la base de datos (Local y Firebase)
+  payments = listaPagos;
+  DB.set('payments', payments);
+  
+  // 4. Cerramos ventana y avisamos
+  closeModal('gen-modal');
+  alert(`¡Operación completada! Se han generado ${creados} nuevos cobros.`);
+  
+  // 5. Forzamos a la pantalla a redibujarse con los nuevos datos
+  if (typeof renderPayments === 'function') {
+    renderPayments();
+  }
+} 
 
   // Guardamos la lista limpia y actualizamos la variable global
   payments = listaPagos;
