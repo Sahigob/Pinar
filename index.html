@@ -1006,6 +1006,7 @@ function deletePayment(id) {
 }
 
 let activeReviewId = null;
+//  ASÍ DEBE QUEDAR (REPARADA SIN BARRAS INVERTIDAS):
 function openReview(id) {
   activeReviewId = id;
   const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
@@ -1014,14 +1015,15 @@ function openReview(id) {
   
   const content = document.getElementById('review-content');
   if(!content) return;
+  
   content.innerHTML = `
     <p class="text-sm mb-2"><b>Jugador:</b> ${p.playerName}</p>
     <p class="text-sm mb-2"><b>Concepto:</b> ${p.conceptName} (${p.amount}€)</p>
-    \${p.notes ? \`<p class="text-xs bg-slate-900 p-2 rounded mb-3 text-yellow-400"><b>Nota del padre:</b> \${p.notes}</p>\` : ''}
-    <img src="\${p.proofUrl}" class="w-full h-auto rounded-lg border border-slate-800 object-contain max-h-96" />`;
+    ${p.notes ? `<p class="text-xs bg-slate-900 p-2 rounded mb-3 text-yellow-400"><b>Nota del padre:</b> ${p.notes}</p>` : ''}
+    <img src="${p.proofUrl}" class="w-full h-auto rounded-lg border border-slate-800 object-contain max-h-96" />`;
+    
   document.getElementById('review-modal').classList.remove('hidden');
 }
-
 function approvePayment() {
   const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
   const p = listaPagos.find(x => x.id === activeReviewId);
