@@ -850,48 +850,45 @@ window.deleteConcept = (id) => {
 };
 
 /* ---------- Cobros ---------- */
-function renderPayments() {
-  const container = document.getElementById('pay-list');
-  if(!container) return;
-  container.innerHTML = '';
+function generatePayments() {
+  const conceptId = document.getElementById('gen-concept').value;
+  const c = concepts.find(x => x.id === conceptId);
+  if(!c) return;
+
+  const targetCatId = document.getElementById('gen-category').value || c.categoryId;
+  const kids = targetCatId ? players.filter(p => p.categoryId === targetCatId) : players;
+
+  // CORRECCIÓN: Nos aseguramos de que 'payments' sea un Array limpio antes de hacer los .push()
+  let listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+  if (!Array.isArray(listaPagos)) listaPagos = [];
+
+  let creados = 0;
+  kids.forEach(k => {
+    const existe = listaPagos.some(p => p.playerId === k.id && p.conceptName === c.name && p.month === c.month);
+    if(!existe) {
+      listaPagos.push({
+        id: 'pay-'+uid(),
+        playerId: k.id,
+        playerName: k.name,
+        categoryId: k.categoryId,
+        conceptName: c.name,
+        amount: c.amount,
+        month: c.month,
+        status: 'pending',
+        proofUrl: null,
+        notes: ''
+      });
+      creados++;
+    }
+  });
+
+  // Guardamos la lista limpia y actualizamos la variable global
+  payments = listaPagos;
+  DB.set('payments', payments);
   
-  const catFilter = document.getElementById('pay-cat-filter').value;
-  const statusFilter = document.getElementById('pay-status-filter').value;
-
-  // CORRECCIÓN: Nos aseguramos de leer el array de pagos correctamente esté o no envuelto por Firebase
-  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
-
-  const filtered = listaPagos.filter(p => {
-    const mCat = !catFilter || p.categoryId === catFilter;
-    const mStat = !statusFilter || p.status === statusFilter;
-    return mCat && mStat;
-  });
-
-  if(filtered.length === 0) {
-    container.innerHTML = '<p class="text-xs text-gray-500 p-4">Ningún recibo coincide con los filtros.</p>';
-    return;
-  }
-
-  filtered.forEach(p => {
-    let badgeClass = 'badge-pending';
-    if(p.status === 'review') badgeClass = 'badge-review';
-    if(p.status === 'approved') badgeClass = 'badge-approved';
-    if(p.status === 'rejected') badgeClass = 'badge-rejected';
-
-    container.innerHTML += `
-      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2">
-        <div>
-          <span class="badge ${badgeClass} uppercase text-[9px]">${p.status}</span>
-          <h4 class="font-bold text-sm mt-1">${p.playerName}</h4>
-          <p class="text-xs text-gray-400">${p.conceptName} · ${MONTH_NAMES[p.month-1]}</p>
-        </div>
-        <div class="text-right flex items-center gap-4">
-          <span class="font-black text-sm">${p.amount.toFixed(2)}€</span>
-          ${p.status === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3">Revisar</button>` : ''}
-          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:underline">🗑</button>
-        </div>
-      </div>`;
-  });
+  closeModal('gen-modal');
+  alert(`Se han generado ${creados} nuevos cobros.`);
+  renderPayments();
 }
 window.openGeneratePayments = () => {
   $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
