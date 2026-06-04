@@ -871,44 +871,71 @@ function renderPayments() {
   if(!container) return;
   container.innerHTML = '';
   
-  // Capturamos filtros si existen en el HTML
+  // 1. Capturamos los filtros de la pantalla (Equipo y Estado)
   const catFilterEl = document.getElementById('pay-cat-filter');
   const statusFilterEl = document.getElementById('pay-status-filter');
   
   const catFilter = catFilterEl ? catFilterEl.value : '';
-  const statusFilter = statusFilterEl ? statusFilterEl.value : '';
+  // Si no hay filtro de estado seleccionado, por defecto asumimos que queremos ver los pendientes de cobro
+  let statusFilter = statusFilterEl ? statusFilterEl.value : '';
 
-  // Forzamos que 'payments' se lea como un Array limpio 
+  // 2. Extraemos el Array de pagos de forma 100% segura
   const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
 
+  // 3. Filtramos los recibos para la sección de Morosos
   const filtered = listaPagos.filter(p => {
+    if (!p || !p.playerName) return false; // Saltamos registros corruptos si los hay
+    
+    // Filtro de Equipo
     const mCat = !catFilter || p.categoryId === catFilter;
-    const mStat = !statusFilter || p.status === statusFilter;
+    
+    // Filtro de Estado: Si el administrador elige un estado manual, usamos ese.
+    // Si está en "Todos" o vacío, mostramos por defecto los que DEBEN dinero ('pending' y 'rejected')
+    let mStat = false;
+    if (statusFilter) {
+      mStat = p.status === statusFilter;
+    } else {
+      mStat = p.status === 'pending' || p.status === 'rejected' || p.status === 'review';
+    }
+    
     return mCat && mStat;
   });
 
+  // 4. Si no hay morosos con los filtros aplicados
   if(filtered.length === 0) {
-    container.innerHTML = '<p class="text-xs text-gray-500 p-4">Ningún recibo coincide con los filtros.</p>';
+    container.innerHTML = `
+      <div class="p-6 text-center text-xs text-gray-500">
+        <p class="font-bold text-green-500 text-sm">✓ ¡Al día!</p>
+        <p class="mt-1">Ningún jugador debe recibos con los filtros seleccionados.</p>
+        <p class="text-[10px] text-gray-600 mt-2">(Total global en el sistema: ${listaPagos.length} recibos)</p>
+      </div>`;
     return;
   }
 
+  // 5. Dibujamos la lista de deudores en pantalla
   filtered.forEach(p => {
     let badgeClass = 'badge-pending';
-    if(p.status === 'review') badgeClass = 'badge-review';
-    if(p.status === 'approved') badgeClass = 'badge-approved';
-    if(p.status === 'rejected') badgeClass = 'badge-rejected';
+    let estadoTexto = 'Pendiente';
+    
+    if(p.status === 'review') { badgeClass = 'badge-review'; estadoTexto = 'En Revisión'; }
+    if(p.status === 'approved') { badgeClass = 'badge-approved'; estadoTexto = 'Aprobado'; }
+    if(p.status === 'rejected') { badgeClass = 'badge-rejected'; estadoTexto = 'Rechazado'; }
+
+    const mesIndex = parseInt(p.month) - 1;
+    const nombreMes = MONTH_NAMES[mesIndex] || 'Mes';
+    const importe = typeof p.amount === 'number' ? p.amount : parseFloat(p.amount) || 0;
 
     container.innerHTML += `
-      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2">
+      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2 border-l-4 ${p.status === 'rejected' ? 'border-red-500' : 'border-yellow-500'}">
         <div>
-          <span class="badge ${badgeClass} uppercase text-[9px]">${p.status}</span>
-          <h4 class="font-bold text-sm mt-1">${p.playerName}</h4>
-          <p class="text-xs text-gray-400">${p.conceptName} · ${MONTH_NAMES[p.month-1]}</p>
+          <span class="badge ${badgeClass} uppercase text-[9px] tracking-wider">${estadoTexto}</span>
+          <h4 class="font-black text-sm mt-1 uppercase text-white">${p.playerName}</h4>
+          <p class="text-xs text-gray-400 font-medium">${p.conceptName} · ${nombreMes}</p>
         </div>
         <div class="text-right flex items-center gap-4">
-          <span class="font-black text-sm">${p.amount.toFixed(2)}€</span>
-          ${p.status === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3">Revisar</button>` : ''}
-          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:underline">🗑</button>
+          <span class="font-black text-base text-yellow-400">${importe.toFixed(2)}€</span>
+          ${p.status === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3 font-bold">Revisar</button>` : ''}
+          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:scale-110 transition-transform px-1" title="Eliminar deuda">🗑</button>
         </div>
       </div>`;
   });
