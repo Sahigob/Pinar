@@ -984,12 +984,6 @@ function generatePayments() {
       creados++;
     }
   });
-
-  payments = listaPagos;
-  DB.set('payments', payments);
-  
-  closeModal('gen-modal');
-  alert(`¡Operación completada! Se han generado ${creados} nuevos cobros.`);
   
   if (typeof renderPayments === 'function') {
     renderPayments();
