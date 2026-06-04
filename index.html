@@ -851,50 +851,47 @@ window.deleteConcept = (id) => {
 
 /* ---------- Cobros ---------- */
 function renderPayments() {
-  $('pay-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('pay-cat-filter').value = state.filters.payCat;
-  $('pay-status-filter').value = state.filters.payStatus;
+  const container = document.getElementById('pay-list');
+  if(!container) return;
+  container.innerHTML = '';
+  
+  const catFilter = document.getElementById('pay-cat-filter').value;
+  const statusFilter = document.getElementById('pay-status-filter').value;
 
-  let list = [...state.payments];
-  if (state.filters.payCat) {
-    const playersInCat = state.players.filter(p=>p.categoryId===state.filters.payCat).map(p=>p.id);
-    list = list.filter(p=> playersInCat.includes(p.playerId));
+  // CORRECCIÓN: Nos aseguramos de leer el array de pagos correctamente esté o no envuelto por Firebase
+  const listaPagos = Array.isArray(payments) ? payments : (payments.data || []);
+
+  const filtered = listaPagos.filter(p => {
+    const mCat = !catFilter || p.categoryId === catFilter;
+    const mStat = !statusFilter || p.status === statusFilter;
+    return mCat && mStat;
+  });
+
+  if(filtered.length === 0) {
+    container.innerHTML = '<p class="text-xs text-gray-500 p-4">Ningún recibo coincide con los filtros.</p>';
+    return;
   }
-  if (state.filters.payStatus) list = list.filter(p=>p.status===state.filters.payStatus);
 
-  const total = list.reduce((s,p)=>s+(p.amount||0),0);
-  const approved = list.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  $('pay-summary').innerHTML = `<div class="grid grid-cols-3 gap-3 mb-6">
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Total</div><div class="text-xl font-black text-white">${moneyFmt(total)}</div></div>
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Aprobado</div><div class="text-xl font-black text-green-400">${moneyFmt(approved)}</div></div>
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(total-approved)}</div></div>
-  </div>`;
+  filtered.forEach(p => {
+    let badgeClass = 'badge-pending';
+    if(p.status === 'review') badgeClass = 'badge-review';
+    if(p.status === 'approved') badgeClass = 'badge-approved';
+    if(p.status === 'rejected') badgeClass = 'badge-rejected';
 
-  if (!list.length) { $('pay-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin cobros.</p>'; return; }
-  $('pay-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500">
-        <tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Mes/Concepto</th><th class="px-3 py-3 text-right">Importe</th><th class="px-3 py-3 text-center">Estado</th><th class="px-3 py-3 text-center">Acción</th></tr>
-      </thead>
-      <tbody>
-        ${list.map(p=>{
-          const pl = state.players.find(x=>x.id===p.playerId);
-          return `<tr class="border-b border-slate-800">
-            <td class="px-3 py-2 font-bold text-white">${escapeHtml(pl?.name||'(borrado)')}</td>
-            <td class="px-3 py-2 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
-            <td class="px-3 py-2 text-gray-300">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')}</td>
-            <td class="px-3 py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
-            <td class="px-3 py-2 text-center">${statusBadge(p.status)}</td>
-            <td class="px-3 py-2 text-center">
-              ${p.proofData || p.notes ? `<button onclick="openReview('${p.id}')" class="btn-secondary">Ver</button>` : ''}
-              ${p.status!=='approved' ? `<button onclick="markApproved('${p.id}')" class="btn-success ml-1">OK</button>` : ''}
-              <button onclick="deletePayment('${p.id}')" class="btn-danger ml-1">🗑</button>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
+    container.innerHTML += `
+      <div class="card flex flex-wrap items-center justify-between gap-4 mb-2">
+        <div>
+          <span class="badge ${badgeClass} uppercase text-[9px]">${p.status}</span>
+          <h4 class="font-bold text-sm mt-1">${p.playerName}</h4>
+          <p class="text-xs text-gray-400">${p.conceptName} · ${MONTH_NAMES[p.month-1]}</p>
+        </div>
+        <div class="text-right flex items-center gap-4">
+          <span class="font-black text-sm">${p.amount.toFixed(2)}€</span>
+          ${p.status === 'review' ? `<button onclick="openReview('${p.id}')" class="btn-primary text-xs py-1 px-3">Revisar</button>` : ''}
+          <button onclick="deletePayment('${p.id}')" class="text-xs text-red-500 font-bold hover:underline">🗑</button>
+        </div>
+      </div>`;
+  });
 }
 window.openGeneratePayments = () => {
   $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
