@@ -502,7 +502,22 @@ function descargarDatosDeLaNube() {
         
         descargasCompletadas++;
         if (descargasCompletadas === colecciones.length) {
-          console.log("🔄 Todos los datos sincronizados. Renderizando app...");
+          console.log("🔄 Todos los datos sincronizados. Actualizando memoria global...");
+          
+          // CORRECCIÓN: Volvemos a llenar las variables con los datos frescos que acaban de bajar
+          categories = DB.get('categories', []);
+          players    = DB.get('players', []);
+          concepts   = DB.get('concepts', []);
+          
+          // Aquí nos aseguramos de que pagos sea un array limpio sí o sí
+          let pRaw   = DB.get('payments', []);
+          payments   = Array.isArray(pRaw) ? pRaw : (pRaw.data || []);
+          
+          matches    = DB.get('matches', []);
+          users      = DB.get('users', []);
+          clubConfig = DB.get('config', { iban:'', holder:'', bank:'', concept:'', bizum:'' });
+
+          console.log("🔄 Renderizando app...");
           if (typeof render === 'function') render();
           if (typeof initApp === 'function') initApp();
           if (typeof showData === 'function') showData();
@@ -517,7 +532,6 @@ function descargarDatosDeLaNube() {
       });
   });
 }
-
 /* 🎯 FUNCIÓN GLOBAL PARA FORZAR LA SUBIDA MANUAL DESDE EL BOTÓN VERDE */
 function subirTodoALaNube() {
   const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
