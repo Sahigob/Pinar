@@ -909,7 +909,6 @@ window.generatePayments = () => {
   const targetCat = overrideCat || concept.categoryId;
   const targetPlayers = targetCat ? state.players.filter(p=>p.categoryId===targetCat) : state.players;
   let created = 0;
-  
   targetPlayers.forEach(pl=>{
     const exists = state.payments.some(p=> p.playerId===pl.id && p.conceptId===concept.id);
     if (exists) return;
@@ -920,58 +919,21 @@ window.generatePayments = () => {
     });
     created++;
   });
-  
-  // 1. Guardar en LocalStorage local
   DB.set('payments', state.payments);
-  
-  // 2. DISPARAR TU SUBIDA DE FIREBASE DE FORMA DIRECTA
-  // Ejecutamos las funciones globales que tus logs muestran para obligar al backend a guardar los pagos
-  if (typeof forzarSubidaMasiva === 'function') {
-    forzarSubidaMasiva(); 
-  } else if (typeof guardarTodoEnNube === 'function') {
-    guardarTodoEnNube();
-  } else if (typeof uploadData === 'function') {
-    // Si tu función requiere subir colección por colección:
-    uploadData('payments', state.payments);
-  }
-
   closeModal('gen-modal');
   toast(`${created} cobros generados`, 'success');
-  
-  // 3. Forzar el redibujado de todas las pantallas con los nuevos datos
   renderPayments();
-  if (typeof renderMorosos === 'function') renderMorosos();
-  if (typeof render === 'function') render();
-  if (typeof showData === 'function') showData();
 };
-
 window.markApproved = (id) => {
   const p = state.payments.find(x=>x.id===id); if (!p) return;
   p.status='approved'; p.approvedAt = Date.now();
-  DB.set('payments', state.payments);
-  
-  if (typeof forzarSubidaMasiva === 'function') forzarSubidaMasiva();
-  else if (typeof uploadData === 'function') uploadData('payments', state.payments);
-  
-  renderPayments(); 
-  if (typeof renderMorosos === 'function') renderMorosos();
-  if (typeof render === 'function') render();
-  toast('Pago aprobado','success');
+  DB.set('payments', state.payments); renderPayments(); toast('Pago aprobado','success');
 };
-
 window.deletePayment = (id) => {
   if (!confirm('¿Eliminar este cobro?')) return;
   state.payments = state.payments.filter(x=>x.id!==id);
-  DB.set('payments', state.payments);
-  
-  if (typeof forzarSubidaMasiva === 'function') forzarSubidaMasiva();
-  else if (typeof uploadData === 'function') uploadData('payments', state.payments);
-  
-  renderPayments();
-  if (typeof renderMorosos === 'function') renderMorosos();
-  if (typeof render === 'function') render();
+  DB.set('payments', state.payments); renderPayments();
 };
-
 window.openReview = (paymentId) => {
   const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
   state.currentReviewPayment = paymentId;
@@ -986,38 +948,20 @@ window.openReview = (paymentId) => {
     </div>`;
   openModal('review-modal');
 };
-
 window.approvePayment = () => {
   if (!state.currentReviewPayment) return;
   const p = state.payments.find(x=>x.id===state.currentReviewPayment);
   p.status='approved'; p.approvedAt=Date.now();
   DB.set('payments', state.payments);
-  
-  if (typeof forzarSubidaMasiva === 'function') forzarSubidaMasiva();
-  else if (typeof uploadData === 'function') uploadData('payments', state.payments);
-  
-  closeModal('review-modal'); 
-  renderPayments(); 
-  if (typeof renderMorosos === 'function') renderMorosos();
-  if (typeof render === 'function') render();
-  toast('Pago aprobado','success');
+  closeModal('review-modal'); renderPayments(); toast('Pago aprobado','success');
 };
-
 window.rejectPayment = () => {
   if (!state.currentReviewPayment) return;
   const reason = prompt('Motivo del rechazo (opcional):','') || '';
   const p = state.payments.find(x=>x.id===state.currentReviewPayment);
   p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason;
   DB.set('payments', state.payments);
-  
-  if (typeof forzarSubidaMasiva === 'function') forzarSubidaMasiva();
-  else if (typeof uploadData === 'function') uploadData('payments', state.payments);
-  
-  closeModal('review-modal'); 
-  renderPayments(); 
-  if (typeof renderMorosos === 'function') renderMorosos();
-  if (typeof render === 'function') render();
-  toast('Pago rechazado','info');
+  closeModal('review-modal'); renderPayments(); toast('Pago rechazado','info');
 };
 
 /* ---------- Partidos ---------- */
