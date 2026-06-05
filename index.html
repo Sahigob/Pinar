@@ -924,13 +924,11 @@ window.generatePayments = () => {
   // 1. Guardar en LocalStorage local
   DB.set('payments', state.payments);
   
-  // 2. Sincronizar inmediatamente con Firebase
-  if (typeof uploadData === 'function') {
-    uploadData('payments', state.payments);
-  } else if (typeof saveData === 'function') {
-    saveData('payments', state.payments);
-  } else if (typeof forzarSubidaMasiva === 'function') {
+  // 2. Sincronizar inmediatamente con Firebase usando tu función nativa
+  if (typeof forzarSubidaMasiva === 'function') {
     forzarSubidaMasiva(); 
+  } else if (typeof uploadData === 'function') {
+    uploadData('payments', state.payments);
   }
 
   closeModal('gen-modal');
@@ -948,11 +946,11 @@ window.markApproved = (id) => {
   p.status='approved'; p.approvedAt = Date.now();
   DB.set('payments', state.payments);
   
-  // Sincronizar con Firebase
-  if (typeof uploadData === 'function') uploadData('payments', state.payments);
+  if (typeof forzarSubidaMasiva === 'function') { forzarSubidaMasiva(); }
+  else if (typeof uploadData === 'function') { uploadData('payments', state.payments); }
   
   renderPayments(); 
-  if (typeof renderMorosos === 'function') renderMorosos(); // <--- Actualiza morosos
+  if (typeof renderMorosos === 'function') renderMorosos();
   toast('Pago aprobado','success');
 };
 
@@ -961,11 +959,11 @@ window.deletePayment = (id) => {
   state.payments = state.payments.filter(x=>x.id!==id);
   DB.set('payments', state.payments);
   
-  // Sincronizar con Firebase
-  if (typeof uploadData === 'function') uploadData('payments', state.payments);
+  if (typeof forzarSubidaMasiva === 'function') { forzarSubidaMasiva(); }
+  else if (typeof uploadData === 'function') { uploadData('payments', state.payments); }
   
   renderPayments();
-  if (typeof renderMorosos === 'function') renderMorosos(); // <--- Actualiza morosos
+  if (typeof renderMorosos === 'function') renderMorosos();
 };
 
 window.openReview = (paymentId) => {
@@ -989,12 +987,12 @@ window.approvePayment = () => {
   p.status='approved'; p.approvedAt=Date.now();
   DB.set('payments', state.payments);
   
-  // Sincronizar con Firebase
-  if (typeof uploadData === 'function') uploadData('payments', state.payments);
+  if (typeof forzarSubidaMasiva === 'function') { forzarSubidaMasiva(); }
+  else if (typeof uploadData === 'function') { uploadData('payments', state.payments); }
   
   closeModal('review-modal'); 
   renderPayments(); 
-  if (typeof renderMorosos === 'function') renderMorosos(); // <--- Actualiza morosos
+  if (typeof renderMorosos === 'function') renderMorosos();
   toast('Pago aprobado','success');
 };
 
@@ -1005,12 +1003,12 @@ window.rejectPayment = () => {
   p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason;
   DB.set('payments', state.payments);
   
-  // Sincronizar con Firebase
-  if (typeof uploadData === 'function') uploadData('payments', state.payments);
+  if (typeof forzarSubidaMasiva === 'function') { forzarSubidaMasiva(); }
+  else if (typeof uploadData === 'function') { uploadData('payments', state.payments); }
   
   closeModal('review-modal'); 
   renderPayments(); 
-  if (typeof renderMorosos === 'function') renderMorosos(); // <--- Actualiza morosos
+  if (typeof renderMorosos === 'function') renderMorosos();
   toast('Pago rechazado','info');
 };
 
