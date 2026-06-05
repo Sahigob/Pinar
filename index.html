@@ -924,17 +924,21 @@ window.generatePayments = () => {
   // 1. Guardar en LocalStorage local
   DB.set('payments', state.payments);
   
-  // 2. Sincronizar inmediatamente con Firebase usando tu función nativa
+  // 2. DISPARAR TU SUBIDA DE FIREBASE DE FORMA DIRECTA
+  // Ejecutamos las funciones globales que tus logs muestran para obligar al backend a guardar los pagos
   if (typeof forzarSubidaMasiva === 'function') {
     forzarSubidaMasiva(); 
+  } else if (typeof guardarTodoEnNube === 'function') {
+    guardarTodoEnNube();
   } else if (typeof uploadData === 'function') {
+    // Si tu función requiere subir colección por colección:
     uploadData('payments', state.payments);
   }
 
   closeModal('gen-modal');
   toast(`${created} cobros generados`, 'success');
   
-  // 3. Actualizar interfaces
+  // 3. Forzar el redibujado de todas las pantallas con los nuevos datos
   renderPayments();
   if (typeof renderMorosos === 'function') renderMorosos();
   if (typeof render === 'function') render();
@@ -946,11 +950,12 @@ window.markApproved = (id) => {
   p.status='approved'; p.approvedAt = Date.now();
   DB.set('payments', state.payments);
   
-  if (typeof forzarSubidaMasiva === 'function') { forzarSubidaMasiva(); }
-  else if (typeof uploadData === 'function') { uploadData('payments', state.payments); }
+  if (typeof forzarSubidaMasiva === 'function') forzarSubidaMasiva();
+  else if (typeof uploadData === 'function') uploadData('payments', state.payments);
   
   renderPayments(); 
   if (typeof renderMorosos === 'function') renderMorosos();
+  if (typeof render === 'function') render();
   toast('Pago aprobado','success');
 };
 
@@ -959,11 +964,12 @@ window.deletePayment = (id) => {
   state.payments = state.payments.filter(x=>x.id!==id);
   DB.set('payments', state.payments);
   
-  if (typeof forzarSubidaMasiva === 'function') { forzarSubidaMasiva(); }
-  else if (typeof uploadData === 'function') { uploadData('payments', state.payments); }
+  if (typeof forzarSubidaMasiva === 'function') forzarSubidaMasiva();
+  else if (typeof uploadData === 'function') uploadData('payments', state.payments);
   
   renderPayments();
   if (typeof renderMorosos === 'function') renderMorosos();
+  if (typeof render === 'function') render();
 };
 
 window.openReview = (paymentId) => {
@@ -987,12 +993,13 @@ window.approvePayment = () => {
   p.status='approved'; p.approvedAt=Date.now();
   DB.set('payments', state.payments);
   
-  if (typeof forzarSubidaMasiva === 'function') { forzarSubidaMasiva(); }
-  else if (typeof uploadData === 'function') { uploadData('payments', state.payments); }
+  if (typeof forzarSubidaMasiva === 'function') forzarSubidaMasiva();
+  else if (typeof uploadData === 'function') uploadData('payments', state.payments);
   
   closeModal('review-modal'); 
   renderPayments(); 
   if (typeof renderMorosos === 'function') renderMorosos();
+  if (typeof render === 'function') render();
   toast('Pago aprobado','success');
 };
 
@@ -1003,12 +1010,13 @@ window.rejectPayment = () => {
   p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason;
   DB.set('payments', state.payments);
   
-  if (typeof forzarSubidaMasiva === 'function') { forzarSubidaMasiva(); }
-  else if (typeof uploadData === 'function') { uploadData('payments', state.payments); }
+  if (typeof forzarSubidaMasiva === 'function') forzarSubidaMasiva();
+  else if (typeof uploadData === 'function') uploadData('payments', state.payments);
   
   closeModal('review-modal'); 
   renderPayments(); 
   if (typeof renderMorosos === 'function') renderMorosos();
+  if (typeof render === 'function') render();
   toast('Pago rechazado','info');
 };
 
