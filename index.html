@@ -559,7 +559,7 @@ function guardarYSubir(coleccion, dataArray) {
   // 1. Guardamos en el almacenamiento local de inmediato
   localStorage.setItem('pinar_' + coleccion, JSON.stringify(dataArray));
   console.log(`💾 [Local] pinar_${coleccion} actualizado.`);
-
+console.log("🔥 EL NOMBRE DE LA COLECCIÓN ES:", coleccion);
   // 2. Subimos ÚNICAMENTE esta colección a Firebase (Evita el bucle masivo)
   db.collection(coleccion).doc('global_data').set({
     data: dataArray,
