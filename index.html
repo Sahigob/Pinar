@@ -475,6 +475,9 @@ const DB = {
     // 3. Si los datos de verdad han cambiado (ej: un nuevo pago), se sube de forma quirúrgica
     if (['players', 'payments', 'matches', 'categories', 'config', 'users'].includes(k)) {
       const documentoRef = db.collection(k).doc('global_data');
+      console.log("🔍 CONTENIDO DEL OBJETO A SUBIR (v):", v);
+console.log("🔍 TIPO DE DATOS DE (v):", typeof v);
+console.log("🔍 ¿ES v UN ARRAY VACÍO?:", Array.isArray(v) && v.length === 0);
       
       documentoRef.set({ 
         data: v,
@@ -507,7 +510,7 @@ function descargarDatosDeLaNube() {
             datosLimpios = datosNube.data;
           }
           
-         DB.set(k, datosLimpios, false);
+          DB.set(k, datosLimpios, false);
           console.log(`📥 Descargado ${k} desde la nube con éxito.`);
         } else {
           console.log(`ℹ️ ${k} está vacío en la nube. Se mantiene la copia local.`);
