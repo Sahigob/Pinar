@@ -457,9 +457,22 @@ const DB = {
       return def; 
     }
   },
-  set(k, v) { 
-    localStorage.setItem('pinar_'+k, JSON.stringify(v)); 
+  // Añadimos un interruptor 'subirAFirebase'. Por defecto es true para que tus formularios suban solos.
+  set(k, v, subirAFirebase = true) { 
+    // 1. Detectamos qué había antes en la memoria del navegador
+    const dataVieja = localStorage.getItem('pinar_'+k);
+    const dataNuevaString = JSON.stringify(v);
     
+    // 2. Guardamos localmente de inmediato
+    localStorage.setItem('pinar_'+k, dataNuevaString); 
+    
+    // 🛡️ EL ESCUDO: Si los datos nuevos son EXACTAMENTE idénticos a los que ya había,
+    // o si el código nos pide explícitamente no subir, frenamos aquí y evitamos el bucle infinito.
+    if (!subirAFirebase || dataVieja === dataNuevaString) {
+      return; 
+    }
+    
+    // 3. Si los datos de verdad han cambiado (ej: un nuevo pago), se sube de forma quirúrgica
     if (['players', 'payments', 'matches', 'categories', 'config', 'users'].includes(k)) {
       const documentoRef = db.collection(k).doc('global_data');
       
@@ -468,9 +481,9 @@ const DB = {
         _lastUpdated: Date.now(),
         _clubId: "pinar-c6165" // Pasaporte de acceso para la regla de Firebase
       })
-      .then(() => console.log(`🔒 Respaldado ${k} en la nube.`))
+      .then(() => console.log(`☁️ [AUTO-SYNC] '${k}' actualizado con éxito en la nube.`))
       .catch(err => {
-        console.error("⚠️ Error de guardado:", err.message);
+        console.error(`⚠️ Error al subir ${k}:`, err.message);
       });
     }
   }
@@ -538,7 +551,31 @@ function subirTodoALaNube() {
   });
   alert("Sincronización manual completada. ¡Los cambios ya están en internet!");
 }
+/* 🔄 FUNCIÓN MAESTRA PARA GUARDAR LOCALMENTE Y SUBIR A FIREBASE AUTOMÁTICAMENTE */
+function guardarYSubir(coleccion, dataArray) {
+  // 1. Guardamos en el almacenamiento local de inmediato
+  localStorage.setItem('pinar_' + coleccion, JSON.stringify(dataArray));
+  console.log(`💾 [Local] pinar_${coleccion} actualizado.`);
 
+  // 2. Subimos ÚNICAMENTE esta colección a Firebase (Evita el bucle masivo)
+  db.collection(coleccion).doc('global_data').set({
+    data: dataArray,
+    _lastUpdated: Date.now(),
+    _clubId: "pinar-c6165"
+  })
+  .then(() => {
+    console.log(`☁️ [Firebase OK] Colección '${coleccion}' sincronizada automáticamente.`);
+  })
+  .catch(err => {
+    console.error(`❌ Error al sincronizar ${coleccion}:`, err.message);
+  });
+
+  // 3. Volvemos a dibujar la pantalla para ver el cambio reflejado
+  // (Nota: si tu función para dibujar la web se llama diferente a renderApp, cambia este nombre)
+  if (typeof renderApp === "function") {
+    renderApp();
+  }
+}
 // Arrancamos la descarga al cargar
 descargarDatosDeLaNube();
 /* ---------- estado ---------- */
