@@ -507,7 +507,7 @@ function descargarDatosDeLaNube() {
             datosLimpios = datosNube.data;
           }
           
-          localStorage.setItem('pinar_' + k, JSON.stringify(datosLimpios));
+         DB.set(k, datosLimpios, false);
           console.log(`📥 Descargado ${k} desde la nube con éxito.`);
         } else {
           console.log(`ℹ️ ${k} está vacío en la nube. Se mantiene la copia local.`);
