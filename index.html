@@ -1,39 +1,36 @@
+Aquí tienes el HTML completo corregido para que lo copies y pegues directamente en GitHub:
+
 <!DOCTYPE html>
-<html lang=\"es\">
+<html lang="es">
 <head>
-  <meta charset=\"UTF-8\" />
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
   <title>Club Pinar Fútbol Sala | Gestión Premium</title>
   
-  <script src=\"https://cdn.tailwindcss.com\"></script>
-  <script src=\"https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js\"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <script src=\"https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js\"></script>
-  <script src=\"https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js\"></script>
-  <script src=\"https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js\"></script>
-  <script src=\"https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js\"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // Inicializamos EmailJS (deja tu PUBLIC KEY real cuando la tengas)
-    emailjs.init(\"TU_PUBLIC_KEY_DE_EMAILJS\");
+    emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
 
-    // Datos de conexión de Firebase de tu club (API KEY REAL)
     const firebaseConfig = {
-      apiKey: \"AIzaSyAPpBPLuCMkbb9aT6BYbELaBKe0dP7rXsU\",
-      authDomain: \"pinar-c6165.firebaseapp.com\",
-      projectId: \"pinar-c6165\",
-      storageBucket: \"pinar-c6165.appspot.com\",
-      messagingSenderId: \"110106144676\",
-      appId: \"1:110106144676:web:55eac9c8e4d8f2de851b31\"
+      apiKey: "AIzaSyAPpBPLuCMkbb9aT6BYbELaBKe0dP7rXsU",
+      authDomain: "pinar-c6165.firebaseapp.com",
+      projectId: "pinar-c6165",
+      storageBucket: "pinar-c6165.appspot.com",
+      messagingSenderId: "110106144676",
+      appId: "1:110106144676:web:55eac9c8e4d8f2de851b31"
     };
     
-    // Arrancamos Firebase globalmente
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Bandera que indica si Firebase ya cargó al menos una vez
     window.__firebaseListo = false;
-    // Bandera para saber si estamos escribiendo localmente (para no rebotar onSnapshot)
     window.__guardandoLocal = false;
   </script>
 
@@ -70,518 +67,181 @@
     .spinner { width: 48px; height: 48px; border: 4px solid #1f1f27; border-top-color: #166534; border-radius: 50%; animation: spin 0.9s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media print { .no-print { display:none !important; } body { background:#fff; color:#000; } .card { background:#fff; border:1px solid #ddd; color:#000; } }
-  
-</style>
+  </style>
 </head>
-<body class=\"pb-24\">
+<body class="pb-24">
 
-<div id=\"view-loading\">
-  <div class=\"spinner\"></div>
-  <div class=\"text-[11px] font-black uppercase tracking-widest text-gray-500\">Conectando con la nube…</div>
+<div id="view-loading">
+  <div class="spinner"></div>
+  <div class="text-[11px] font-black uppercase tracking-widest text-gray-500">Conectando con la nube…</div>
 </div>
 
-<div id=\"view-login\" class=\"hidden min-h-screen flex items-center justify-center p-6\">
-  <div class=\"w-full max-w-md\">
-    <div class=\"text-center mb-8\">
-      <div class=\"w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white text-3xl italic mb-4\">P</div>
-      <h1 class=\"font-black text-3xl tracking-tighter\">CLUB PINAR FS</h1>
-      <p class=\"text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2\">Acceso a la plataforma</p>
+<div id="view-login" class="hidden min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white text-3xl italic mb-4">P</div>
+      <h1 class="font-black text-3xl tracking-tighter">CLUB PINAR FS</h1>
+      <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2">Acceso a la plataforma</p>
     </div>
-    <div class=\"card\">
-      <div id=\"login-error\" class=\"hidden bg-red-900/30 border border-red-700 text-red-300 text-xs p-3 rounded-lg mb-4 font-bold\"></div>
-      <div class=\"space-y-4\">
+    <div class="card">
+      <div id="login-error" class="hidden bg-red-900/30 border border-red-700 text-red-300 text-xs p-3 rounded-lg mb-4 font-bold"></div>
+      <div class="space-y-4">
         <div>
-          <label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Email</label>
-          <input id=\"login-email\" type=\"email\" class=\"input-field\" autocomplete=\"email\" />
+          <label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Email</label>
+          <input id="login-email" type="email" class="input-field" autocomplete="email" />
         </div>
         <div>
-          <label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Contraseña</label>
-          <input id=\"login-password\" type=\"password\" class=\"input-field\" autocomplete=\"current-password\" />
+          <label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Contraseña</label>
+          <input id="login-password" type="password" class="input-field" autocomplete="current-password" />
         </div>
-        <button id=\"btn-login\" class=\"w-full btn-primary py-3\">Entrar</button>
-        <p class=\"text-center text-[10px] text-gray-500 mt-2\">Admin por defecto: <b>admin@pinarfs.es</b> / <b>Pinar2026!</b></p>
+        <button id="btn-login" class="w-full btn-primary py-3">Entrar</button>
+        <p class="text-center text-[10px] text-gray-500 mt-2">Admin por defecto: <b>admin@pinarfs.es</b> / <b>Pinar2026!</b></p>
       </div>
     </div>
-    <p class=\"text-center text-[9px] text-gray-600 mt-6 uppercase tracking-widest\">© Club Pinar FS · Alcorcón</p>
+    <p class="text-center text-[9px] text-gray-600 mt-6 uppercase tracking-widest">© Club Pinar FS · Alcorcón</p>
   </div>
 </div>
 
-<div id=\"view-admin\" class=\"hidden\">
-  <header class=\"bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40\">
-    <div class=\"max-w-7xl mx-auto px-6 py-4 flex items-center justify-between\">
-      <div class=\"flex items-center gap-4\">
-        <div class=\"w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white italic\">P</div>
+<div id="view-admin" class="hidden">
+  <header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white italic">P</div>
         <div>
-          <h1 class=\"font-black text-xl tracking-tighter leading-none\">CLUB PINAR FS</h1>
-          <p class=\"text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1\">Modo Administrador</p>
+          <h1 class="font-black text-xl tracking-tighter leading-none">CLUB PINAR FS</h1>
+          <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Modo Administrador</p>
         </div>
       </div>
-      <div class=\"flex items-center gap-3\">
-        <span id=\"cloud-status\" class=\"text-[10px] font-black text-gray-500 tracking-widest\">☁️ —</span>
-        <span id=\"admin-email-badge\" class=\"hidden sm:inline text-[10px] font-black text-green-500 tracking-widest\"></span>
-        <button onclick=\"subirTodoALaNube()\" style=\"background-color: #16a34a; color: white; font-size: 10px; font-weight: bold; padding: 6px 12px; border-radius: 6px; cursor: pointer;\">
-          ☁️ Sincronizar Nube
-        </button>
-        <button onclick=\"logout()\" class=\"btn-secondary\">Salir</button>
+      <div class="flex items-center gap-3">
+        <span id="cloud-status" class="text-[10px] font-black text-gray-500 tracking-widest">☁️ —</span>
+        <span id="admin-email-badge" class="hidden sm:inline text-[10px] font-black text-green-500 tracking-widest"></span>
+        <button onclick="subirTodoALaNube()" style="background-color: #16a34a; color: white; font-size: 10px; font-weight: bold; padding: 6px 12px; border-radius: 6px; cursor: pointer;">☁️ Sincronizar Nube</button>
+        <button onclick="logout()" class="btn-secondary">Salir</button>
       </div>
     </div>
-    <div class=\"max-w-7xl mx-auto px-6 pb-4 overflow-x-auto\">
-      <div class=\"flex gap-2 p-1 bg-slate-900/50 rounded-xl w-fit\">
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest tab-active\" data-tab=\"dashboard\" onclick=\"switchAdminTab('dashboard')\">Panel</button>
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest\" data-tab=\"categories\" onclick=\"switchAdminTab('categories')\">Equipos</button>
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest\" data-tab=\"players\" onclick=\"switchAdminTab('players')\">Plantillas</button>
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest\" data-tab=\"concepts\" onclick=\"switchAdminTab('concepts')\">Conceptos</button>
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest\" data-tab=\"payments\" onclick=\"switchAdminTab('payments')\">Cobros</button>
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest\" data-tab=\"matches\" onclick=\"switchAdminTab('matches')\">Partidos</button>
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest\" data-tab=\"morosos\" onclick=\"switchAdminTab('morosos')\">Morosos</button>
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest\" data-tab=\"users\" onclick=\"switchAdminTab('users')\">Usuarios</button>
-        <button class=\"tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest\" data-tab=\"config\" onclick=\"switchAdminTab('config')\">Config</button>
+    <div class="max-w-7xl mx-auto px-6 pb-4 overflow-x-auto">
+      <div class="flex gap-2 p-1 bg-slate-900/50 rounded-xl w-fit">
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest tab-active" data-tab="dashboard" onclick="switchAdminTab('dashboard')">Panel</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="categories" onclick="switchAdminTab('categories')">Equipos</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="players" onclick="switchAdminTab('players')">Plantillas</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="concepts" onclick="switchAdminTab('concepts')">Conceptos</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="payments" onclick="switchAdminTab('payments')">Cobros</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="matches" onclick="switchAdminTab('matches')">Partidos</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="morosos" onclick="switchAdminTab('morosos')">Morosos</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="users" onclick="switchAdminTab('users')">Usuarios</button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="config" onclick="switchAdminTab('config')">Config</button>
       </div>
     </div>
   </header>
 
-  <main class=\"max-w-7xl mx-auto px-6 mt-8\">
-    <div id=\"admin-tab-dashboard\" class=\"admin-pane\">
-      <h2 class=\"text-3xl font-black mb-8 italic uppercase tracking-tighter\">Estado General</h2>
-      <div id=\"dash-content\"></div>
-    </div>
-
-    <div id=\"admin-tab-categories\" class=\"admin-pane hidden\">
-      <div class=\"flex justify-between items-center mb-8\">
-        <h2 class=\"text-3xl font-black italic uppercase tracking-tighter\">Equipos</h2>
-        <button onclick=\"openEditCategory(null)\" class=\"btn-success\">+ Nuevo Equipo</button>
-      </div>
-      <div id=\"cat-list\" class=\"grid sm:grid-cols-2 lg:grid-cols-4 gap-6\"></div>
-    </div>
-
-    <div id=\"admin-tab-players\" class=\"admin-pane hidden\">
-      <div class=\"flex flex-wrap items-center gap-4 mb-8\">
-        <h2 class=\"text-3xl font-black italic uppercase tracking-tighter flex-1\">Plantilla</h2>
-        <input id=\"player-search\" type=\"text\" placeholder=\"Buscar por nombre...\" class=\"input-field max-w-xs\" />
-        <select id=\"player-cat-filter\" class=\"input-field max-w-xs\"></select>
-        <button onclick=\"exportPlayers()\" class=\"btn-secondary\">Excel</button>
-        <button onclick=\"openEditPlayer(null)\" class=\"btn-primary\">+ Alta Jugador</button>
-      </div>
-      <div id=\"player-list\" class=\"grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6\"></div>
-    </div>
-
-    <div id=\"admin-tab-concepts\" class=\"admin-pane hidden\">
-      <div class=\"flex justify-between items-center mb-8\">
-        <h2 class=\"text-3xl font-black italic uppercase tracking-tighter\">Conceptos de Cuota</h2>
-        <button onclick=\"openEditConcept(null)\" class=\"btn-success\">+ Nuevo Concepto</button>
-      </div>
-      <p class=\"text-gray-500 text-sm mb-6\">Define cada cuota del año (mes, concepto, importe) y asígnala a todos los equipos o solo a uno concreto. Después podrás generar los cobros para los jugadores.</p>
-      <div id=\"concept-list\" class=\"grid sm:grid-cols-2 lg:grid-cols-3 gap-4\"></div>
-    </div>
-
-    <div id=\"admin-tab-payments\" class=\"admin-pane hidden\">
-      <div class=\"flex flex-wrap items-center gap-4 mb-8\">
-        <h2 class=\"text-3xl font-black italic uppercase tracking-tighter flex-1\">Cobros</h2>
-        <select id=\"pay-cat-filter\" class=\"input-field max-w-xs\"></select>
-        <select id=\"pay-status-filter\" class=\"input-field max-w-[180px]\">
-          <option value=\"\">Todos los estados</option>
-          <option value=\"pending\">Pendientes</option>
-          <option value=\"review\">En revisión</option>
-          <option value=\"approved\">Aprobados</option>
-          <option value=\"rejected\">Rechazados</option>
-        </select>
-        <button onclick=\"openGeneratePayments()\" class=\"btn-success\">Generar cobros</button>
-        <button onclick=\"exportPayments()\" class=\"btn-secondary\">Excel</button>
-      </div>
-      <div id=\"pay-summary\"></div>
-      <div id=\"pay-list\"></div>
-    </div>
-
-    <div id=\"admin-tab-matches\" class=\"admin-pane hidden\">
-      <div class=\"flex justify-between items-center mb-8\">
-        <h2 class=\"text-3xl font-black italic uppercase tracking-tighter\">Partidos</h2>
-        <button onclick=\"openEditMatch(null)\" class=\"btn-success\">+ Nuevo Partido</button>
-      </div>
-      <div id=\"match-list\" class=\"space-y-4\"></div>
-    </div>
-
-    <div id=\"admin-tab-morosos\" class=\"admin-pane hidden\">
-      <div class=\"flex justify-between items-center mb-8\">
-        <h2 class=\"text-3xl font-black italic uppercase tracking-tighter\">Morosos</h2>
-        <button onclick=\"exportMorosos()\" class=\"btn-secondary\">Excel</button>
-      </div>
-      <div id=\"morosos-list\"></div>
-    </div>
-
-    <div id=\"admin-tab-users\" class=\"admin-pane hidden\">
-      <div class=\"flex justify-between items-center mb-8\">
-        <h2 class=\"text-3xl font-black italic uppercase tracking-tighter\">Usuarios</h2>
-        <button onclick=\"openEditUser(null)\" class=\"btn-success\">+ Nuevo Usuario</button>
-      </div>
-      <p class=\"text-gray-500 text-sm mb-6\">Crea cuentas para padres/tutores o jugadores mayores de edad y vincúlalos a uno o varios jugadores.</p>
-      <div id=\"users-list\"></div>
-    </div>
-
-    <div id=\"admin-tab-config\" class=\"admin-pane hidden\">
-      <h2 class=\"text-3xl font-black italic uppercase tracking-tighter mb-8\">Configuración del Club</h2>
-      <div class=\"card max-w-2xl\">
-        <h3 class=\"section-title\">Datos Bancarios (visibles para padres)</h3>
-        <div class=\"space-y-4\">
-          <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">IBAN</label><input id=\"cfg-iban\" type=\"text\" class=\"input-field\" placeholder=\"ES00 0000 0000 0000 0000 0000\" /></div>
-          <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Titular</label><input id=\"cfg-holder\" type=\"text\" class=\"input-field\" /></div>
-          <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Banco</label><input id=\"cfg-bank\" type=\"text\" class=\"input-field\" /></div>
-          <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Concepto sugerido</label><input id=\"cfg-concept\" type=\"text\" class=\"input-field\" placeholder=\"Nombre del jugador + mes\" /></div>
-          <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Bizum (opcional)</label><input id=\"cfg-bizum\" type=\"text\" class=\"input-field\" /></div>
-          <button onclick=\"saveClubConfig()\" class=\"btn-primary mt-4\">Guardar Configuración</button>
-        </div>
-      </div>
-
-      <div class=\"card max-w-2xl mt-6\">
-        <h3 class=\"section-title\">Copia de Seguridad</h3>
-        <p class=\"text-gray-400 text-xs mb-4\">Exporta todos los datos (equipos, jugadores, cobros, partidos, usuarios, config) a un archivo JSON. Guárdalo o pásalo a otro dispositivo y usa <b>Importar</b> para restaurarlo.</p>
-        <div class=\"flex flex-wrap gap-3\">
-          <button onclick=\"exportBackup()\" class=\"btn-success\">⬇ Exportar copia</button>
-          <label class=\"btn-primary cursor-pointer\">⬆ Importar copia<input type=\"file\" accept=\"application/json,.json\" onchange=\"importBackup(event)\" class=\"hidden\" /></label>
-          <button onclick=\"wipeAll()\" class=\"btn-danger\">🗑 Borrar todo</button>
-        </div>
-        <p id=\"backup-info\" class=\"text-[11px] text-gray-500 mt-3\"></p>
-      </div>
-    </div>
+  <main class="max-w-7xl mx-auto px-6 mt-8">
+    <div id="admin-tab-dashboard" class="admin-pane"><h2 class="text-3xl font-black mb-8 italic uppercase tracking-tighter">Estado General</h2><div id="dash-content"></div></div>
+    <div id="admin-tab-categories" class="admin-pane hidden"><div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter">Equipos</h2><button onclick="openEditCategory(null)" class="btn-success">+ Nuevo Equipo</button></div><div id="cat-list" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div></div>
+    <div id="admin-tab-players" class="admin-pane hidden"><div class="flex flex-wrap items-center gap-4 mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter flex-1">Plantilla</h2><input id="player-search" type="text" placeholder="Buscar por nombre..." class="input-field max-w-xs" /><select id="player-cat-filter" class="input-field max-w-xs"></select><button onclick="exportPlayers()" class="btn-secondary">Excel</button><button onclick="openEditPlayer(null)" class="btn-primary">+ Alta Jugador</button></div><div id="player-list" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div></div>
+    <div id="admin-tab-concepts" class="admin-pane hidden"><div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter">Conceptos de Cuota</h2><button onclick="openEditConcept(null)" class="btn-success">+ Nuevo Concepto</button></div><p class="text-gray-500 text-sm mb-6">Define cada cuota del año (mes, concepto, importe) y asígnala a todos los equipos o solo a uno concreto. Después podrás generar los cobros para los jugadores.</p><div id="concept-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+    <div id="admin-tab-payments" class="admin-pane hidden"><div class="flex flex-wrap items-center gap-4 mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter flex-1">Cobros</h2><select id="pay-cat-filter" class="input-field max-w-xs"></select><select id="pay-status-filter" class="input-field max-w-[180px]"><option value="">Todos los estados</option><option value="pending">Pendientes</option><option value="review">En revisión</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select><button onclick="openGeneratePayments()" class="btn-success">Generar cobros</button><button onclick="exportPayments()" class="btn-secondary">Excel</button></div><div id="pay-summary"></div><div id="pay-list"></div></div>
+    <div id="admin-tab-matches" class="admin-pane hidden"><div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter">Partidos</h2><button onclick="openEditMatch(null)" class="btn-success">+ Nuevo Partido</button></div><div id="match-list" class="space-y-4"></div></div>
+    <div id="admin-tab-morosos" class="admin-pane hidden"><div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter">Morosos</h2><button onclick="exportMorosos()" class="btn-secondary">Excel</button></div><div id="morosos-list"></div></div>
+    <div id="admin-tab-users" class="admin-pane hidden"><div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-black italic uppercase tracking-tighter">Usuarios</h2><button onclick="openEditUser(null)" class="btn-success">+ Nuevo Usuario</button></div><p class="text-gray-500 text-sm mb-6">Crea cuentas para padres/tutores o jugadores mayores de edad y vincúlalos a uno o varios jugadores.</p><div id="users-list"></div></div>
+    <div id="admin-tab-config" class="admin-pane hidden"><h2 class="text-3xl font-black italic uppercase tracking-tighter mb-8">Configuración del Club</h2><div class="card max-w-2xl"><h3 class="section-title">Datos Bancarios (visibles para padres)</h3><div class="space-y-4"><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">IBAN</label><input id="cfg-iban" type="text" class="input-field" placeholder="ES00 0000 0000 0000 0000 0000" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Titular</label><input id="cfg-holder" type="text" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Banco</label><input id="cfg-bank" type="text" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Concepto sugerido</label><input id="cfg-concept" type="text" class="input-field" placeholder="Nombre del jugador + mes" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Bizum (opcional)</label><input id="cfg-bizum" type="text" class="input-field" /></div><button onclick="saveClubConfig()" class="btn-primary mt-4">Guardar Configuración</button></div></div><div class="card max-w-2xl mt-6"><h3 class="section-title">Copia de Seguridad</h3><p class="text-gray-400 text-xs mb-4">Exporta todos los datos a un archivo JSON. Guárdalo o pásalo a otro dispositivo y usa <b>Importar</b> para restaurarlo.</p><div class="flex flex-wrap gap-3"><button onclick="exportBackup()" class="btn-success">⬇ Exportar copia</button><label class="btn-primary cursor-pointer">⬆ Importar copia<input type="file" accept="application/json,.json" onchange="importBackup(event)" class="hidden" /></label><button onclick="wipeAll()" class="btn-danger">🗑 Borrar todo</button></div><p id="backup-info" class="text-[11px] text-gray-500 mt-3"></p></div></div>
   </main>
 </div>
 
-<div id=\"view-parent\" class=\"hidden\">
-  <header class=\"bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40\">
-    <div class=\"max-w-3xl mx-auto px-4 py-4 flex items-center justify-between\">
-      <div class=\"flex items-center gap-3\">
-        <div class=\"w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white italic\">P</div>
-        <div>
-          <h1 class=\"font-black text-base tracking-tighter leading-none\">CLUB PINAR FS</h1>
-          <p class=\"text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1\">Área de familias</p>
-        </div>
-      </div>
-      <button onclick=\"logout()\" class=\"btn-secondary text-[9px]\">Salir</button>
+<div id="view-parent" class="hidden">
+  <header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
+    <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white italic">P</div><div><h1 class="font-black text-base tracking-tighter leading-none">CLUB PINAR FS</h1><p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Área de familias</p></div></div>
+      <button onclick="logout()" class="btn-secondary text-[9px]">Salir</button>
     </div>
-    <div id=\"parent-player-selector\" class=\"max-w-3xl mx-auto px-4 pb-3 hidden\">
-      <select id=\"parent-player-select\" class=\"input-field\"></select>
-    </div>
+    <div id="parent-player-selector" class="max-w-3xl mx-auto px-4 pb-3 hidden"><select id="parent-player-select" class="input-field"></select></div>
   </header>
-
-  <main class=\"max-w-3xl mx-auto px-4 mt-6\">
-    <div id=\"parent-pane-home\" class=\"parent-pane\"></div>
-    <div id=\"parent-pane-payments\" class=\"parent-pane hidden\"></div>
-    <div id=\"parent-pane-matches\" class=\"parent-pane hidden\"></div>
-    <div id=\"parent-pane-history\" class=\"parent-pane hidden\"></div>
-    <div id=\"parent-pane-bank\" class=\"parent-pane hidden\"></div>
+  <main class="max-w-3xl mx-auto px-4 mt-6">
+    <div id="parent-pane-home" class="parent-pane"></div>
+    <div id="parent-pane-payments" class="parent-pane hidden"></div>
+    <div id="parent-pane-matches" class="parent-pane hidden"></div>
+    <div id="parent-pane-history" class="parent-pane hidden"></div>
+    <div id="parent-pane-bank" class="parent-pane hidden"></div>
   </main>
-
-  <nav class=\"bottom-nav\" style=\"position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 50 !important; background-color: #000000 !important; display: flex !important;\">
-    <button data-pane=\"home\" onclick=\"switchParentTab('home')\" class=\"active\">
-      <svg fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M3 12l2-2m0 0l7-7 7 7m-9 2v8a2 2 0 002 2h2a2 2 0 002-2v-8\"/></svg>Inicio
-    </button>
-    <button data-pane=\"payments\" onclick=\"switchParentTab('payments')\">
-      <svg fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 8c-1.66 0-3 .67-3 1.5S10.34 11 12 11s3 .67 3 1.5S13.66 14 12 14m0-6V6m0 8v2m9-4a9 9 0 11-18 0 9 9 0 0118 0z\"/></svg>Pagos
-    </button>
-    <button data-pane=\"matches\" onclick=\"switchParentTab('matches')\">
-      <svg fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\"/></svg>Partidos
-    </button>
-    <button data-pane=\"history\" onclick=\"switchParentTab('history')\">
-      <svg fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2\"/></svg>Historial
-    </button>
-    <button data-pane=\"bank\" onclick=\"switchParentTab('bank')\">
-      <svg fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M3 10h18M3 14h18M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z\"/></svg>Banco
-    </button>
+  <nav class="bottom-nav" style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 50 !important; background-color: #000000 !important; display: flex !important;">
+    <button data-pane="home" onclick="switchParentTab('home')" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8a2 2 0 002 2h2a2 2 0 002-2v-8"/></svg>Inicio</button>
+    <button data-pane="payments" onclick="switchParentTab('payments')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.66 0-3 .67-3 1.5S10.34 11 12 11s3 .67 3 1.5S13.66 14 12 14m0-6V6m0 8v2m9-4a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pagos</button>
+    <button data-pane="matches" onclick="switchParentTab('matches')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Partidos</button>
+    <button data-pane="history" onclick="switchParentTab('history')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Historial</button>
+    <button data-pane="bank" onclick="switchParentTab('bank')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>Banco</button>
   </nav>
 </div>
 
-<div id=\"cat-modal\" class=\"modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6\">
-  <div class=\"card w-full max-w-md\">
-    <h3 class=\"text-xl font-black mb-6 uppercase italic\">Configurar Equipo</h3>
-    <input type=\"hidden\" id=\"cat-form-id\" />
-    <div class=\"space-y-4\">
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Categoría Base</label>
-        <select id=\"cat-base\" class=\"input-field\">
-          <option>Prebenjamín</option><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Juvenil</option><option>Sénior</option>
-        </select>
-      </div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Subcategoría (Letra)</label><input id=\"cat-sub\" type=\"text\" placeholder=\"Ej: A, B o C\" class=\"input-field\" /></div>
-    </div>
-    <div class=\"flex gap-3 mt-8\">
-      <button onclick=\"closeModal('cat-modal')\" class=\"flex-1 btn-secondary\">Cancelar</button>
-      <button onclick=\"saveCategoryForm()\" class=\"flex-1 btn-success\">Guardar</button>
-    </div>
-  </div>
-</div>
+<div id="cat-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6"><div class="card w-full max-w-md"><h3 class="text-xl font-black mb-6 uppercase italic">Configurar Equipo</h3><input type="hidden" id="cat-form-id" /><div class="space-y-4"><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Categoría Base</label><select id="cat-base" class="input-field"><option>Prebenjamín</option><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Juvenil</option><option>Sénior</option></select></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Subcategoría (Letra)</label><input id="cat-sub" type="text" placeholder="Ej: A, B o C" class="input-field" /></div></div><div class="flex gap-3 mt-8"><button onclick="closeModal('cat-modal')" class="flex-1 btn-secondary">Cancelar</button><button onclick="saveCategoryForm()" class="flex-1 btn-success">Guardar</button></div></div></div>
 
-<div id=\"player-modal\" class=\"modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6\">
-  <div class=\"card w-full max-w-lg overflow-y-auto max-h-[90vh]\">
-    <h3 class=\"text-xl font-black mb-6 uppercase italic\">Ficha del Jugador</h3>
-    <input type=\"hidden\" id=\"pl-id\" />
-    <div class=\"grid grid-cols-2 gap-4\">
-      <div class=\"col-span-2\"><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Nombre Completo</label><input id=\"pl-name\" type=\"text\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Dorsal</label><input id=\"pl-dorsal\" type=\"number\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Posición</label>
-        <select id=\"pl-position\" class=\"input-field\"><option>Portero</option><option>Cierre</option><option>Ala Izquierda</option><option>Ala Derecha</option><option>Pívot</option></select>
-      </div>
-      <div class=\"col-span-2\"><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Equipo</label><select id=\"pl-category\" class=\"input-field\"></select></div>
-      <div class=\"col-span-2\"><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Foto (URL)</label><input id=\"pl-photo\" type=\"url\" class=\"input-field\" placeholder=\"https://...\" /></div>
-      <div class=\"col-span-2 border-t border-slate-800 pt-4\"><label class=\"text-[10px] font-black text-red-500 uppercase mb-3 block\">Estadísticas y Asistencia</label></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase\">Goles</label><input id=\"pl-goals\" type=\"number\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase\">Presencias</label><input id=\"pl-att-present\" type=\"number\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase\">Faltas</label><input id=\"pl-att-absent\" type=\"number\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase\">Lesiones</label><input id=\"pl-att-injured\" type=\"number\" class=\"input-field\" /></div>
-    </div>
-    <div class=\"flex gap-3 mt-8\">
-      <button onclick=\"closeModal('player-modal')\" class=\"flex-1 btn-secondary\">Cancelar</button>
-      <button onclick=\"savePlayerForm()\" class=\"flex-1 btn-primary\">Guardar</button>
-    </div>
-  </div>
-</div>
+<div id="player-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6"><div class="card w-full max-w-lg overflow-y-auto max-h-[90vh]"><h3 class="text-xl font-black mb-6 uppercase italic">Ficha del Jugador</h3><input type="hidden" id="pl-id" /><div class="grid grid-cols-2 gap-4"><div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Nombre Completo</label><input id="pl-name" type="text" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Dorsal</label><input id="pl-dorsal" type="number" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Posición</label><select id="pl-position" class="input-field"><option>Portero</option><option>Cierre</option><option>Ala Izquierda</option><option>Ala Derecha</option><option>Pívot</option></select></div><div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipo</label><select id="pl-category" class="input-field"></select></div><div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Foto (URL)</label><input id="pl-photo" type="url" class="input-field" placeholder="https://..." /></div><div class="col-span-2 border-t border-slate-800 pt-4"><label class="text-[10px] font-black text-red-500 uppercase mb-3 block">Estadísticas y Asistencia</label></div><div><label class="text-[10px] font-black text-gray-500 uppercase">Goles</label><input id="pl-goals" type="number" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase">Presencias</label><input id="pl-att-present" type="number" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase">Faltas</label><input id="pl-att-absent" type="number" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase">Lesiones</label><input id="pl-att-injured" type="number" class="input-field" /></div></div><div class="flex gap-3 mt-8"><button onclick="closeModal('player-modal')" class="flex-1 btn-secondary">Cancelar</button><button onclick="savePlayerForm()" class="flex-1 btn-primary">Guardar</button></div></div></div>
 
-<div id=\"concept-modal\" class=\"modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6\">
-  <div class=\"card w-full max-w-md\">
-    <h3 class=\"text-xl font-black mb-6 uppercase italic\">Concepto de Cuota</h3>
-    <input type=\"hidden\" id=\"cc-id\" />
-    <div class=\"space-y-4\">
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Mes</label>
-        <select id=\"cc-month\" class=\"input-field\">
-          <option value=\"1\">Enero</option><option value=\"2\">Febrero</option><option value=\"3\">Marzo</option><option value=\"4\">Abril</option><option value=\"5\">Mayo</option><option value=\"6\">Junio</option><option value=\"7\">Julio</option><option value=\"8\">Agosto</option><option value=\"9\">Septiembre</option><option value=\"10\">Octubre</option><option value=\"11\">Noviembre</option><option value=\"12\">Diciembre</option>
-        </select>
-      </div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Concepto</label><input id=\"cc-name\" type=\"text\" class=\"input-field\" placeholder=\"Ej: Reserva plaza\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Importe (€)</label><input id=\"cc-amount\" type=\"number\" step=\"0.01\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Aplicar a</label>
-        <select id=\"cc-category\" class=\"input-field\"><option value=\"\">Todos los equipos</option></select>
-      </div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Temporada</label><input id=\"cc-season\" type=\"text\" class=\"input-field\" placeholder=\"2025-2026\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Fecha límite (opcional)</label><input id=\"cc-deadline\" type=\"date\" class=\"input-field\" /></div>
-    </div>
-    <div class=\"flex gap-3 mt-8\">
-      <button onclick=\"closeModal('concept-modal')\" class=\"flex-1 btn-secondary\">Cancelar</button>
-      <button onclick=\"saveConceptForm()\" class=\"flex-1 btn-success\">Guardar</button>
-    </div>
-  </div>
-</div>
+<div id="concept-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6"><div class="card w-full max-w-md"><h3 class="text-xl font-black mb-6 uppercase italic">Concepto de Cuota</h3><input type="hidden" id="cc-id" /><div class="space-y-4"><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Mes</label><select id="cc-month" class="input-field"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Concepto</label><input id="cc-name" type="text" class="input-field" placeholder="Ej: Reserva plaza" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Importe (€)</label><input id="cc-amount" type="number" step="0.01" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Aplicar a</label><select id="cc-category" class="input-field"><option value="">Todos los equipos</option></select></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Temporada</label><input id="cc-season" type="text" class="input-field" placeholder="2025-2026" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Fecha límite (opcional)</label><input id="cc-deadline" type="date" class="input-field" /></div></div><div class="flex gap-3 mt-8"><button onclick="closeModal('concept-modal')" class="flex-1 btn-secondary">Cancelar</button><button onclick="saveConceptForm()" class="flex-1 btn-success">Guardar</button></div></div></div>
 
-<div id=\"gen-modal\" class=\"modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6\">
-  <div class=\"card w-full max-w-md\">
-    <h3 class=\"text-xl font-black mb-6 uppercase italic\">Generar Cobros</h3>
-    <p class=\"text-gray-500 text-xs mb-4\">Crea un cobro pendiente para cada jugador que aplique. Si el cobro ya existe, no se duplica.</p>
-    <div class=\"space-y-4\">
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Concepto</label><select id=\"gen-concept\" class=\"input-field\"></select></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Equipo (override opcional)</label><select id=\"gen-category\" class=\"input-field\"><option value=\"\">Usar el del concepto</option></select></div>
-    </div>
-    <div class=\"flex gap-3 mt-8\">
-      <button onclick=\"closeModal('gen-modal')\" class=\"flex-1 btn-secondary\">Cancelar</button>
-      <button onclick=\"generatePayments()\" class=\"flex-1 btn-success\">Generar</button>
-    </div>
-  </div>
-</div>
+<div id="gen-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6"><div class="card w-full max-w-md"><h3 class="text-xl font-black mb-6 uppercase italic">Generar Cobros</h3><p class="text-gray-500 text-xs mb-4">Crea un cobro pendiente para cada jugador que aplique. Si el cobro ya existe, no se duplica.</p><div class="space-y-4"><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Concepto</label><select id="gen-concept" class="input-field"></select></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipo (override opcional)</label><select id="gen-category" class="input-field"><option value="">Usar el del concepto</option></select></div></div><div class="flex gap-3 mt-8"><button onclick="closeModal('gen-modal')" class="flex-1 btn-secondary">Cancelar</button><button onclick="generatePayments()" class="flex-1 btn-success">Generar</button></div></div></div>
 
-<div id=\"match-modal\" class=\"modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6\">
-  <div class=\"card w-full max-w-md overflow-y-auto max-h-[90vh]\">
-    <h3 class=\"text-xl font-black mb-6 uppercase italic\">Partido</h3>
-    <input type=\"hidden\" id=\"mt-id\" />
-    <div class=\"space-y-4\">
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Equipo</label><select id=\"mt-category\" class=\"input-field\"></select></div>
-      <div class=\"grid grid-cols-2 gap-3\">
-        <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Fecha</label><input id=\"mt-date\" type=\"date\" class=\"input-field\" /></div>
-        <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Hora</label><input id=\"mt-time\" type=\"time\" class=\"input-field\" /></div>
-      </div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Rival</label><input id=\"mt-rival\" type=\"text\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Lugar / Pabellón</label><input id=\"mt-location\" type=\"text\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Dirección</label><input id=\"mt-address\" type=\"text\" class=\"input-field\" placeholder=\"Calle, ciudad...\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Equipación</label>
-        <select id=\"mt-kit\" class=\"input-field\"><option value=\"Titular\">Titular (rojo/verde)</option><option value=\"Suplente\">Suplente</option><option value=\"Negra\">Tercera (negra)</option></select>
-      </div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Local/Visitante</label>
-        <select id=\"mt-home\" class=\"input-field\"><option value=\"home\">Local</option><option value=\"away\">Visitante</option></select>
-      </div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Notas (opcional)</label><textarea id=\"mt-notes\" class=\"input-field h-20\"></textarea></div>
-    </div>
-    <div class=\"flex gap-3 mt-8\">
-      <button onclick=\"closeModal('match-modal')\" class=\"flex-1 btn-secondary\">Cancelar</button>
-      <button onclick=\"saveMatchForm()\" class=\"flex-1 btn-success\">Guardar</button>
-    </div>
-  </div>
-</div>
+<div id="match-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6"><div class="card w-full max-w-md overflow-y-auto max-h-[90vh]"><h3 class="text-xl font-black mb-6 uppercase italic">Partido</h3><input type="hidden" id="mt-id" /><div class="space-y-4"><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipo</label><select id="mt-category" class="input-field"></select></div><div class="grid grid-cols-2 gap-3"><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Fecha</label><input id="mt-date" type="date" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Hora</label><input id="mt-time" type="time" class="input-field" /></div></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Rival</label><input id="mt-rival" type="text" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Lugar / Pabellón</label><input id="mt-location" type="text" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Dirección</label><input id="mt-address" type="text" class="input-field" placeholder="Calle, ciudad..." /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipación</label><select id="mt-kit" class="input-field"><option value="Titular">Titular (rojo/verde)</option><option value="Suplente">Suplente</option><option value="Negra">Tercera (negra)</option></select></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Local/Visitante</label><select id="mt-home" class="input-field"><option value="home">Local</option><option value="away">Visitante</option></select></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Notas (opcional)</label><textarea id="mt-notes" class="input-field h-20"></textarea></div></div><div class="flex gap-3 mt-8"><button onclick="closeModal('match-modal')" class="flex-1 btn-secondary">Cancelar</button><button onclick="saveMatchForm()" class="flex-1 btn-success">Guardar</button></div></div></div>
 
-<div id=\"user-modal\" class=\"modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6\">
-  <div class=\"card w-full max-w-md overflow-y-auto max-h-[90vh]\">
-    <h3 class=\"text-xl font-black mb-6 uppercase italic\">Usuario</h3>
-    <input type=\"hidden\" id=\"us-id\" />
-    <p class=\"text-gray-500 text-[11px] mb-4\">Cuenta sincronizada con la nube. Compártele al padre/tutor su email y la contraseña que indiques.</p>
-    <div class=\"space-y-4\">
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Nombre del titular</label><input id=\"us-name\" type=\"text\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Email</label><input id=\"us-email\" type=\"email\" class=\"input-field\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Contraseña</label><input id=\"us-password\" type=\"text\" class=\"input-field\" placeholder=\"min 4 caracteres\" /></div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Rol</label>
-        <select id=\"us-role\" class=\"input-field\"><option value=\"parent\">Padre / Tutor</option><option value=\"player\">Jugador mayor de edad</option><option value=\"admin\">Administrador</option></select>
-      </div>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Jugadores vinculados</label>
-        <div id=\"us-players\" class=\"space-y-2 max-h-48 overflow-y-auto border border-slate-800 rounded-lg p-3\"></div>
-      </div>
-    </div>
-    <div class=\"flex gap-3 mt-8\">
-      <button onclick=\"closeModal('user-modal')\" class=\"flex-1 btn-secondary\">Cancelar</button>
-      <button onclick=\"saveUserForm()\" class=\"flex-1 btn-success\">Guardar</button>
-    </div>
-  </div>
-</div>
+<div id="user-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6"><div class="card w-full max-w-md overflow-y-auto max-h-[90vh]"><h3 class="text-xl font-black mb-6 uppercase italic">Usuario</h3><input type="hidden" id="us-id" /><p class="text-gray-500 text-[11px] mb-4">Cuenta sincronizada con la nube. Compártele al padre/tutor su email y la contraseña que indiques.</p><div class="space-y-4"><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Nombre del titular</label><input id="us-name" type="text" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Email</label><input id="us-email" type="email" class="input-field" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Contraseña</label><input id="us-password" type="text" class="input-field" placeholder="min 4 caracteres" /></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Rol</label><select id="us-role" class="input-field"><option value="parent">Padre / Tutor</option><option value="player">Jugador mayor de edad</option><option value="admin">Administrador</option></select></div><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Jugadores vinculados</label><div id="us-players" class="space-y-2 max-h-48 overflow-y-auto border border-slate-800 rounded-lg p-3"></div></div></div><div class="flex gap-3 mt-8"><button onclick="closeModal('user-modal')" class="flex-1 btn-secondary">Cancelar</button><button onclick="saveUserForm()" class="flex-1 btn-success">Guardar</button></div></div></div>
 
-<div id=\"proof-modal\" class=\"modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6\">
-  <div class=\"card w-full max-w-md\">
-    <h3 class=\"text-xl font-black mb-4 uppercase italic\">Subir Justificante</h3>
-    <input type=\"hidden\" id=\"proof-payment-id\" />
-    <p id=\"proof-info\" class=\"text-gray-400 text-xs mb-4\"></p>
-    <div class=\"space-y-3\">
-      <label class=\"block\">
-        <span class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Foto del justificante</span>
-        <input id=\"proof-file\" type=\"file\" accept=\"image/*\" capture=\"environment\" class=\"input-field\" />
-      </label>
-      <div><label class=\"text-[10px] font-black text-gray-500 uppercase mb-1 block\">Notas (opcional)</label><textarea id=\"proof-notes\" class=\"input-field h-20\" placeholder=\"Ej: pago realizado por Bizum el 15/09\"></textarea></div>
-    </div>
-    <div class=\"flex gap-3 mt-6\">
-      <button onclick=\"closeModal('proof-modal')\" class=\"flex-1 btn-secondary\">Cancelar</button>
-      <button onclick=\"submitProof()\" class=\"flex-1 btn-primary\">Enviar</button>
-    </div>
-  </div>
-</div>
+<div id="proof-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6"><div class="card w-full max-w-md"><h3 class="text-xl font-black mb-4 uppercase italic">Subir Justificante</h3><input type="hidden" id="proof-payment-id" /><p id="proof-info" class="text-gray-400 text-xs mb-4"></p><div class="space-y-3"><label class="block"><span class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Foto del justificante</span><input id="proof-file" type="file" accept="image/*" capture="environment" class="input-field" /></label><div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Notas (opcional)</label><textarea id="proof-notes" class="input-field h-20" placeholder="Ej: pago realizado por Bizum el 15/09"></textarea></div></div><div class="flex gap-3 mt-6"><button onclick="closeModal('proof-modal')" class="flex-1 btn-secondary">Cancelar</button><button onclick="submitProof()" class="flex-1 btn-primary">Enviar</button></div></div></div>
 
-<div id=\"review-modal\" class=\"modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6\">
-  <div class=\"card w-full max-w-lg max-h-[90vh] overflow-y-auto\">
-    <h3 class=\"text-xl font-black mb-4 uppercase italic\">Revisar Justificante</h3>
-    <div id=\"review-content\"></div>
-    <div class=\"flex gap-3 mt-6\">
-      <button onclick=\"closeModal('review-modal')\" class=\"flex-1 btn-secondary\">Cerrar</button>
-      <button onclick=\"rejectPayment()\" class=\"btn-danger\">Rechazar</button>
-      <button onclick=\"approvePayment()\" class=\"btn-success\">Aprobar</button>
-    </div>
-  </div>
-</div>
+<div id="review-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6"><div class="card w-full max-w-lg max-h-[90vh] overflow-y-auto"><h3 class="text-xl font-black mb-4 uppercase italic">Revisar Justificante</h3><div id="review-content"></div><div class="flex gap-3 mt-6"><button onclick="closeModal('review-modal')" class="flex-1 btn-secondary">Cerrar</button><button onclick="rejectPayment()" class="btn-danger">Rechazar</button><button onclick="approvePayment()" class="btn-success">Aprobar</button></div></div></div>
 
 <script>
-/* ════════════════════════════════════════════════════════════════════════
-   CLUB PINAR FS · Versión Corregida para Sincronización Completa con Firebase
-   Almacenamiento: Firebase Firestore (nube) + localStorage (caché offline)
-   ════════════════════════════════════════════════════════════════════════ */
-
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-/* ---------- claves sincronizables ---------- */
 const CLAVES_NUBE = ['users','categories','players','concepts','payments','matches','config'];
 
-/* ---------- almacenamiento ---------- */
 const DB = {
-  get(k, def) {
-    try { 
-      const v = localStorage.getItem('pinar_'+k); 
-      return v ? JSON.parse(v) : def; 
-    } catch { 
-      return def; 
-    }
-  },
-  // Guarda en LOCAL y SUBE a Firebase
-  set(k, v) { 
-    localStorage.setItem('pinar_'+k, JSON.stringify(v)); 
-    
+  get(k, def) { try { const v = localStorage.getItem('pinar_'+k); return v ? JSON.parse(v) : def; } catch { return def; } },
+  set(k, v) {
+    localStorage.setItem('pinar_'+k, JSON.stringify(v));
     if (CLAVES_NUBE.includes(k)) {
-      // Marcamos que vamos a guardar para que el listener no rebote
       window.__guardandoLocal = true;
-      
-      const documentoRef = db.collection(k).doc('global_data');
-      documentoRef.set({ 
-        data: v,
-        _lastUpdated: Date.now(),
-        _clubId: \"pinar-c6165\"
-      })
-      .then(() => {
-        console.log(`☁️ Subido ${k} a la nube.`);
-        actualizarEstadoNube('ok');
-        // Liberamos el flag después de un pequeño margen para que el snapshot propio no nos pise
-        setTimeout(()=> { window.__guardandoLocal = false; }, 500);
-      })
-      .catch(err => {
-        console.error(`⚠️ Error subiendo ${k}:`, err.message);
-        actualizarEstadoNube('error');
-        window.__guardandoLocal = false;
-      });
+      db.collection(k).doc('global_data').set({ data: v, _lastUpdated: Date.now(), _clubId: "pinar-c6165" })
+        .then(() => { console.log(`☁️ Subido ${k} a la nube.`); actualizarEstadoNube('ok'); setTimeout(()=>{ window.__guardandoLocal=false; }, 500); })
+        .catch(err => { console.error(`⚠️ Error subiendo ${k}:`, err.message); actualizarEstadoNube('error'); window.__guardandoLocal=false; });
     }
   }
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
 function actualizarEstadoNube(estado) {
-  const el = document.getElementById('cloud-status');
-  if (!el) return;
-  if (estado === 'ok')     { el.textContent = '☁️ Nube OK';      el.style.color = '#4ade80'; }
-  else if (estado==='sync'){ el.textContent = '☁️ Sincronizando…'; el.style.color = '#fbbf24'; }
-  else                     { el.textContent = '☁️ Sin conexión'; el.style.color = '#f87171'; }
+  const el = document.getElementById('cloud-status'); if (!el) return;
+  if (estado==='ok')       { el.textContent='☁️ Nube OK';        el.style.color='#4ade80'; }
+  else if (estado==='sync'){ el.textContent='☁️ Sincronizando…';  el.style.color='#fbbf24'; }
+  else                     { el.textContent='☁️ Sin conexión';   el.style.color='#f87171'; }
 }
 
-/* ---------- Sincronización en TIEMPO REAL con Firebase ---------- */
-// Cada colección tiene un listener que detecta cambios desde otros dispositivos
 function suscribirseATodoEnTiempoReal() {
   actualizarEstadoNube('sync');
-  let listasRecibidas = 0;
-  const totalListas = CLAVES_NUBE.length;
-
+  let listasRecibidas = 0; const totalListas = CLAVES_NUBE.length;
   CLAVES_NUBE.forEach(k => {
     db.collection(k).doc('global_data').onSnapshot(
       doc => {
-        // Si fue una escritura nuestra recién hecha, ignoramos el eco
-        if (window.__guardandoLocal && doc.metadata.hasPendingWrites) {
-          return;
-        }
-
+        if (window.__guardandoLocal && doc.metadata.hasPendingWrites) return;
         if (doc.exists && doc.data()) {
           const datosNube = doc.data();
           let datosLimpios = datosNube;
-          if (datosNube && datosNube.hasOwnProperty('data')) {
-            datosLimpios = datosNube.data;
-          }
-          localStorage.setItem('pinar_' + k, JSON.stringify(datosLimpios));
+          if (datosNube && datosNube.hasOwnProperty('data')) datosLimpios = datosNube.data;
+          localStorage.setItem('pinar_'+k, JSON.stringify(datosLimpios));
           console.log(`📥 [Tiempo real] ${k} actualizado desde la nube.`);
-
-          // Refrescamos el state en memoria
           aplicarDatosAlEstado(k, datosLimpios);
-
-          // Re-renderizamos la pantalla activa si el usuario ya entró
           refrescarPantallaActual();
-        } else {
-          console.log(`ℹ️ ${k} aún no existe en la nube.`);
-        }
-
-        // Marcamos como cargada la primera vez
+        } else { console.log(`ℹ️ ${k} aún no existe en la nube.`); }
         if (!window.__firebaseListo) {
           listasRecibidas++;
-          if (listasRecibidas >= totalListas) {
-            window.__firebaseListo = true;
-            console.log(\"✅ Firebase listo. Arrancando app.\");
-            arrancarAplicacion();
-          }
+          if (listasRecibidas >= totalListas) { window.__firebaseListo = true; console.log("✅ Firebase listo."); arrancarAplicacion(); }
         }
         actualizarEstadoNube('ok');
       },
       err => {
         console.error(`⚠️ Error en listener ${k}:`, err.message);
         actualizarEstadoNube('error');
-        // Aunque falle un listener, seguimos arrancando para no dejar la app colgada
-        if (!window.__firebaseListo) {
-          listasRecibidas++;
-          if (listasRecibidas >= totalListas) {
-            window.__firebaseListo = true;
-            arrancarAplicacion();
-          }
-        }
+        if (!window.__firebaseListo) { listasRecibidas++; if (listasRecibidas >= totalListas) { window.__firebaseListo = true; arrancarAplicacion(); } }
       }
     );
   });
-
-  // Salvavidas: si en 6 segundos Firebase no ha respondido, arrancamos con datos locales
-  setTimeout(() => {
-    if (!window.__firebaseListo) {
-      console.warn(\"⏱️ Firebase tarda en responder. Arrancando con datos locales.\");
-      window.__firebaseListo = true;
-      actualizarEstadoNube('error');
-      arrancarAplicacion();
-    }
-  }, 6000);
+  setTimeout(() => { if (!window.__firebaseListo) { console.warn("⏱️ Firebase tarda. Arrancando con datos locales."); window.__firebaseListo = true; actualizarEstadoNube('error'); arrancarAplicacion(); } }, 6000);
 }
 
 function aplicarDatosAlEstado(k, datos) {
@@ -595,158 +255,90 @@ function aplicarDatosAlEstado(k, datos) {
     case 'config':     state.clubInfo   = (datos && typeof datos==='object') ? datos : {}; break;
   }
 }
-
 function refrescarPantallaActual() {
   if (!state.user) return;
-  if (state.role === 'admin') {
-    if (typeof window.switchAdminTab === 'function') switchAdminTab(state.adminTab || 'dashboard');
-  } else {
-    if (typeof window.switchParentTab === 'function') switchParentTab(state.parentTab || 'home');
-  }
+  if (state.role === 'admin') { if (typeof window.switchAdminTab === 'function') switchAdminTab(state.adminTab || 'dashboard'); }
+  else { if (typeof window.switchParentTab === 'function') switchParentTab(state.parentTab || 'home'); }
 }
 
-/* 🎯 FUNCIÓN GLOBAL PARA FORZAR LA SUBIDA MANUAL DESDE EL BOTÓN VERDE */
 function subirTodoALaNube() {
-  console.log(\"🚀 Forzando subida masiva de datos locales a Firebase...\");
+  console.log("🚀 Forzando subida masiva de datos locales a Firebase...");
   actualizarEstadoNube('sync');
-  
   const promesas = CLAVES_NUBE.map(k => {
-    const datosLocales = localStorage.getItem('pinar_' + k);
+    const datosLocales = localStorage.getItem('pinar_'+k);
     if (!datosLocales) return Promise.resolve();
     const datosParseados = JSON.parse(datosLocales);
-    return db.collection(k).doc('global_data').set({
-      data: datosParseados,
-      _lastUpdated: Date.now(),
-      _clubId: \"pinar-c6165\"
-    })
-    .then(() => console.log(`✅ [SUBIDA MANUAL OK] ${k} subido a Firebase.`))
-    .catch(err => console.error(`❌ Error en subida manual de ${k}:`, err.message));
+    return db.collection(k).doc('global_data').set({ data: datosParseados, _lastUpdated: Date.now(), _clubId: "pinar-c6165" })
+      .then(() => console.log(`✅ [SUBIDA MANUAL OK] ${k} subido a Firebase.`))
+      .catch(err => console.error(`❌ Error en subida manual de ${k}:`, err.message));
   });
-
-  Promise.all(promesas).then(() => {
-    actualizarEstadoNube('ok');
-    alert(\"Sincronización manual completada. ¡Los cambios ya están en internet!\");
-  });
+  Promise.all(promesas).then(() => { actualizarEstadoNube('ok'); alert("Sincronización manual completada. ¡Los cambios ya están en internet!"); });
 }
 window.subirTodoALaNube = subirTodoALaNube;
 
-/* ---------- estado ---------- */
 let state = {
-  user: null, role: null,
-  categories: [], players: [], concepts: [], payments: [], matches: [], users: [], clubInfo: {},
-  parentSelectedPlayer: null,
-  pendingProofPaymentId: null, currentReviewPayment: null,
+  user: null, role: null, categories: [], players: [], concepts: [], payments: [], matches: [], users: [], clubInfo: {},
+  parentSelectedPlayer: null, pendingProofPaymentId: null, currentReviewPayment: null,
   adminTab: 'dashboard', parentTab: 'home',
   filters: { playerCat:'', playerSearch:'', payCat:'', payStatus:'' }
 };
 
-/* ---------- helpers ---------- */
 const $ = (id) => document.getElementById(id);
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const moneyFmt = (n) => (Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
 const teamName = (catId) => { const c = state.categories.find(c=>c.id===catId); return c ? `${c.base} ${c.sub||''}`.trim() : 'Sin equipo'; };
 
 function toast(msg, type='info') {
-  const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(()=> t.remove(), 3500);
+  const t = document.createElement('div'); t.className = `toast toast-${type}`; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(()=> t.remove(), 3500);
 }
-function showView(id) {
-  ['view-login','view-admin','view-parent','view-loading'].forEach(v=> {
-    const el = document.getElementById(v);
-    if (el) el.classList.toggle('hidden', v!==id);
-  });
-}
+function showView(id) { ['view-login','view-admin','view-parent','view-loading'].forEach(v=> { const el=document.getElementById(v); if (el) el.classList.toggle('hidden', v!==id); }); }
 function openModal(id){ $(id).classList.remove('hidden'); }
 function closeModal(id){ $(id).classList.add('hidden'); }
 window.openModal = openModal; window.closeModal = closeModal;
 
 function statusBadge(s) {
   const map = { pending:['Pendiente','badge-pending'], review:['En revisión','badge-review'], approved:['Aprobado','badge-approved'], rejected:['Rechazado','badge-rejected'] };
-  const [t,c] = map[s]||['?','badge-pending'];
-  return `<span class=\"badge ${c}\">${t}</span>`;
+  const [t,c] = map[s]||['?','badge-pending']; return `<span class="badge ${c}">${t}</span>`;
 }
 function roleBadge(role) {
   const map = { admin:['Admin','badge-approved'], parent:['Padre/Tutor','badge-review'], player:['Jugador','badge-pending'] };
-  const [t,c] = map[role]||['?','badge-pending'];
-  return `<span class=\"badge ${c}\">${t}</span>`;
+  const [t,c] = map[role]||['?','badge-pending']; return `<span class="badge ${c}">${t}</span>`;
 }
 
-/* ---------- carga datos (desde localStorage que ya viene sincronizado con la nube) ---------- */
 function loadAll() {
-  state.users      = DB.get('users', []);
-  state.categories = DB.get('categories', []);
-  state.players    = DB.get('players', []);
-  state.concepts   = DB.get('concepts', []);
-  state.payments   = DB.get('payments', []);
-  state.matches    = DB.get('matches', []);
-  state.clubInfo   = DB.get('config', {});
-  // crear admin por defecto si no hay (esto se subirá a Firebase automáticamente)
+  state.users = DB.get('users', []); state.categories = DB.get('categories', []); state.players = DB.get('players', []);
+  state.concepts = DB.get('concepts', []); state.payments = DB.get('payments', []); state.matches = DB.get('matches', []);
+  state.clubInfo = DB.get('config', {});
   if (!state.users.some(u=>u.role==='admin')) {
     state.users.push({ id: uid(), email:'admin@pinarfs.es', password:'Pinar2026!', name:'Administrador', role:'admin', playerIds:[], createdAt: Date.now() });
     DB.set('users', state.users);
   }
 }
 
-/* ════════════════════ AUTH ════════════════════ */
 function doLogin() {
-  const email = $('login-email').value.trim().toLowerCase();
-  const pass  = $('login-password').value;
-  const err = $('login-error');
-  err.classList.add('hidden');
-
-  // 🎯 Releemos siempre la última versión de usuarios desde localStorage
-  // (que el listener de Firebase mantiene siempre actualizado)
-  console.log(\"=== DIAGNÓSTICO DE LOGIN ===\");
-  try {
-    const usuariosDescargados = JSON.parse(localStorage.getItem('pinar_users'));
-    if (usuariosDescargados) {
-      state.users = usuariosDescargados;
-    }
-    console.log(\"Usuarios disponibles:\", state.users.length);
-  } catch(e) {
-    console.error(\"Error al leer pinar_users:\", e.message);
-  }
-  console.log(\"============================\");
-
+  const email = $('login-email').value.trim().toLowerCase(); const pass = $('login-password').value;
+  const err = $('login-error'); err.classList.add('hidden');
+  try { const usuariosDescargados = JSON.parse(localStorage.getItem('pinar_users')); if (usuariosDescargados) state.users = usuariosDescargados; } catch(e) {}
   const u = state.users.find(x => x.email.toLowerCase() === email && x.password === pass);
-  
-  if (!u) { 
-    err.textContent = 'Email o contraseña incorrectos.'; 
-    err.classList.remove('hidden'); 
-    return; 
-  }
-  
-  state.user = u; 
-  state.role = u.role;
-  // La sesión es sólo local, no se sube a la nube
+  if (!u) { err.textContent = 'Email o contraseña incorrectos.'; err.classList.remove('hidden'); return; }
+  state.user = u; state.role = u.role;
   localStorage.setItem('pinar_session', JSON.stringify({ id: u.id }));
   enterApp();
 }
-function logout() {
-  localStorage.removeItem('pinar_session');
-  state.user = null; state.role = null;
-  showView('view-login');
-}
+function logout() { localStorage.removeItem('pinar_session'); state.user=null; state.role=null; showView('view-login'); }
 window.logout = logout;
 
 function enterApp() {
   if (state.role === 'admin') {
-    showView('view-admin');
-    $('admin-email-badge').textContent = state.user.email;
-    $('admin-email-badge').classList.remove('hidden');
-    switchAdminTab('dashboard');
+    showView('view-admin'); $('admin-email-badge').textContent = state.user.email; $('admin-email-badge').classList.remove('hidden'); switchAdminTab('dashboard');
   } else {
     showView('view-parent');
     const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-    state.parentSelectedPlayer = myPlayers[0]?.id || null;
-    switchParentTab('home');
+    state.parentSelectedPlayer = myPlayers[0]?.id || null; switchParentTab('home');
   }
 }
 
-/* ════════════════════ ADMIN: TABS ════════════════════ */
 window.switchAdminTab = (tab) => {
   state.adminTab = tab;
   document.querySelectorAll('[data-tab]').forEach(b=> b.classList.toggle('tab-active', b.dataset.tab===tab));
@@ -755,833 +347,171 @@ window.switchAdminTab = (tab) => {
   map[tab] && map[tab]();
 };
 
-/* ---------- Dashboard ---------- */
 function renderDash() {
   const totalApproved = state.payments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  const totalPending  = state.payments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
+  const totalPending = state.payments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
   const numMorosos = new Set(state.payments.filter(p=>p.status!=='approved').map(p=>p.playerId)).size;
-  $('dash-content').innerHTML = `
-    <div class=\"grid grid-cols-2 md:grid-cols-4 gap-4 mb-6\">
-      <div class=\"card\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Equipos</div><div class=\"text-3xl font-black text-white\">${state.categories.length}</div></div>
-      <div class=\"card\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Jugadores</div><div class=\"text-3xl font-black text-white\">${state.players.length}</div></div>
-      <div class=\"card\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Cobrado</div><div class=\"text-2xl font-black text-green-400\">${moneyFmt(totalApproved)}</div></div>
-      <div class=\"card\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Pendiente</div><div class=\"text-2xl font-black text-yellow-400\">${moneyFmt(totalPending)}</div></div>
-    </div>
-    <div class=\"card\">
-      <h3 class=\"section-title\">Morosos</h3>
-      <p class=\"text-gray-300\">${numMorosos} jugador(es) con pagos pendientes.</p>
-    </div>`;
+  $('dash-content').innerHTML = `<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"><div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Equipos</div><div class="text-3xl font-black text-white">${state.categories.length}</div></div><div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Jugadores</div><div class="text-3xl font-black text-white">${state.players.length}</div></div><div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Cobrado</div><div class="text-2xl font-black text-green-400">${moneyFmt(totalApproved)}</div></div><div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-2xl font-black text-yellow-400">${moneyFmt(totalPending)}</div></div></div><div class="card"><h3 class="section-title">Morosos</h3><p class="text-gray-300">${numMorosos} jugador(es) con pagos pendientes.</p></div>`;
 }
 
-/* ---------- Equipos ---------- */
 function renderCategories() {
-  if (!state.categories.length) { $('cat-list').innerHTML = '<p class=\"text-gray-500 col-span-full text-center py-8\">Sin equipos. Crea el primero.</p>'; return; }
-  $('cat-list').innerHTML = state.categories.map(c=>`
-    <div class=\"card\">
-      <div class=\"text-[10px] font-black text-green-500 uppercase tracking-widest\">${escapeHtml(c.base)}</div>
-      <div class=\"text-2xl font-black text-white tracking-tighter\">${escapeHtml(c.sub||'—')}</div>
-      <div class=\"text-xs text-gray-500 mt-1\">${state.players.filter(p=>p.categoryId===c.id).length} jugadores</div>
-      <div class=\"flex gap-2 mt-4\">
-        <button onclick=\"openEditCategory('${c.id}')\" class=\"btn-secondary flex-1\">Editar</button>
-        <button onclick=\"deleteCategory('${c.id}')\" class=\"btn-danger\">🗑</button>
-      </div>
-    </div>`).join('');
+  if (!state.categories.length) { $('cat-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin equipos. Crea el primero.</p>'; return; }
+  $('cat-list').innerHTML = state.categories.map(c=>`<div class="card"><div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(c.base)}</div><div class="text-2xl font-black text-white tracking-tighter">${escapeHtml(c.sub||'—')}</div><div class="text-xs text-gray-500 mt-1">${state.players.filter(p=>p.categoryId===c.id).length} jugadores</div><div class="flex gap-2 mt-4"><button onclick="openEditCategory('${c.id}')" class="btn-secondary flex-1">Editar</button><button onclick="deleteCategory('${c.id}')" class="btn-danger">🗑</button></div></div>`).join('');
 }
-window.openEditCategory = (id) => {
-  const c = id ? state.categories.find(x=>x.id===id) : null;
-  $('cat-form-id').value = c?.id||'';
-  $('cat-base').value = c?.base||'Prebenjamín';
-  $('cat-sub').value = c?.sub||'';
-  openModal('cat-modal');
-};
-window.saveCategoryForm = () => {
-  const id = $('cat-form-id').value;
-  const data = { base: $('cat-base').value, sub: $('cat-sub').value.trim() };
-  if (id) {
-    const i = state.categories.findIndex(x=>x.id===id);
-    state.categories[i] = { ...state.categories[i], ...data };
-  } else {
-    state.categories.push({ id: uid(), ...data });
-  }
-  DB.set('categories', state.categories);
-  closeModal('cat-modal'); renderCategories(); toast('Equipo guardado','success');
-};
-window.deleteCategory = (id) => {
-  if (!confirm('¿Eliminar este equipo?')) return;
-  state.categories = state.categories.filter(x=>x.id!==id);
-  DB.set('categories', state.categories);
-  renderCategories();
-};
+window.openEditCategory = (id) => { const c = id ? state.categories.find(x=>x.id===id) : null; $('cat-form-id').value = c?.id||''; $('cat-base').value = c?.base||'Prebenjamín'; $('cat-sub').value = c?.sub||''; openModal('cat-modal'); };
+window.saveCategoryForm = () => { const id = $('cat-form-id').value; const data = { base: $('cat-base').value, sub: $('cat-sub').value.trim() }; if (id) { const i = state.categories.findIndex(x=>x.id===id); state.categories[i] = { ...state.categories[i], ...data }; } else { state.categories.push({ id: uid(), ...data }); } DB.set('categories', state.categories); closeModal('cat-modal'); renderCategories(); toast('Equipo guardado','success'); };
+window.deleteCategory = (id) => { if (!confirm('¿Eliminar este equipo?')) return; state.categories = state.categories.filter(x=>x.id!==id); DB.set('categories', state.categories); renderCategories(); };
 
-/* ---------- Jugadores ---------- */
 function renderPlayers() {
-  // poblar filtros
-  $('player-cat-filter').innerHTML = '<option value=\"\">Todos los equipos</option>' + state.categories.map(c=>`<option value=\"${c.id}\">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  $('player-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
   $('player-cat-filter').value = state.filters.playerCat;
-
   let list = [...state.players];
   if (state.filters.playerCat) list = list.filter(p=>p.categoryId===state.filters.playerCat);
-  if (state.filters.playerSearch) {
-    const q = state.filters.playerSearch.toLowerCase();
-    list = list.filter(p=> (p.name||'').toLowerCase().includes(q));
-  }
-  if (!list.length) { $('player-list').innerHTML = '<p class=\"text-gray-500 col-span-full text-center py-8\">Sin jugadores.</p>'; return; }
-  $('player-list').innerHTML = list.map(p=>`
-    <div class=\"card\">
-      <div class=\"flex items-center gap-3\">
-        <img src=\"${p.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(p.name)+'&background=7f1d1d&color=fff'}\" class=\"w-14 h-14 rounded-xl object-cover\" />
-        <div class=\"flex-1\">
-          <div class=\"text-[10px] font-black uppercase text-green-500\">${escapeHtml(teamName(p.categoryId))}</div>
-          <div class=\"font-black text-white\">${escapeHtml(p.name)}</div>
-          <div class=\"text-[11px] text-gray-500\">#${p.dorsal||'S/N'} · ${escapeHtml(p.position||'')}</div>
-        </div>
-      </div>
-      <div class=\"grid grid-cols-4 gap-2 mt-3 text-center text-[10px]\">
-        <div><div class=\"text-gray-500\">GOL</div><div class=\"font-black text-white\">${p.goals||0}</div></div>
-        <div><div class=\"text-gray-500\">PRE</div><div class=\"font-black text-white\">${p.attPresent||0}</div></div>
-        <div><div class=\"text-gray-500\">FAL</div><div class=\"font-black text-white\">${p.attAbsent||0}</div></div>
-        <div><div class=\"text-gray-500\">LES</div><div class=\"font-black text-white\">${p.attInjured||0}</div></div>
-      </div>
-      <div class=\"flex gap-2 mt-3\">
-        <button onclick=\"openEditPlayer('${p.id}')\" class=\"btn-secondary flex-1\">Editar</button>
-        <button onclick=\"deletePlayer('${p.id}')\" class=\"btn-danger\">🗑</button>
-      </div>
-    </div>`).join('');
+  if (state.filters.playerSearch) { const q = state.filters.playerSearch.toLowerCase(); list = list.filter(p=> (p.name||'').toLowerCase().includes(q)); }
+  if (!list.length) { $('player-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin jugadores.</p>'; return; }
+  $('player-list').innerHTML = list.map(p=>`<div class="card"><div class="flex items-center gap-3"><img src="${p.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(p.name)+'&background=7f1d1d&color=fff'}" class="w-14 h-14 rounded-xl object-cover" /><div class="flex-1"><div class="text-[10px] font-black uppercase text-green-500">${escapeHtml(teamName(p.categoryId))}</div><div class="font-black text-white">${escapeHtml(p.name)}</div><div class="text-[11px] text-gray-500">#${p.dorsal||'S/N'} · ${escapeHtml(p.position||'')}</div></div></div><div class="grid grid-cols-4 gap-2 mt-3 text-center text-[10px]"><div><div class="text-gray-500">GOL</div><div class="font-black text-white">${p.goals||0}</div></div><div><div class="text-gray-500">PRE</div><div class="font-black text-white">${p.attPresent||0}</div></div><div><div class="text-gray-500">FAL</div><div class="font-black text-white">${p.attAbsent||0}</div></div><div><div class="text-gray-500">LES</div><div class="font-black text-white">${p.attInjured||0}</div></div></div><div class="flex gap-2 mt-3"><button onclick="openEditPlayer('${p.id}')" class="btn-secondary flex-1">Editar</button><button onclick="deletePlayer('${p.id}')" class="btn-danger">🗑</button></div></div>`).join('');
 }
-window.openEditPlayer = (id) => {
-  const p = id ? state.players.find(x=>x.id===id) : null;
-  $('pl-category').innerHTML = state.categories.map(c=>`<option value=\"${c.id}\">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('pl-id').value = p?.id||'';
-  $('pl-name').value = p?.name||'';
-  $('pl-dorsal').value = p?.dorsal||'';
-  $('pl-position').value = p?.position||'Portero';
-  $('pl-category').value = p?.categoryId||(state.categories[0]?.id||'');
-  $('pl-photo').value = p?.photo||'';
-  $('pl-goals').value = p?.goals||0;
-  $('pl-att-present').value = p?.attPresent||0;
-  $('pl-att-absent').value = p?.attAbsent||0;
-  $('pl-att-injured').value = p?.attInjured||0;
-  openModal('player-modal');
-};
-window.savePlayerForm = () => {
-  const data = {
-    name: $('pl-name').value.trim(),
-    dorsal: Number($('pl-dorsal').value)||null,
-    position: $('pl-position').value,
-    categoryId: $('pl-category').value,
-    photo: $('pl-photo').value.trim(),
-    goals: Number($('pl-goals').value)||0,
-    attPresent: Number($('pl-att-present').value)||0,
-    attAbsent: Number($('pl-att-absent').value)||0,
-    attInjured: Number($('pl-att-injured').value)||0
-  };
-  if (!data.name) return toast('Nombre obligatorio','error');
-  const id = $('pl-id').value;
-  if (id) { const i = state.players.findIndex(x=>x.id===id); state.players[i] = { ...state.players[i], ...data }; }
-  else { state.players.push({ id: uid(), ...data }); }
-  DB.set('players', state.players);
-  closeModal('player-modal'); renderPlayers(); toast('Jugador guardado','success');
-};
-window.deletePlayer = (id) => {
-  if (!confirm('¿Eliminar este jugador?')) return;
-  state.players = state.players.filter(x=>x.id!==id);
-  DB.set('players', state.players);
-  renderPlayers();
-};
+window.openEditPlayer = (id) => { const p = id ? state.players.find(x=>x.id===id) : null; $('pl-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join(''); $('pl-id').value = p?.id||''; $('pl-name').value = p?.name||''; $('pl-dorsal').value = p?.dorsal||''; $('pl-position').value = p?.position||'Portero'; $('pl-category').value = p?.categoryId||(state.categories[0]?.id||''); $('pl-photo').value = p?.photo||''; $('pl-goals').value = p?.goals||0; $('pl-att-present').value = p?.attPresent||0; $('pl-att-absent').value = p?.attAbsent||0; $('pl-att-injured').value = p?.attInjured||0; openModal('player-modal'); };
+window.savePlayerForm = () => { const data = { name: $('pl-name').value.trim(), dorsal: Number($('pl-dorsal').value)||null, position: $('pl-position').value, categoryId: $('pl-category').value, photo: $('pl-photo').value.trim(), goals: Number($('pl-goals').value)||0, attPresent: Number($('pl-att-present').value)||0, attAbsent: Number($('pl-att-absent').value)||0, attInjured: Number($('pl-att-injured').value)||0 }; if (!data.name) return toast('Nombre obligatorio','error'); const id = $('pl-id').value; if (id) { const i = state.players.findIndex(x=>x.id===id); state.players[i] = { ...state.players[i], ...data }; } else { state.players.push({ id: uid(), ...data }); } DB.set('players', state.players); closeModal('player-modal'); renderPlayers(); toast('Jugador guardado','success'); };
+window.deletePlayer = (id) => { if (!confirm('¿Eliminar este jugador?')) return; state.players = state.players.filter(x=>x.id!==id); DB.set('players', state.players); renderPlayers(); };
 
-/* ---------- Conceptos ---------- */
 function renderConcepts() {
-  $('cc-category').innerHTML = '<option value=\"\">Todos los equipos</option>' + state.categories.map(c=>`<option value=\"${c.id}\">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  if (!state.concepts.length) { $('concept-list').innerHTML = '<p class=\"text-gray-500 col-span-full text-center py-8\">Sin conceptos.</p>'; return; }
-  $('concept-list').innerHTML = state.concepts.map(c=>`
-    <div class=\"card\">
-      <div class=\"text-[10px] font-black text-green-500 uppercase\">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.season||'')}</div>
-      <div class=\"font-black text-white text-lg\">${escapeHtml(c.name)}</div>
-      <div class=\"text-2xl font-black text-white mt-1\">${moneyFmt(c.amount)}</div>
-      <div class=\"text-[11px] text-gray-500 mt-1\">Equipo: ${c.categoryId ? escapeHtml(teamName(c.categoryId)) : 'Todos'}</div>
-      ${c.deadline ? `<div class=\"text-[11px] text-yellow-500 mt-1\">Límite: ${c.deadline}</div>` : ''}
-      <div class=\"flex gap-2 mt-3\">
-        <button onclick=\"openEditConcept('${c.id}')\" class=\"btn-secondary flex-1\">Editar</button>
-        <button onclick=\"deleteConcept('${c.id}')\" class=\"btn-danger\">🗑</button>
-      </div>
-    </div>`).join('');
+  $('cc-category').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  if (!state.concepts.length) { $('concept-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin conceptos.</p>'; return; }
+  $('concept-list').innerHTML = state.concepts.map(c=>`<div class="card"><div class="text-[10px] font-black text-green-500 uppercase">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.season||'')}</div><div class="font-black text-white text-lg">${escapeHtml(c.name)}</div><div class="text-2xl font-black text-white mt-1">${moneyFmt(c.amount)}</div><div class="text-[11px] text-gray-500 mt-1">Equipo: ${c.categoryId ? escapeHtml(teamName(c.categoryId)) : 'Todos'}</div>${c.deadline ? `<div class="text-[11px] text-yellow-500 mt-1">Límite: ${c.deadline}</div>` : ''}<div class="flex gap-2 mt-3"><button onclick="openEditConcept('${c.id}')" class="btn-secondary flex-1">Editar</button><button onclick="deleteConcept('${c.id}')" class="btn-danger">🗑</button></div></div>`).join('');
 }
-window.openEditConcept = (id) => {
-  $('cc-category').innerHTML = '<option value=\"\">Todos los equipos</option>' + state.categories.map(c=>`<option value=\"${c.id}\">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  const c = id ? state.concepts.find(x=>x.id===id) : null;
-  $('cc-id').value = c?.id||'';
-  $('cc-month').value = c?.month||1;
-  $('cc-name').value = c?.name||'';
-  $('cc-amount').value = c?.amount||'';
-  $('cc-category').value = c?.categoryId||'';
-  $('cc-season').value = c?.season||'2025-2026';
-  $('cc-deadline').value = c?.deadline||'';
-  openModal('concept-modal');
-};
-window.saveConceptForm = () => {
-  const data = {
-    month: Number($('cc-month').value),
-    name: $('cc-name').value.trim(),
-    amount: Number($('cc-amount').value)||0,
-    categoryId: $('cc-category').value || null,
-    season: $('cc-season').value.trim(),
-    deadline: $('cc-deadline').value
-  };
-  if (!data.name || !data.amount) return toast('Concepto e importe son obligatorios','error');
-  const id = $('cc-id').value;
-  if (id) { const i = state.concepts.findIndex(x=>x.id===id); state.concepts[i] = { ...state.concepts[i], ...data }; }
-  else { state.concepts.push({ id: uid(), ...data }); }
-  DB.set('concepts', state.concepts);
-  closeModal('concept-modal'); renderConcepts(); toast('Concepto guardado','success');
-};
-window.deleteConcept = (id) => {
-  if (!confirm('¿Eliminar este concepto?')) return;
-  state.concepts = state.concepts.filter(x=>x.id!==id);
-  DB.set('concepts', state.concepts);
-  renderConcepts();
-};
+window.openEditConcept = (id) => { $('cc-category').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join(''); const c = id ? state.concepts.find(x=>x.id===id) : null; $('cc-id').value = c?.id||''; $('cc-month').value = c?.month||1; $('cc-name').value = c?.name||''; $('cc-amount').value = c?.amount||''; $('cc-category').value = c?.categoryId||''; $('cc-season').value = c?.season||'2025-2026'; $('cc-deadline').value = c?.deadline||''; openModal('concept-modal'); };
+window.saveConceptForm = () => { const data = { month: Number($('cc-month').value), name: $('cc-name').value.trim(), amount: Number($('cc-amount').value)||0, categoryId: $('cc-category').value || null, season: $('cc-season').value.trim(), deadline: $('cc-deadline').value }; if (!data.name || !data.amount) return toast('Concepto e importe son obligatorios','error'); const id = $('cc-id').value; if (id) { const i = state.concepts.findIndex(x=>x.id===id); state.concepts[i] = { ...state.concepts[i], ...data }; } else { state.concepts.push({ id: uid(), ...data }); } DB.set('concepts', state.concepts); closeModal('concept-modal'); renderConcepts(); toast('Concepto guardado','success'); };
+window.deleteConcept = (id) => { if (!confirm('¿Eliminar este concepto?')) return; state.concepts = state.concepts.filter(x=>x.id!==id); DB.set('concepts', state.concepts); renderConcepts(); };
 
-/* ---------- Cobros ---------- */
 function renderPayments() {
-  $('pay-cat-filter').innerHTML = '<option value=\"\">Todos los equipos</option>' + state.categories.map(c=>`<option value=\"${c.id}\">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('pay-cat-filter').value = state.filters.payCat;
-  $('pay-status-filter').value = state.filters.payStatus;
-
+  $('pay-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
+  $('pay-cat-filter').value = state.filters.payCat; $('pay-status-filter').value = state.filters.payStatus;
   let list = [...state.payments];
-  if (state.filters.payCat) {
-    const playersInCat = state.players.filter(p=>p.categoryId===state.filters.payCat).map(p=>p.id);
-    list = list.filter(p=> playersInCat.includes(p.playerId));
-  }
+  if (state.filters.payCat) { const playersInCat = state.players.filter(p=>p.categoryId===state.filters.payCat).map(p=>p.id); list = list.filter(p=> playersInCat.includes(p.playerId)); }
   if (state.filters.payStatus) list = list.filter(p=>p.status===state.filters.payStatus);
-
-  const total = list.reduce((s,p)=>s+(p.amount||0),0);
-  const approved = list.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  $('pay-summary').innerHTML = `<div class=\"grid grid-cols-3 gap-3 mb-6\">
-    <div class=\"card\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Total</div><div class=\"text-xl font-black text-white\">${moneyFmt(total)}</div></div>
-    <div class=\"card\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Aprobado</div><div class=\"text-xl font-black text-green-400\">${moneyFmt(approved)}</div></div>
-    <div class=\"card\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Pendiente</div><div class=\"text-xl font-black text-yellow-400\">${moneyFmt(total-approved)}</div></div>
-  </div>`;
-
-  if (!list.length) { $('pay-list').innerHTML = '<p class=\"text-gray-500 text-center py-8\">Sin cobros.</p>'; return; }
-  $('pay-list').innerHTML = `<div class=\"overflow-x-auto rounded-xl border border-slate-800\">
-    <table class=\"w-full text-sm\">
-      <thead class=\"bg-slate-900 text-[10px] uppercase font-black text-gray-500\">
-        <tr><th class=\"px-3 py-3 text-left\">Jugador</th><th class=\"px-3 py-3 text-left\">Equipo</th><th class=\"px-3 py-3 text-left\">Mes/Concepto</th><th class=\"px-3 py-3 text-right\">Importe</th><th class=\"px-3 py-3 text-center\">Estado</th><th class=\"px-3 py-3 text-center\">Acción</th></tr>
-      </thead>
-      <tbody>
-        ${list.map(p=>{
-          const pl = state.players.find(x=>x.id===p.playerId);
-          return `<tr class=\"border-b border-slate-800\">
-            <td class=\"px-3 py-2 font-bold text-white\">${escapeHtml(pl?.name||'(borrado)')}</td>
-            <td class=\"px-3 py-2 text-gray-400\">${escapeHtml(teamName(pl?.categoryId))}</td>
-            <td class=\"px-3 py-2 text-gray-300\">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')}</td>
-            <td class=\"px-3 py-2 text-right font-bold text-white\">${moneyFmt(p.amount)}</td>
-            <td class=\"px-3 py-2 text-center\">${statusBadge(p.status)}</td>
-            <td class=\"px-3 py-2 text-center\">
-              ${p.proofData || p.notes ? `<button onclick=\"openReview('${p.id}')\" class=\"btn-secondary\">Ver</button>` : ''}
-              ${p.status!=='approved' ? `<button onclick=\"markApproved('${p.id}')\" class=\"btn-success ml-1\">OK</button>` : ''}
-              <button onclick=\"deletePayment('${p.id}')\" class=\"btn-danger ml-1\">🗑</button>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
+  const total = list.reduce((s,p)=>s+(p.amount||0),0); const approved = list.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
+  $('pay-summary').innerHTML = `<div class="grid grid-cols-3 gap-3 mb-6"><div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Total</div><div class="text-xl font-black text-white">${moneyFmt(total)}</div></div><div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Aprobado</div><div class="text-xl font-black text-green-400">${moneyFmt(approved)}</div></div><div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(total-approved)}</div></div></div>`;
+  if (!list.length) { $('pay-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin cobros.</p>'; return; }
+  $('pay-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800"><table class="w-full text-sm"><thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Mes/Concepto</th><th class="px-3 py-3 text-right">Importe</th><th class="px-3 py-3 text-center">Estado</th><th class="px-3 py-3 text-center">Acción</th></tr></thead><tbody>${list.map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return `<tr class="border-b border-slate-800"><td class="px-3 py-2 font-bold text-white">${escapeHtml(pl?.name||'(borrado)')}</td><td class="px-3 py-2 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td><td class="px-3 py-2 text-gray-300">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')}</td><td class="px-3 py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td><td class="px-3 py-2 text-center">${statusBadge(p.status)}</td><td class="px-3 py-2 text-center">${p.proofData || p.notes ? `<button onclick="openReview('${p.id}')" class="btn-secondary">Ver</button>` : ''}${p.status!=='approved' ? `<button onclick="markApproved('${p.id}')" class="btn-success ml-1">OK</button>` : ''}<button onclick="deletePayment('${p.id}')" class="btn-danger ml-1">🗑</button></td></tr>`; }).join('')}</tbody></table></div>`;
 }
-window.openGeneratePayments = () => {
-  $('gen-concept').innerHTML = state.concepts.map(c=>`<option value=\"${c.id}\">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
-  $('gen-category').innerHTML = '<option value=\"\">Usar el del concepto</option>' + state.categories.map(c=>`<option value=\"${c.id}\">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  openModal('gen-modal');
-};
-window.generatePayments = () => {
-  const conceptId = $('gen-concept').value;
-  const overrideCat = $('gen-category').value;
-  const concept = state.concepts.find(c=>c.id===conceptId);
-  if (!concept) return toast('Selecciona un concepto','error');
-  const targetCat = overrideCat || concept.categoryId;
-  const targetPlayers = targetCat ? state.players.filter(p=>p.categoryId===targetCat) : state.players;
-  let created = 0;
-  targetPlayers.forEach(pl=>{
-    const exists = state.payments.some(p=> p.playerId===pl.id && p.conceptId===concept.id);
-    if (exists) return;
-    state.payments.push({
-      id: uid(), playerId: pl.id, conceptId: concept.id, conceptName: concept.name,
-      month: concept.month, amount: concept.amount, season: concept.season,
-      status: 'pending', createdAt: Date.now()
-    });
-    created++;
-  });
-  DB.set('payments', state.payments);
-  closeModal('gen-modal');
-  toast(`${created} cobros generados`, 'success');
-  renderPayments();
-};
-window.markApproved = (id) => {
-  const p = state.payments.find(x=>x.id===id); if (!p) return;
-  p.status='approved'; p.approvedAt = Date.now();
-  DB.set('payments', state.payments); renderPayments(); toast('Pago aprobado','success');
-};
-window.deletePayment = (id) => {
-  if (!confirm('¿Eliminar este cobro?')) return;
-  state.payments = state.payments.filter(x=>x.id!==id);
-  DB.set('payments', state.payments); renderPayments();
-};
-window.openReview = (paymentId) => {
-  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
-  state.currentReviewPayment = paymentId;
-  const pl = state.players.find(x=>x.id===p.playerId);
-  $('review-content').innerHTML = `
-    <div class=\"space-y-3\">
-      <div><span class=\"text-[10px] font-black text-gray-500 uppercase\">Jugador</span><div class=\"font-bold text-white\">${escapeHtml(pl?.name||'')} · ${escapeHtml(teamName(pl?.categoryId))}</div></div>
-      <div><span class=\"text-[10px] font-black text-gray-500 uppercase\">Concepto</span><div class=\"font-bold text-white\">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} · ${moneyFmt(p.amount)}</div></div>
-      <div><span class=\"text-[10px] font-black text-gray-500 uppercase\">Estado</span><div>${statusBadge(p.status)}</div></div>
-      ${p.notes ? `<div><span class=\"text-[10px] font-black text-gray-500 uppercase\">Notas del padre</span><div class=\"text-gray-300 text-sm\">${escapeHtml(p.notes)}</div></div>` : ''}
-      ${p.proofData ? `<div><span class=\"text-[10px] font-black text-gray-500 uppercase\">Justificante</span><a href=\"${p.proofData}\" target=\"_blank\"><img src=\"${p.proofData}\" class=\"w-full max-h-96 object-contain rounded-lg border border-slate-700 mt-2\" /></a></div>` : '<p class=\"text-gray-500 text-sm\">Sin justificante</p>'}
-    </div>`;
-  openModal('review-modal');
-};
-window.approvePayment = () => {
-  if (!state.currentReviewPayment) return;
-  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
-  p.status='approved'; p.approvedAt=Date.now();
-  DB.set('payments', state.payments);
-  closeModal('review-modal'); renderPayments(); toast('Pago aprobado','success');
-};
-window.rejectPayment = () => {
-  if (!state.currentReviewPayment) return;
-  const reason = prompt('Motivo del rechazo (opcional):','') || '';
-  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
-  p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason;
-  DB.set('payments', state.payments);
-  closeModal('review-modal'); renderPayments(); toast('Pago rechazado','info');
-};
+window.openGeneratePayments = () => { $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join(''); $('gen-category').innerHTML = '<option value="">Usar el del concepto</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join(''); openModal('gen-modal'); };
+window.generatePayments = () => { const conceptId = $('gen-concept').value; const overrideCat = $('gen-category').value; const concept = state.concepts.find(c=>c.id===conceptId); if (!concept) return toast('Selecciona un concepto','error'); const targetCat = overrideCat || concept.categoryId; const targetPlayers = targetCat ? state.players.filter(p=>p.categoryId===targetCat) : state.players; let created = 0; targetPlayers.forEach(pl=>{ const exists = state.payments.some(p=> p.playerId===pl.id && p.conceptId===concept.id); if (exists) return; state.payments.push({ id: uid(), playerId: pl.id, conceptId: concept.id, conceptName: concept.name, month: concept.month, amount: concept.amount, season: concept.season, status: 'pending', createdAt: Date.now() }); created++; }); DB.set('payments', state.payments); closeModal('gen-modal'); toast(`${created} cobros generados`,'success'); renderPayments(); };
+window.markApproved = (id) => { const p = state.payments.find(x=>x.id===id); if (!p) return; p.status='approved'; p.approvedAt = Date.now(); DB.set('payments', state.payments); renderPayments(); toast('Pago aprobado','success'); };
+window.deletePayment = (id) => { if (!confirm('¿Eliminar este cobro?')) return; state.payments = state.payments.filter(x=>x.id!==id); DB.set('payments', state.payments); renderPayments(); };
+window.openReview = (paymentId) => { const p = state.payments.find(x=>x.id===paymentId); if (!p) return; state.currentReviewPayment = paymentId; const pl = state.players.find(x=>x.id===p.playerId); $('review-content').innerHTML = `<div class="space-y-3"><div><span class="text-[10px] font-black text-gray-500 uppercase">Jugador</span><div class="font-bold text-white">${escapeHtml(pl?.name||'')} · ${escapeHtml(teamName(pl?.categoryId))}</div></div><div><span class="text-[10px] font-black text-gray-500 uppercase">Concepto</span><div class="font-bold text-white">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} · ${moneyFmt(p.amount)}</div></div><div><span class="text-[10px] font-black text-gray-500 uppercase">Estado</span><div>${statusBadge(p.status)}</div></div>${p.notes ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Notas del padre</span><div class="text-gray-300 text-sm">${escapeHtml(p.notes)}</div></div>` : ''}${p.proofData ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Justificante</span><a href="${p.proofData}" target="_blank"><img src="${p.proofData}" class="w-full max-h-96 object-contain rounded-lg border border-slate-700 mt-2" /></a></div>` : '<p class="text-gray-500 text-sm">Sin justificante</p>'}</div>`; openModal('review-modal'); };
+window.approvePayment = () => { if (!state.currentReviewPayment) return; const p = state.payments.find(x=>x.id===state.currentReviewPayment); p.status='approved'; p.approvedAt=Date.now(); DB.set('payments', state.payments); closeModal('review-modal'); renderPayments(); toast('Pago aprobado','success'); };
+window.rejectPayment = () => { if (!state.currentReviewPayment) return; const reason = prompt('Motivo del rechazo (opcional):','') || ''; const p = state.payments.find(x=>x.id===state.currentReviewPayment); p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason; DB.set('payments', state.payments); closeModal('review-modal'); renderPayments(); toast('Pago rechazado','info'); };
 
-/* ---------- Partidos ---------- */
 function renderMatches() {
   const list = [...state.matches].sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  if (!list.length) { $('match-list').innerHTML = '<p class=\"text-gray-500 text-center py-8\">Sin partidos.</p>'; return; }
-  $('match-list').innerHTML = list.map(m=>`
-    <div class=\"card flex flex-col md:flex-row md:items-center gap-4\">
-      <div class=\"text-center md:w-24\">
-        <div class=\"text-[10px] font-black text-green-500 uppercase\">${m.date||''}</div>
-        <div class=\"text-2xl font-black text-white\">${m.time||''}</div>
-      </div>
-      <div class=\"flex-1\">
-        <div class=\"text-[10px] font-black text-gray-500 uppercase\">${escapeHtml(teamName(m.categoryId))} · ${m.home==='home'?'LOCAL':'VISITANTE'}</div>
-        <div class=\"font-black text-white text-lg\">vs ${escapeHtml(m.rival||'?')}</div>
-        <div class=\"text-gray-400 text-sm\">${escapeHtml(m.location||'')}</div>
-        <div class=\"text-[10px] text-gray-500 mt-1\">Equipación: ${escapeHtml(m.kit||'Titular')}${m.notes?` · ${escapeHtml(m.notes)}`:''}</div>
-      </div>
-      <div class=\"flex gap-2\">
-        <button onclick=\"openEditMatch('${m.id}')\" class=\"btn-secondary\">Editar</button>
-        <button onclick=\"deleteMatch('${m.id}')\" class=\"btn-danger\">🗑</button>
-      </div>
-    </div>`).join('');
+  if (!list.length) { $('match-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin partidos.</p>'; return; }
+  $('match-list').innerHTML = list.map(m=>`<div class="card flex flex-col md:flex-row md:items-center gap-4"><div class="text-center md:w-24"><div class="text-[10px] font-black text-green-500 uppercase">${m.date||''}</div><div class="text-2xl font-black text-white">${m.time||''}</div></div><div class="flex-1"><div class="text-[10px] font-black text-gray-500 uppercase">${escapeHtml(teamName(m.categoryId))} · ${m.home==='home'?'LOCAL':'VISITANTE'}</div><div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div><div class="text-gray-400 text-sm">${escapeHtml(m.location||'')}</div><div class="text-[10px] text-gray-500 mt-1">Equipación: ${escapeHtml(m.kit||'Titular')}${m.notes?` · ${escapeHtml(m.notes)}`:''}</div></div><div class="flex gap-2"><button onclick="openEditMatch('${m.id}')" class="btn-secondary">Editar</button><button onclick="deleteMatch('${m.id}')" class="btn-danger">🗑</button></div></div>`).join('');
 }
-window.openEditMatch = (id) => {
-  const m = id ? state.matches.find(x=>x.id===id) : null;
-  $('mt-category').innerHTML = state.categories.map(c=>`<option value=\"${c.id}\">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  openModal('match-modal');
-  $('mt-id').value = m?.id||'';
-  $('mt-category').value = m?.categoryId||(state.categories[0]?.id||'');
-  $('mt-date').value = m?.date||'';
-  $('mt-time').value = m?.time||'';
-  $('mt-rival').value = m?.rival||'';
-  $('mt-location').value = m?.location||'';
-  $('mt-address').value = m?.address||'';
-  $('mt-kit').value = m?.kit||'Titular';
-  $('mt-home').value = m?.home||'home';
-  $('mt-notes').value = m?.notes||'';
-};
-window.saveMatchForm = () => {
-  const data = {
-    categoryId: $('mt-category').value, date: $('mt-date').value, time: $('mt-time').value,
-    rival: $('mt-rival').value.trim(), location: $('mt-location').value.trim(), address: $('mt-address').value.trim(),
-    kit: $('mt-kit').value, home: $('mt-home').value, notes: $('mt-notes').value.trim()
-  };
-  if (!data.date) return toast('La fecha es obligatoria','error');
-  const id = $('mt-id').value;
-  if (id) { const i = state.matches.findIndex(x=>x.id===id); state.matches[i] = { ...state.matches[i], ...data }; }
-  else { state.matches.push({ id: uid(), ...data }); }
-  DB.set('matches', state.matches);
-  renderMatches(); closeModal('match-modal'); toast('Partido guardado','success');
-};
-window.deleteMatch = (id) => {
-  if (!confirm('¿Eliminar este partido?')) return;
-  state.matches = state.matches.filter(x=>x.id!==id);
-  DB.set('matches', state.matches); renderMatches();
-};
+window.openEditMatch = (id) => { const m = id ? state.matches.find(x=>x.id===id) : null; $('mt-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join(''); openModal('match-modal'); $('mt-id').value = m?.id||''; $('mt-category').value = m?.categoryId||(state.categories[0]?.id||''); $('mt-date').value = m?.date||''; $('mt-time').value = m?.time||''; $('mt-rival').value = m?.rival||''; $('mt-location').value = m?.location||''; $('mt-address').value = m?.address||''; $('mt-kit').value = m?.kit||'Titular'; $('mt-home').value = m?.home||'home'; $('mt-notes').value = m?.notes||''; };
+window.saveMatchForm = () => { const data = { categoryId: $('mt-category').value, date: $('mt-date').value, time: $('mt-time').value, rival: $('mt-rival').value.trim(), location: $('mt-location').value.trim(), address: $('mt-address').value.trim(), kit: $('mt-kit').value, home: $('mt-home').value, notes: $('mt-notes').value.trim() }; if (!data.date) return toast('La fecha es obligatoria','error'); const id = $('mt-id').value; if (id) { const i = state.matches.findIndex(x=>x.id===id); state.matches[i] = { ...state.matches[i], ...data }; } else { state.matches.push({ id: uid(), ...data }); } DB.set('matches', state.matches); renderMatches(); closeModal('match-modal'); toast('Partido guardado','success'); };
+window.deleteMatch = (id) => { if (!confirm('¿Eliminar este partido?')) return; state.matches = state.matches.filter(x=>x.id!==id); DB.set('matches', state.matches); renderMatches(); };
 
-/* ---------- Morosos ---------- */
 function renderMorosos() {
   const debts = state.payments.filter(p => p.status !== 'approved');
-  if (!debts.length) { $('morosos-list').innerHTML = '<p class=\"text-gray-500 text-center py-8\">¡Sin morosos! 🎉</p>'; return; }
-  const byPlayer = {};
-  debts.forEach(p => { (byPlayer[p.playerId] = byPlayer[p.playerId]||[]).push(p); });
-  const rows = Object.entries(byPlayer).map(([pid, ps])=>{
-    const pl = state.players.find(x=>x.id===pid);
-    const total = ps.reduce((s,p)=>s+(p.amount||0),0);
-    const conceptList = ps.map(p=>`${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} (${statusBadge(p.status)})`).join('<br/>');
-    return `<tr class=\"border-b border-slate-800\">
-      <td class=\"px-3 py-3 font-bold text-white\">${escapeHtml(pl?.name||'(eliminado)')}</td>
-      <td class=\"px-3 py-3 text-gray-400\">${escapeHtml(teamName(pl?.categoryId))}</td>
-      <td class=\"px-3 py-3 text-sm\">${conceptList}</td>
-      <td class=\"px-3 py-3 text-right font-black text-red-400\">${moneyFmt(total)}</td>
-    </tr>`;
-  }).join('');
-  $('morosos-list').innerHTML = `<div class=\"overflow-x-auto rounded-xl border border-slate-800\">
-    <table class=\"w-full\">
-      <thead class=\"bg-slate-900 text-[10px] uppercase font-black text-gray-500\"><tr><th class=\"px-3 py-3 text-left\">Jugador</th><th class=\"px-3 py-3 text-left\">Equipo</th><th class=\"px-3 py-3 text-left\">Pendiente</th><th class=\"px-3 py-3 text-right\">Total</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>`;
+  if (!debts.length) { $('morosos-list').innerHTML = '<p class="text-gray-500 text-center py-8">¡Sin morosos! 🎉</p>'; return; }
+  const byPlayer = {}; debts.forEach(p => { (byPlayer[p.playerId] = byPlayer[p.playerId]||[]).push(p); });
+  const rows = Object.entries(byPlayer).map(([pid, ps])=>{ const pl = state.players.find(x=>x.id===pid); const total = ps.reduce((s,p)=>s+(p.amount||0),0); const conceptList = ps.map(p=>`${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} (${statusBadge(p.status)})`).join('<br/>'); return `<tr class="border-b border-slate-800"><td class="px-3 py-3 font-bold text-white">${escapeHtml(pl?.name||'(eliminado)')}</td><td class="px-3 py-3 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td><td class="px-3 py-3 text-sm">${conceptList}</td><td class="px-3 py-3 text-right font-black text-red-400">${moneyFmt(total)}</td></tr>`; }).join('');
+  $('morosos-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800"><table class="w-full"><thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Pendiente</th><th class="px-3 py-3 text-right">Total</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
-/* ---------- Usuarios ---------- */
 function renderUsers() {
-  if (!state.users.length) { $('users-list').innerHTML = '<p class=\"text-gray-500 text-center py-8\">Sin usuarios.</p>'; return; }
-  $('users-list').innerHTML = `<div class=\"overflow-x-auto rounded-xl border border-slate-800\">
-    <table class=\"w-full text-sm\">
-      <thead class=\"bg-slate-900 text-[10px] uppercase font-black text-gray-500\"><tr><th class=\"px-3 py-3 text-left\">Nombre</th><th class=\"px-3 py-3 text-left\">Email</th><th class=\"px-3 py-3 text-left\">Rol</th><th class=\"px-3 py-3 text-left\">Jugadores</th><th class=\"px-3 py-3 text-center\">Acción</th></tr></thead>
-      <tbody>
-        ${state.users.map(u=>{
-          const linked = (u.playerIds||[]).map(pid => state.players.find(p=>p.id===pid)?.name || '(?)').join(', ');
-          return `<tr class=\"border-b border-slate-800\">
-            <td class=\"px-3 py-2 font-bold text-white\">${escapeHtml(u.name||'')}</td>
-            <td class=\"px-3 py-2 text-gray-400\">${escapeHtml(u.email||'')}</td>
-            <td class=\"px-3 py-2\">${roleBadge(u.role)}</td>
-            <td class=\"px-3 py-2 text-gray-300\">${escapeHtml(linked||'—')}</td>
-            <td class=\"px-3 py-2 text-center\">
-              <button onclick=\"openEditUser('${u.id}')\" class=\"btn-secondary\">Editar</button>
-              ${u.id !== state.user.id ? `<button onclick=\"deleteUserDoc('${u.id}')\" class=\"btn-danger ml-1\">🗑</button>` : ''}
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
+  if (!state.users.length) { $('users-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin usuarios.</p>'; return; }
+  $('users-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800"><table class="w-full text-sm"><thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Nombre</th><th class="px-3 py-3 text-left">Email</th><th class="px-3 py-3 text-left">Rol</th><th class="px-3 py-3 text-left">Jugadores</th><th class="px-3 py-3 text-center">Acción</th></tr></thead><tbody>${state.users.map(u=>{ const linked = (u.playerIds||[]).map(pid => state.players.find(p=>p.id===pid)?.name || '(?)').join(', '); return `<tr class="border-b border-slate-800"><td class="px-3 py-2 font-bold text-white">${escapeHtml(u.name||'')}</td><td class="px-3 py-2 text-gray-400">${escapeHtml(u.email||'')}</td><td class="px-3 py-2">${roleBadge(u.role)}</td><td class="px-3 py-2 text-gray-300">${escapeHtml(linked||'—')}</td><td class="px-3 py-2 text-center"><button onclick="openEditUser('${u.id}')" class="btn-secondary">Editar</button>${u.id !== state.user.id ? `<button onclick="deleteUserDoc('${u.id}')" class="btn-danger ml-1">🗑</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>`;
 }
-window.openEditUser = (id) => {
-  const u = id ? state.users.find(x=>x.id===id) : null;
-  $('us-id').value = u?.id||'';
-  $('us-name').value = u?.name||'';
-  $('us-email').value = u?.email||'';
-  $('us-password').value = u?.password||'';
-  $('us-role').value = u?.role||'parent';
-  $('us-players').innerHTML = state.players.map(p=>`
-    <label class=\"flex items-center gap-2 text-sm text-gray-300\">
-      <input type=\"checkbox\" value=\"${p.id}\" class=\"us-player-chk accent-green-600\" ${u?.playerIds?.includes(p.id)?'checked':''} />
-      ${escapeHtml(p.name)} <span class=\"text-gray-500 text-xs\">· ${escapeHtml(teamName(p.categoryId))}</span>
-    </label>`).join('') || '<p class=\"text-gray-500 text-xs\">Crea primero algún jugador.</p>';
-  openModal('user-modal');
-};
-window.saveUserForm = () => {
-  const id = $('us-id').value;
-  const email = $('us-email').value.trim().toLowerCase();
-  const name = $('us-name').value.trim();
-  const password = $('us-password').value;
-  const role = $('us-role').value;
-  const playerIds = [...document.querySelectorAll('.us-player-chk:checked')].map(i=>i.value);
-  if (!email || !name) return toast('Email y nombre son obligatorios','error');
-  if (!id && password.length < 4) return toast('Contraseña mínima 4 caracteres','error');
-  if (state.users.some(u=> u.email.toLowerCase()===email && u.id!==id)) return toast('Email ya registrado','error');
-  if (id) {
-    const i = state.users.findIndex(x=>x.id===id);
-    state.users[i] = { ...state.users[i], name, email, role, playerIds, ...(password?{password}:{}) };
-  } else {
-    state.users.push({ id: uid(), name, email, password, role, playerIds, createdAt: Date.now() });
-  }
-  DB.set('users', state.users);
-  closeModal('user-modal'); renderUsers(); toast('Usuario guardado y sincronizado en la nube','success');
-};
-window.deleteUserDoc = (id) => {
-  if (!confirm('¿Eliminar este usuario?')) return;
-  state.users = state.users.filter(x=>x.id!==id);
-  DB.set('users', state.users); renderUsers();
-};
+window.openEditUser = (id) => { const u = id ? state.users.find(x=>x.id===id) : null; $('us-id').value = u?.id||''; $('us-name').value = u?.name||''; $('us-email').value = u?.email||''; $('us-password').value = u?.password||''; $('us-role').value = u?.role||'parent'; $('us-players').innerHTML = state.players.map(p=>`<label class="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" value="${p.id}" class="us-player-chk accent-green-600" ${u?.playerIds?.includes(p.id)?'checked':''} />${escapeHtml(p.name)} <span class="text-gray-500 text-xs">· ${escapeHtml(teamName(p.categoryId))}</span></label>`).join('') || '<p class="text-gray-500 text-xs">Crea primero algún jugador.</p>'; openModal('user-modal'); };
+window.saveUserForm = () => { const id = $('us-id').value; const email = $('us-email').value.trim().toLowerCase(); const name = $('us-name').value.trim(); const password = $('us-password').value; const role = $('us-role').value; const playerIds = [...document.querySelectorAll('.us-player-chk:checked')].map(i=>i.value); if (!email || !name) return toast('Email y nombre son obligatorios','error'); if (!id && password.length < 4) return toast('Contraseña mínima 4 caracteres','error'); if (state.users.some(u=> u.email.toLowerCase()===email && u.id!==id)) return toast('Email ya registrado','error'); if (id) { const i = state.users.findIndex(x=>x.id===id); state.users[i] = { ...state.users[i], name, email, role, playerIds, ...(password?{password}:{}) }; } else { state.users.push({ id: uid(), name, email, password, role, playerIds, createdAt: Date.now() }); } DB.set('users', state.users); closeModal('user-modal'); renderUsers(); toast('Usuario guardado y sincronizado en la nube','success'); };
+window.deleteUserDoc = (id) => { if (!confirm('¿Eliminar este usuario?')) return; state.users = state.users.filter(x=>x.id!==id); DB.set('users', state.users); renderUsers(); };
 
-/* ---------- Config ---------- */
-function renderConfig() {
-  const c = state.clubInfo || {};
-  $('cfg-iban').value = c.iban||'';
-  $('cfg-holder').value = c.holder||'';
-  $('cfg-bank').value = c.bank||'';
-  $('cfg-concept').value = c.concept||'';
-  $('cfg-bizum').value = c.bizum||'';
-}
-window.saveClubConfig = () => {
-  const data = { iban: $('cfg-iban').value.trim(), holder: $('cfg-holder').value.trim(), bank: $('cfg-bank').value.trim(), concept: $('cfg-concept').value.trim(), bizum: $('cfg-bizum').value.trim() };
-  DB.set('config', data); state.clubInfo = data;
-  toast('Configuración guardada','success');
-};
+function renderConfig() { const c = state.clubInfo || {}; $('cfg-iban').value = c.iban||''; $('cfg-holder').value = c.holder||''; $('cfg-bank').value = c.bank||''; $('cfg-concept').value = c.concept||''; $('cfg-bizum').value = c.bizum||''; }
+window.saveClubConfig = () => { const data = { iban: $('cfg-iban').value.trim(), holder: $('cfg-holder').value.trim(), bank: $('cfg-bank').value.trim(), concept: $('cfg-concept').value.trim(), bizum: $('cfg-bizum').value.trim() }; DB.set('config', data); state.clubInfo = data; toast('Configuración guardada','success'); };
 
-/* ---------- Copia de seguridad ---------- */
-window.exportBackup = () => {
-  const data = {
-    _meta: { app: 'ClubPinarFS', version: 1, exportedAt: new Date().toISOString() },
-    users: state.users,
-    categories: state.categories,
-    players: state.players,
-    concepts: state.concepts,
-    payments: state.payments,
-    matches: state.matches,
-    config: state.clubInfo
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const ts = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
-  a.href = url; a.download = `pinar_backup_${ts}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-  toast('Copia descargada','success');
-};
+window.exportBackup = () => { const data = { _meta: { app: 'ClubPinarFS', version: 1, exportedAt: new Date().toISOString() }, users: state.users, categories: state.categories, players: state.players, concepts: state.concepts, payments: state.payments, matches: state.matches, config: state.clubInfo }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); const ts = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-'); a.href = url; a.download = `pinar_backup_${ts}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Copia descargada','success'); };
+window.importBackup = (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const data = JSON.parse(reader.result); if (data._meta?.app !== 'ClubPinarFS') { if (!confirm('El archivo no parece una copia de Club Pinar FS. ¿Importar de todos modos?')) return; } if (!confirm('Esto SOBRESCRIBIRÁ todos los datos actuales y se subirán a la nube. ¿Continuar?')) return; if (Array.isArray(data.users)) { state.users = data.users; DB.set('users', state.users); } if (Array.isArray(data.categories)) { state.categories = data.categories; DB.set('categories', state.categories); } if (Array.isArray(data.players)) { state.players = data.players; DB.set('players', state.players); } if (Array.isArray(data.concepts)) { state.concepts = data.concepts; DB.set('concepts', state.concepts); } if (Array.isArray(data.payments)) { state.payments = data.payments; DB.set('payments', state.payments); } if (Array.isArray(data.matches)) { state.matches = data.matches; DB.set('matches', state.matches); } if (data.config && typeof data.config === 'object') { state.clubInfo = data.config; DB.set('config', state.clubInfo); } $('backup-info').textContent = `Importado: ${state.users.length} usuarios · ${state.players.length} jugadores · ${state.payments.length} cobros · ${state.matches.length} partidos`; toast('Copia importada. Vuelve a iniciar sesión.','success'); setTimeout(()=> logout(), 1500); } catch(err) { toast('Archivo inválido: '+err.message,'error'); } }; reader.readAsText(file); e.target.value = ''; };
+window.wipeAll = () => { if (!confirm('⚠️ Esto borra TODOS los datos locales. La nube se mantiene. ¿Seguro?')) return; if (!confirm('Última oportunidad. ¿Confirmas que quieres borrar TODO en local?')) return; ['users','categories','players','concepts','payments','matches','config','session'].forEach(k => localStorage.removeItem('pinar_'+k)); toast('Todo borrado en local. La nube se mantiene.','info'); setTimeout(()=> location.reload(), 800); };
 
-window.importBackup = (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const data = JSON.parse(reader.result);
-      if (data._meta?.app !== 'ClubPinarFS') {
-        if (!confirm('El archivo no parece una copia de Club Pinar FS. ¿Importar de todos modos?')) return;
-      }
-      if (!confirm('Esto SOBRESCRIBIRÁ todos los datos actuales (usuarios, jugadores, cobros...) y se subirán a la nube. ¿Continuar?')) return;
-      if (Array.isArray(data.users))      { state.users = data.users;           DB.set('users', state.users); }
-      if (Array.isArray(data.categories)) { state.categories = data.categories; DB.set('categories', state.categories); }
-      if (Array.isArray(data.players))    { state.players = data.players;       DB.set('players', state.players); }
-      if (Array.isArray(data.concepts))   { state.concepts = data.concepts;     DB.set('concepts', state.concepts); }
-      if (Array.isArray(data.payments))   { state.payments = data.payments;     DB.set('payments', state.payments); }
-      if (Array.isArray(data.matches))    { state.matches = data.matches;       DB.set('matches', state.matches); }
-      if (data.config && typeof data.config === 'object') { state.clubInfo = data.config; DB.set('config', state.clubInfo); }
-      $('backup-info').textContent = `Importado: ${state.users.length} usuarios · ${state.players.length} jugadores · ${state.payments.length} cobros · ${state.matches.length} partidos`;
-      toast('Copia importada. Vuelve a iniciar sesión.','success');
-      setTimeout(()=> logout(), 1500);
-    } catch(err) {
-      toast('Archivo inválido: '+err.message,'error');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-};
+window.exportPlayers = () => { const rows = state.players.map(p=>({ Nombre: p.name, Dorsal: p.dorsal, Posición: p.position, Equipo: teamName(p.categoryId), Goles: p.goals||0, Presencias: p.attPresent||0, Faltas: p.attAbsent||0, Lesiones: p.attInjured||0 })); downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores'); };
+window.exportPayments = () => { const rows = state.payments.map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status, Notas: p.notes||'' }; }); downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros'); };
+window.exportMorosos = () => { const rows = state.payments.filter(p=>p.status!=='approved').map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status }; }); downloadXlsx(rows, 'morosos_pinar.xlsx', 'Morosos'); };
+function downloadXlsx(rows, filename, sheet) { if (!rows.length) return toast('Sin datos para exportar','info'); const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, sheet); XLSX.writeFile(wb, filename); }
 
-window.wipeAll = () => {
-  if (!confirm('⚠️ Esto borra TODOS los datos LOCALES (usuarios, jugadores, cobros, partidos...). Los datos en la nube se mantendrán y se volverán a descargar al recargar. ¿Seguro?')) return;
-  if (!confirm('⚠️ ¿Borrar ABSOLUTAMENTE TODO en local? Esta acción no se puede deshacer aquí.')) return;
-  localStorage.clear();
-  location.reload();
-};
-
-/* ---------- Export Excel ---------- */
-window.exportPlayers = () => {
-  const rows = state.players.map(p => ({ 
-    Nombre: p.name, 
-    Dorsal: p.dorsal, 
-    Equipo: teamName(p.categoryId), 
-    Goles: p.goals || 0 
-  }));
-  downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
-};
-
-window.exportPayments = () => {
-  const rows = state.payments.map(p => { 
-    const pl = state.players.find(x => x.id === p.playerId); 
-    return { 
-      Jugador: pl?.name || '', 
-      Mes: MONTH_NAMES[(p.month || 1) - 1], 
-      Concepto: p.conceptName || '', 
-      Importe: p.amount || 0, 
-      Estado: p.status 
-    }; 
-  });
-  downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
-};
-
-function downloadXlsx(rows, filename, sheet) {
-  if (!rows.length) return toast('Sin datos para exportar', 'info');
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet);
-  XLSX.writeFile(wb, filename);
-}
-
-window.wipeAll = () => {
-  if (!confirm('⚠️ Esto borra TODOS los datos locales (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
-  if (!confirm('Última oportunidad. ¿Confirmas que quieres borrar TODO en local?')) return;
-  ['users','categories','players','concepts','payments','matches','config','session'].forEach(k => localStorage.removeItem('pinar_'+k));
-  toast('Todo borrado en local. La nube se mantiene.','info');
-  setTimeout(()=> location.reload(), 800);
-};
-
-/* ---------- Export Excel ---------- */
-window.exportPlayers = () => {
-  const rows = state.players.map(p=>({ Nombre: p.name, Dorsal: p.dorsal, Posición: p.position, Equipo: teamName(p.categoryId), Goles: p.goals||0, Presencias: p.attPresent||0, Faltas: p.attAbsent||0, Lesiones: p.attInjured||0 }));
-  downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
-};
-window.exportPayments = () => {
-  const rows = state.payments.map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status, Notas: p.notes||'' }; });
-  downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
-};
-window.exportMorosos = () => {
-  const rows = state.payments.filter(p=>p.status!=='approved').map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status }; });
-  downloadXlsx(rows, 'morosos_pinar.xlsx', 'Morosos');
-};
-function downloadXlsx(rows, filename, sheet) {
-  if (!rows.length) return toast('Sin datos para exportar','info');
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet);
-  XLSX.writeFile(wb, filename);
-}
-
-/* ════════════════════ PARENT ════════════════════ */
 window.switchParentTab = (tab) => {
   state.parentTab = tab;
   document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.pane===tab));
   document.querySelectorAll('.parent-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'parent-pane-'+tab));
   const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-  if (myPlayers.length>1) {
-    const sel = $('parent-player-select');
-    sel.innerHTML = myPlayers.map(p=>`<option value=\"${p.id}\">${escapeHtml(p.name)} · ${escapeHtml(teamName(p.categoryId))}</option>`).join('');
-    sel.value = state.parentSelectedPlayer || myPlayers[0].id;
-    $('parent-player-selector').classList.remove('hidden');
-    sel.onchange = (e)=>{ state.parentSelectedPlayer = e.target.value; switchParentTab(state.parentTab); };
-  }
+  if (myPlayers.length>1) { const sel = $('parent-player-select'); sel.innerHTML = myPlayers.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${escapeHtml(teamName(p.categoryId))}</option>`).join(''); sel.value = state.parentSelectedPlayer || myPlayers[0].id; $('parent-player-selector').classList.remove('hidden'); sel.onchange = (e)=>{ state.parentSelectedPlayer = e.target.value; switchParentTab(state.parentTab); }; }
   const map = { home: renderParentHome, payments: renderParentPayments, matches: renderParentMatches, history: renderParentHistory, bank: renderParentBank };
   map[tab] && map[tab]();
 };
-function currentParentPlayer() {
-  const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-  return myPlayers.find(p=>p.id===state.parentSelectedPlayer) || myPlayers[0];
-}
+function currentParentPlayer() { const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id)); return myPlayers.find(p=>p.id===state.parentSelectedPlayer) || myPlayers[0]; }
 function renderParentHome() {
   const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-home').innerHTML = '<div class=\"card text-center py-12\"><p class=\"text-gray-400 font-bold\">Tu cuenta aún no está vinculada a ningún jugador.</p><p class=\"text-gray-500 text-xs mt-2\">Contacta con el administrador.</p></div>'; return; }
+  if (!pl) { $('parent-pane-home').innerHTML = '<div class="card text-center py-12"><p class="text-gray-400 font-bold">Tu cuenta aún no está vinculada a ningún jugador.</p><p class="text-gray-500 text-xs mt-2">Contacta con el administrador.</p></div>'; return; }
   const myPayments = state.payments.filter(p=>p.playerId===pl.id);
   const nextPending = myPayments.filter(p=>p.status!=='approved').sort((a,b)=>(a.month||0)-(b.month||0))[0];
   const upcomingMatch = state.matches.filter(m=>m.categoryId===pl.categoryId && m.date && new Date(m.date+'T'+(m.time||'23:59'))>=new Date()).sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0];
   const totalPendiente = myPayments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
   const totalPagado = myPayments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  $('parent-pane-home').innerHTML = `
-    <div class=\"card mb-4 flex items-center gap-4\">
-      <img src=\"${pl.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(pl.name)+'&background=7f1d1d&color=fff'}\" class=\"w-16 h-16 rounded-2xl object-cover\" />
-      <div>
-        <div class=\"text-[10px] font-black text-green-500 uppercase tracking-widest\">${escapeHtml(teamName(pl.categoryId))}</div>
-        <h2 class=\"text-2xl font-black text-white tracking-tight\">${escapeHtml(pl.name)}</h2>
-        <div class=\"text-[11px] text-gray-500\">#${pl.dorsal||'S/N'} · ${escapeHtml(pl.position||'')}</div>
-      </div>
-    </div>
-    <div class=\"grid grid-cols-2 gap-3 mb-4\">
-      <div class=\"card text-center\"><div class=\"text-[9px] font-black uppercase text-gray-500\">Pagado</div><div class=\"text-xl font-black text-green-400\">${moneyFmt(totalPagado)}</div></div>
-      <div class=\"card text-center\"><div class=\"text-[9px] font-black uppercase text-gray-500\">Pendiente</div><div class=\"text-xl font-black text-yellow-400\">${moneyFmt(totalPendiente)}</div></div>
-    </div>
-    ${nextPending ? `<div class=\"card border-l-4 border-l-yellow-500 mb-4\">
-      <div class=\"text-[10px] font-black text-yellow-500 uppercase tracking-widest mb-1\">Próximo Pago</div>
-      <div class=\"flex justify-between items-center\">
-        <div>
-          <div class=\"font-black text-white text-lg\">${escapeHtml(nextPending.conceptName)}</div>
-          <div class=\"text-[10px] text-gray-500\">${MONTH_NAMES[(nextPending.month||1)-1]} · ${statusBadge(nextPending.status)}</div>
-        </div>
-        <div class=\"text-2xl font-black text-white\">${moneyFmt(nextPending.amount)}</div>
-      </div>
-      ${nextPending.status==='pending' || nextPending.status==='rejected' ? `<button onclick=\"openProof('${nextPending.id}')\" class=\"w-full btn-primary mt-3\">Subir Justificante</button>` : ''}
-    </div>` : `<div class=\"card text-center mb-4\"><p class=\"text-green-400 font-black\">¡Estás al corriente! 🎉</p></div>`}
-    ${upcomingMatch ? `<div class=\"card border-l-4 border-l-green-600 mb-4\">
-      <div class=\"text-[10px] font-black text-green-500 uppercase tracking-widest mb-1\">Próximo Partido</div>
-      <div class=\"font-black text-white text-lg\">vs ${escapeHtml(upcomingMatch.rival||'?')} (${upcomingMatch.home==='home'?'Local':'Visitante'})</div>
-      <div class=\"text-sm text-gray-300\">${upcomingMatch.date} · ${upcomingMatch.time||''}</div>
-      <div class=\"text-[11px] text-gray-500 mt-1\">${escapeHtml(upcomingMatch.location||'')}</div>
-      <div class=\"text-[11px] text-gray-500 mt-1\">Equipación: <span class=\"text-white font-bold\">${escapeHtml(upcomingMatch.kit||'Titular')}</span></div>
-    </div>` : ''}`;
+  $('parent-pane-home').innerHTML = `<div class="card mb-4 flex items-center gap-4"><img src="${pl.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(pl.name)+'&background=7f1d1d&color=fff'}" class="w-16 h-16 rounded-2xl object-cover" /><div><div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(teamName(pl.categoryId))}</div><h2 class="text-2xl font-black text-white tracking-tight">${escapeHtml(pl.name)}</h2><div class="text-[11px] text-gray-500">#${pl.dorsal||'S/N'} · ${escapeHtml(pl.position||'')}</div></div></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pagado</div><div class="text-xl font-black text-green-400">${moneyFmt(totalPagado)}</div></div><div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(totalPendiente)}</div></div></div>${nextPending ? `<div class="card border-l-4 border-l-yellow-500 mb-4"><div class="text-[10px] font-black text-yellow-500 uppercase tracking-widest mb-1">Próximo Pago</div><div class="flex justify-between items-center"><div><div class="font-black text-white text-lg">${escapeHtml(nextPending.conceptName)}</div><div class="text-[10px] text-gray-500">${MONTH_NAMES[(nextPending.month||1)-1]} · ${statusBadge(nextPending.status)}</div></div><div class="text-2xl font-black text-white">${moneyFmt(nextPending.amount)}</div></div>${nextPending.status==='pending' || nextPending.status==='rejected' ? `<button onclick="openProof('${nextPending.id}')" class="w-full btn-primary mt-3">Subir Justificante</button>` : ''}</div>` : `<div class="card text-center mb-4"><p class="text-green-400 font-black">¡Estás al corriente! 🎉</p></div>`}${upcomingMatch ? `<div class="card border-l-4 border-l-green-600 mb-4"><div class="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">Próximo Partido</div><div class="font-black text-white text-lg">vs ${escapeHtml(upcomingMatch.rival||'?')} (${upcomingMatch.home==='home'?'Local':'Visitante'})</div><div class="text-sm text-gray-300">${upcomingMatch.date} · ${upcomingMatch.time||''}</div><div class="text-[11px] text-gray-500 mt-1">${escapeHtml(upcomingMatch.location||'')}</div><div class="text-[11px] text-gray-500 mt-1">Equipación: <span class="text-white font-bold">${escapeHtml(upcomingMatch.kit||'Titular')}</span></div></div>` : ''}`;
 }
 function renderParentPayments() {
   const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-payments').innerHTML = '<p class=\"text-gray-500 text-center py-12\">Sin jugador vinculado.</p>'; return; }
+  if (!pl) { $('parent-pane-payments').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
   const myPayments = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=>(a.month||0)-(b.month||0));
-  if (!myPayments.length) { $('parent-pane-payments').innerHTML = '<div class=\"card text-center py-8\"><p class=\"text-gray-400\">Sin cobros generados aún.</p></div>'; return; }
-  $('parent-pane-payments').innerHTML = myPayments.map(p=>`
-    <div class=\"card mb-3\">
-      <div class=\"flex justify-between items-start\">
-        <div>
-          <div class=\"text-[10px] font-black text-green-500 uppercase tracking-widest\">${MONTH_NAMES[(p.month||1)-1]}</div>
-          <div class=\"font-black text-white text-lg\">${escapeHtml(p.conceptName||'')}</div>
-          <div class=\"mt-1\">${statusBadge(p.status)}</div>
-          ${p.rejectionReason ? `<div class=\"text-[11px] text-red-400 mt-1\">Rechazo: ${escapeHtml(p.rejectionReason)}</div>` : ''}
-        </div>
-        <div class=\"text-right\"><div class=\"text-2xl font-black text-white\">${moneyFmt(p.amount)}</div></div>
-      </div>
-      ${p.proofData ? `<a href=\"${p.proofData}\" target=\"_blank\" class=\"block mt-3\"><img src=\"${p.proofData}\" class=\"rounded-lg max-h-48 object-contain border border-slate-700\" /></a>` : ''}
-      ${p.status!=='approved' ? `<button onclick=\"openProof('${p.id}')\" class=\"w-full btn-primary mt-3\">${p.proofData?'Reemplazar Justificante':'Subir Justificante'}</button>` : ''}
-    </div>`).join('');
+  if (!myPayments.length) { $('parent-pane-payments').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin cobros generados aún.</p></div>'; return; }
+  $('parent-pane-payments').innerHTML = myPayments.map(p=>`<div class="card mb-3"><div class="flex justify-between items-start"><div><div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${MONTH_NAMES[(p.month||1)-1]}</div><div class="font-black text-white text-lg">${escapeHtml(p.conceptName||'')}</div><div class="mt-1">${statusBadge(p.status)}</div>${p.rejectionReason ? `<div class="text-[11px] text-red-400 mt-1">Rechazo: ${escapeHtml(p.rejectionReason)}</div>` : ''}</div><div class="text-right"><div class="text-2xl font-black text-white">${moneyFmt(p.amount)}</div></div></div>${p.proofData ? `<a href="${p.proofData}" target="_blank" class="block mt-3"><img src="${p.proofData}" class="rounded-lg max-h-48 object-contain border border-slate-700" /></a>` : ''}${p.status!=='approved' ? `<button onclick="openProof('${p.id}')" class="w-full btn-primary mt-3">${p.proofData?'Reemplazar Justificante':'Subir Justificante'}</button>` : ''}</div>`).join('');
 }
 function renderParentMatches() {
   const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-matches').innerHTML = '<p class=\"text-gray-500 text-center py-12\">Sin jugador vinculado.</p>'; return; }
+  if (!pl) { $('parent-pane-matches').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
   const list = state.matches.filter(m=>m.categoryId===pl.categoryId).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  if (!list.length) { $('parent-pane-matches').innerHTML = '<div class=\"card text-center py-8\"><p class=\"text-gray-400\">No hay partidos.</p></div>'; return; }
-  $('parent-pane-matches').innerHTML = list.map(m=>{
-    const past = m.date && new Date(m.date+'T'+(m.time||'23:59'))<new Date();
-    return `<div class=\"card mb-3 ${past?'opacity-60':''}\">
-      <div class=\"flex justify-between items-start\">
-        <div>
-          <div class=\"text-[10px] font-black ${past?'text-gray-500':'text-green-500'} uppercase tracking-widest\">${m.date} · ${m.time||''}</div>
-          <div class=\"font-black text-white text-lg\">vs ${escapeHtml(m.rival||'?')}</div>
-          <div class=\"text-[11px] text-gray-500\">${m.home==='home'?'Local':'Visitante'} · Equipación ${escapeHtml(m.kit||'Titular')}</div>
-        </div>
-      </div>
-      <div class=\"mt-2 text-sm text-gray-300\">${escapeHtml(m.location||'')}</div>
-      ${m.notes ? `<div class=\"text-[11px] text-gray-500 mt-2\">${escapeHtml(m.notes)}</div>` : ''}
-    </div>`;
-  }).join('');
+  if (!list.length) { $('parent-pane-matches').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">No hay partidos.</p></div>'; return; }
+  $('parent-pane-matches').innerHTML = list.map(m=>{ const past = m.date && new Date(m.date+'T'+(m.time||'23:59'))<new Date(); return `<div class="card mb-3 ${past?'opacity-60':''}"><div class="flex justify-between items-start"><div><div class="text-[10px] font-black ${past?'text-gray-500':'text-green-500'} uppercase tracking-widest">${m.date} · ${m.time||''}</div><div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div><div class="text-[11px] text-gray-500">${m.home==='home'?'Local':'Visitante'} · Equipación ${escapeHtml(m.kit||'Titular')}</div></div></div><div class="mt-2 text-sm text-gray-300">${escapeHtml(m.location||'')}</div>${m.notes ? `<div class="text-[11px] text-gray-500 mt-2">${escapeHtml(m.notes)}</div>` : ''}</div>`; }).join('');
 }
 function renderParentHistory() {
   const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-history').innerHTML = '<p class=\"text-gray-500 text-center py-12\">Sin jugador vinculado.</p>'; return; }
+  if (!pl) { $('parent-pane-history').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
   const list = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
-  if (!list.length) { $('parent-pane-history').innerHTML = '<div class=\"card text-center py-8\"><p class=\"text-gray-400\">Sin historial.</p></div>'; return; }
-  $('parent-pane-history').innerHTML = `<div class=\"card overflow-x-auto\">
-    <table class=\"w-full text-sm\">
-      <thead><tr class=\"text-[10px] font-black uppercase text-gray-500\"><th class=\"py-2 text-left\">Concepto</th><th class=\"py-2 text-left\">Mes</th><th class=\"py-2 text-right\">Importe</th><th class=\"py-2 text-center\">Estado</th></tr></thead>
-      <tbody>
-        ${list.map(p=>`<tr class=\"border-t border-slate-800\">
-          <td class=\"py-2 font-bold text-white\">${escapeHtml(p.conceptName||'')}</td>
-          <td class=\"py-2 text-gray-400\">${MONTH_NAMES[(p.month||1)-1]}</td>
-          <td class=\"py-2 text-right font-bold text-white\">${moneyFmt(p.amount)}</td>
-          <td class=\"py-2 text-center\">${statusBadge(p.status)}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-  </div>`;
+  if (!list.length) { $('parent-pane-history').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin historial.</p></div>'; return; }
+  $('parent-pane-history').innerHTML = `<div class="card overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-[10px] font-black uppercase text-gray-500"><th class="py-2 text-left">Concepto</th><th class="py-2 text-left">Mes</th><th class="py-2 text-right">Importe</th><th class="py-2 text-center">Estado</th></tr></thead><tbody>${list.map(p=>`<tr class="border-t border-slate-800"><td class="py-2 font-bold text-white">${escapeHtml(p.conceptName||'')}</td><td class="py-2 text-gray-400">${MONTH_NAMES[(p.month||1)-1]}</td><td class="py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td><td class="py-2 text-center">${statusBadge(p.status)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function renderParentBank() {
   const c = state.clubInfo || {};
-  $('parent-pane-bank').innerHTML = `<div class=\"card\">
-    <h3 class=\"section-title\">💳 Datos para el Pago</h3>
-    ${c.iban ? `<div class=\"mb-4\"><div class=\"text-[10px] font-black uppercase text-gray-500\">IBAN</div>
-      <div class=\"flex items-center gap-2 mt-1\"><code class=\"text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg\">${escapeHtml(c.iban)}</code><button onclick=\"copyText('${escapeHtml(c.iban)}')\" class=\"btn-secondary\">Copiar</button></div></div>` : ''}
-    ${c.holder ? `<div class=\"mb-3\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Titular</div><div class=\"text-white font-bold\">${escapeHtml(c.holder)}</div></div>` : ''}
-    ${c.bank ? `<div class=\"mb-3\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Banco</div><div class=\"text-white\">${escapeHtml(c.bank)}</div></div>` : ''}
-    ${c.concept ? `<div class=\"mb-3\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Concepto</div><div class=\"text-white\">${escapeHtml(c.concept)}</div></div>` : ''}
-    ${c.bizum ? `<div class=\"mb-3\"><div class=\"text-[10px] font-black uppercase text-gray-500\">Bizum</div><div class=\"flex items-center gap-2 mt-1\"><code class=\"text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg\">${escapeHtml(c.bizum)}</code><button onclick=\"copyText('${escapeHtml(c.bizum)}')\" class=\"btn-secondary\">Copiar</button></div></div>` : ''}
-    ${!c.iban && !c.bizum ? '<p class=\"text-gray-500 text-sm text-center py-4\">El club aún no ha configurado los datos bancarios.</p>' : ''}
-    <div class=\"mt-6 p-3 bg-blue-900/20 border border-blue-800 rounded-lg text-[11px] text-blue-300\">
-      💡 Tras pagar, ve a <b>Pagos</b> y sube la foto del justificante.
-    </div>
-  </div>`;
+  $('parent-pane-bank').innerHTML = `<div class="card"><h3 class="section-title">💳 Datos para el Pago</h3>${c.iban ? `<div class="mb-4"><div class="text-[10px] font-black uppercase text-gray-500">IBAN</div><div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.iban)}</code><button onclick="copyText('${escapeHtml(c.iban)}')" class="btn-secondary">Copiar</button></div></div>` : ''}${c.holder ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Titular</div><div class="text-white font-bold">${escapeHtml(c.holder)}</div></div>` : ''}${c.bank ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Banco</div><div class="text-white">${escapeHtml(c.bank)}</div></div>` : ''}${c.concept ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Concepto</div><div class="text-white">${escapeHtml(c.concept)}</div></div>` : ''}${c.bizum ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Bizum</div><div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.bizum)}</code><button onclick="copyText('${escapeHtml(c.bizum)}')" class="btn-secondary">Copiar</button></div></div>` : ''}${!c.iban && !c.bizum ? '<p class="text-gray-500 text-sm text-center py-4">El club aún no ha configurado los datos bancarios.</p>' : ''}<div class="mt-6 p-3 bg-blue-900/20 border border-blue-800 rounded-lg text-[11px] text-blue-300">💡 Tras pagar, ve a <b>Pagos</b> y sube la foto del justificante.</div></div>`;
 }
 window.copyText = (t) => { navigator.clipboard.writeText(t).then(()=> toast('Copiado','success')); };
 
-/* ---------- Subir justificante (base64) ---------- */
-window.openProof = (paymentId) => {
-  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
-  state.pendingProofPaymentId = paymentId;
-  $('proof-payment-id').value = paymentId;
-  $('proof-info').textContent = `${MONTH_NAMES[(p.month||1)-1]} · ${p.conceptName} · ${moneyFmt(p.amount)}`;
-  $('proof-file').value = '';
-  $('proof-notes').value = p.notes||'';
-  openModal('proof-modal');
-};
+window.openProof = (paymentId) => { const p = state.payments.find(x=>x.id===paymentId); if (!p) return; state.pendingProofPaymentId = paymentId; $('proof-payment-id').value = paymentId; $('proof-info').textContent = `${MONTH_NAMES[(p.month||1)-1]} · ${p.conceptName} · ${moneyFmt(p.amount)}`; $('proof-file').value = ''; $('proof-notes').value = p.notes||''; openModal('proof-modal'); };
 window.submitProof = async () => {
   const paymentId = state.pendingProofPaymentId;
-  const file = $('proof-file').files[0];
-  const notes = $('proof-notes').value.trim();
-  
-  if (!file && !notes) return toast('Adjunta una foto o añade una nota', 'error');
-  
-  const p = state.payments.find(x => x.id === paymentId); 
-  if (!p) return;
-  
-  p.status = 'review'; 
-  p.notes = notes; 
-  p.submittedAt = Date.now();
-  
-  if (file) {
-    try {
-      const dataUrl = await fileToBase64Resized(file, 1200, 0.8);
-      p.proofData = dataUrl;
-    } catch(e) {
-      return toast('Error al procesar imagen: ' + e.message, 'error');
-    }
-  }
-  
-  // 1. Guardamos en local Y subimos a Firebase (DB.set hace ambas cosas)
+  const file = $('proof-file').files[0]; const notes = $('proof-notes').value.trim();
+  if (!file && !notes) return toast('Adjunta una foto o añade una nota','error');
+  const p = state.payments.find(x => x.id === paymentId); if (!p) return;
+  p.status = 'review'; p.notes = notes; p.submittedAt = Date.now();
+  if (file) { try { const dataUrl = await fileToBase64Resized(file, 1200, 0.8); p.proofData = dataUrl; } catch(e) { return toast('Error al procesar imagen: '+e.message,'error'); } }
   DB.set('payments', state.payments);
-  closeModal('proof-modal'); 
-  toast('Justificante guardado y subido a la nube.', 'success');
-  switchParentTab(state.parentTab);
-
-  // 2. ¡ENVÍO DEL CORREO AL CLUB!
+  closeModal('proof-modal'); toast('Justificante guardado y subido a la nube.','success'); switchParentTab(state.parentTab);
   const pl = state.players.find(x => x.id === p.playerId);
-  
-  const emailParams = {
-    jugador: pl ? pl.name : 'Desconocido',
-    equipo: teamName(pl?.categoryId),
-    mes: MONTH_NAMES[(p.month || 1) - 1],
-    concepto: p.conceptName || 'Mensualidad',
-    importe: moneyFmt(p.amount),
-    notas: notes || 'Sin notas adicionales.',
-    justificante: p.proofData || 'No se adjuntó imagen (solo nota).' 
-  };
-
-  // Solo intentamos enviar email si EmailJS está bien configurado
-  try {
-    emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', emailParams)
-      .then(() => {
-        toast('📧 Notificación enviada al correo del club.', 'success');
-      })
-      .catch((err) => {
-        console.warn('EmailJS no configurado o falló:', err);
-      });
-  } catch(e) {
-    console.warn('EmailJS no disponible:', e);
-  }
+  const emailParams = { jugador: pl ? pl.name : 'Desconocido', equipo: teamName(pl?.categoryId), mes: MONTH_NAMES[(p.month || 1) - 1], concepto: p.conceptName || 'Mensualidad', importe: moneyFmt(p.amount), notas: notes || 'Sin notas adicionales.', justificante: p.proofData || 'No se adjuntó imagen (solo nota).' };
+  try { emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', emailParams).then(() => { toast('📧 Notificación enviada al correo del club.','success'); }).catch((err) => { console.warn('EmailJS no configurado o falló:', err); }); } catch(e) { console.warn('EmailJS no disponible:', e); }
 };
-function fileToBase64Resized(file, maxDim, quality) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          const r = Math.min(maxDim/width, maxDim/height);
-          width = Math.round(width*r); height = Math.round(height*r);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
+function fileToBase64Resized(file, maxDim, quality) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onerror = reject; reader.onload = () => { const img = new Image(); img.onload = () => { let { width, height } = img; if (width > maxDim || height > maxDim) { const r = Math.min(maxDim/width, maxDim/height); width = Math.round(width*r); height = Math.round(height*r); } const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); resolve(canvas.toDataURL('image/jpeg', quality)); }; img.onerror = reject; img.src = reader.result; }; reader.readAsDataURL(file); }); }
 
-/* ════════════════════ INIT ════════════════════ */
-// Función que se llama cuando Firebase ya cargó los datos por primera vez
 function arrancarAplicacion() {
   loadAll();
-
-  // sesión persistente
   const sess = DB.get('session', null);
-  if (sess?.id) {
-    const u = state.users.find(x=>x.id===sess.id);
-    if (u) { state.user = u; state.role = u.role; enterApp(); }
-    else showView('view-login');
-  } else {
-    showView('view-login');
-  }
+  if (sess?.id) { const u = state.users.find(x=>x.id===sess.id); if (u) { state.user = u; state.role = u.role; enterApp(); } else showView('view-login'); }
+  else { showView('view-login'); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Arrancamos la suscripción en tiempo real a Firebase
-  //    Cuando llegue la primera ronda de datos, se llamará a arrancarAplicacion()
   suscribirseATodoEnTiempoReal();
-
-  // 2. listeners de la interfaz (se enganchan ya aunque la app aún no esté lista)
   $('btn-login').addEventListener('click', doLogin);
   $('login-password').addEventListener('keypress', e => { if (e.key==='Enter') doLogin(); });
   $('player-search').addEventListener('input', e => { state.filters.playerSearch = e.target.value; renderPlayers(); });
