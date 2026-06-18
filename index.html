@@ -1610,7 +1610,6 @@ window.submitProof = async () => {
     }
   }
 
-  // 🔥 GUARDADO REAL EN FIREBASE (NO LOCAL)
   db.collection('payments').doc('global_data').set({
     data: state.payments
   });
@@ -1619,7 +1618,6 @@ window.submitProof = async () => {
   toast('Justificante enviado correctamente.', 'success');
   switchParentTab(state.parentTab);
 
-  // 2. EMAILJS (igual que lo tenías)
   const pl = state.players.find(x => x.id === p.playerId);
 
   const emailParams = {
@@ -1632,10 +1630,15 @@ window.submitProof = async () => {
     justificante: p.proofData || 'No se adjuntó imagen (solo nota).'
   };
 
-  emailjs.send("TU_SERVICE_ID", "TU_TEMPLATE_ID", emailParams);
+  emailjs.send("TU_SERVICE_ID", "TU_TEMPLATE_ID", emailParams)
+    .then(() => {
+      toast('📧 Notificación enviada al correo del club.', 'success');
+    })
+    .catch((err) => {
+      console.error('Error EmailJS:', err);
+      toast('Justificante guardado, pero falló el envío del correo.', 'error');
+    });
 };
-
-  
 function fileToBase64Resized(file, maxDim, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
