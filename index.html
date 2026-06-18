@@ -3,34 +3,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
   <title>Club Pinar Fútbol Sala | Gestión Premium</title>
   
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+ 
 
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-  <script>
-    
-    // Inicializamos EmailJS
-    emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
-
-    // Datos de conexión de Firebase de tu club
-    const firebaseConfig = {
-      apiKey: "AIzaSyAPpBPLuCMkbb9aT6BYbELaBKe0dP7rXsU", 
-      authDomain: "pinar-c6165.firebaseapp.com",
-      projectId: "pinar-c6165",
-      storageBucket: "pinar-c6165.appspot.com",
-      messagingSenderId: "110106144676",
-      appId: "1:110106144676:web:55eac9c8e4d8f2de851b31"
-    };
-    
-    // Arrancamos Firebase globalmente
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore(); 
-  </script>
-
+  
   <style>
     body { background: #08080a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
     .card { background: #121217; border: 1px solid #1f1f27; border-radius: 16px; padding: 1.25rem; }
@@ -441,6 +416,29 @@
 </div>
 
 <script>
+   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  // Inicializamos EmailJS
+    emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
+
+    // Datos de conexión de Firebase de tu club
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPpBPLuCMkbb9aT6BYbELaBKe0dP7rXsU", 
+      authDomain: "pinar-c6165.firebaseapp.com",
+      projectId: "pinar-c6165",
+      storageBucket: "pinar-c6165.appspot.com",
+      messagingSenderId: "110106144676",
+      appId: "1:110106144676:web:55eac9c8e4d8f2de851b31"
+    };
+    
+    // Arrancamos Firebase globalmente
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(); 
 /* ════════════════════════════════════════════════════════════════════════
    CLUB PINAR FS · Versión Corregida para Sincronización Completa
    Almacenamiento: localStorage del navegador + Firebase Back-end
