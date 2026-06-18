@@ -1610,6 +1610,7 @@ window.submitProof = async () => {
     }
   }
 
+  // GUARDAR EN FIREBASE
   db.collection('payments').doc('global_data').set({
     data: state.payments
   });
@@ -1618,6 +1619,7 @@ window.submitProof = async () => {
   toast('Justificante enviado correctamente.', 'success');
   switchParentTab(state.parentTab);
 
+  // EMAILJS (si lo quieres, déjalo aquí dentro)
   const pl = state.players.find(x => x.id === p.playerId);
 
   const emailParams = {
