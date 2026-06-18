@@ -811,7 +811,7 @@ window.openEditPlayer = (id) => {
   $('pl-att-injured').value = p?.attInjured||0;
   openModal('player-modal');
 };
-window.savePlayerForm = () => {
+window.savePlayerForm = async () => {
   const data = {
     name: $('pl-name').value.trim(),
     dorsal: Number($('pl-dorsal').value)||null,
@@ -832,7 +832,7 @@ window.savePlayerForm = () => {
 });
   closeModal('player-modal'); renderPlayers(); toast('Jugador guardado','success');
 };
-window.deletePlayer = (id) => {
+window.deletePlayer = async (id) => {
   if (!confirm('¿Eliminar este jugador?')) return;
   state.players = state.players.filter(x=>x.id!==id);
  await setDoc(doc(db, "app", "players"), {
