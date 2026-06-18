@@ -646,7 +646,6 @@ async function loadAll() {
         })
     )
   );
-}
   // 👇 crear admin si no existe
   if (!state.users.some(u => u.role === 'admin')) {
     state.users.push({
