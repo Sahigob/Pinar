@@ -12,6 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <script>
+    
     // Inicializamos EmailJS
     emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
 
@@ -827,7 +828,7 @@ window.savePlayerForm = async () => {
   const id = $('pl-id').value;
   if (id) { const i = state.players.findIndex(x=>x.id===id); state.players[i] = { ...state.players[i], ...data }; }
   else { state.players.push({ id: uid(), ...data }); }
-  await setDoc(doc(db, "app", "players"), {
+ await db.collection("app").doc("players").set({
   data: state.players
 });
   closeModal('player-modal'); renderPlayers(); toast('Jugador guardado','success');
@@ -835,7 +836,7 @@ window.savePlayerForm = async () => {
 window.deletePlayer = async (id) => {
   if (!confirm('¿Eliminar este jugador?')) return;
   state.players = state.players.filter(x=>x.id!==id);
- await setDoc(doc(db, "app", "players"), {
+ await db.collection("app").doc("players").set({
   data: state.players
 });
   renderPlayers();
