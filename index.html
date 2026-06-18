@@ -499,41 +499,39 @@ function descargarDatosDeLaNube() {
   const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
   let descargasCompletadas = 0;
 
-  colecciones.forEach(k => {
-    db.collection(k).doc('global_data').get()
-      .then(doc => {
-        if (doc.exists && doc.data()) {
-          const datosNube = doc.data();
-          
-          // 🎯 ARREGLO CRÍTICO: Forzamos la extracción correcta sin importar si es Array u Objeto
-          let datosLimpios = datosNube;
-          if (datosNube && datosNube.hasOwnProperty('data')) {
-            datosLimpios = datosNube.data;
-          }
-          
-          DB.set(k, datosLimpios, false);
-          console.log(`📥 Descargado ${k} desde la nube con éxito.`);
-        } else {
-          console.log(`ℹ️ ${k} está vacío en la nube. Se mantiene la copia local.`);
+ colecciones.forEach(k => {
+  db.collection(k).doc('global_data').get()
+    .then(doc => {
+      if (doc.exists && doc.data()) {
+        const datosNube = doc.data();
+
+        // 🎯 Extraer data correctamente
+        let datosLimpios = datosNube;
+        if (datosNube && Object.prototype.hasOwnProperty.call(datosNube, 'data')) {
+          datosLimpios = datosNube.data;
         }
-        
-        descargasCompletadas++;
-        if (descargasCompletadas === colecciones.length) {
-          console.log("🔄 Todos los datos sincronizados. Renderizando app...");
-          if (typeof render === 'function') render();
-          if (typeof initApp === 'function') initApp();
-          if (typeof showData === 'function') showData();
-        }
-      })
-      .catch(err => {
-        console.error(`⚠️ Error al descargar ${k}:`, err.message);
-        descargasCompletadas++;
-        if (descargasCompletadas === colecciones.length) {
-          if (typeof render === 'function') render();
-        }
-      });
-  });
-}
+
+        // ✅ GUARDAR EN MEMORIA (NO LOCALSTORAGE)
+        state[k] = datosLimpios;
+
+        console.log(`📥 Descargado ${k} desde la nube con éxito.`);
+      } else {
+        console.log(`ℹ️ ${k} está vacío en la nube.`);
+      }
+
+      descargasCompletadas++;
+      if (descargasCompletadas === colecciones.length) {
+        console.log("🔄 Todos los datos sincronizados. Renderizando app...");
+
+        if (typeof render === 'function') render();
+        if (typeof initApp === 'function') initApp();
+        if (typeof showData === 'function') showData();
+      }
+    })
+    .catch(err => {
+      console.error(`❌ Error descargando ${k}:`, err);
+    });
+});
 
 /* 🎯 FUNCIÓN GLOBAL PARA FORZAR LA SUBIDA MANUAL DESDE EL BOTÓN VERDE */
 function subirTodoALaNube() {
@@ -622,18 +620,48 @@ function roleBadge(role) {
 }
 
 /* ---------- carga datos ---------- */
-function loadAll() {
-  state.users      = DB.get('users', []);
-  state.categories = DB.get('categories', []);
-  state.players    = DB.get('players', []);
-  state.concepts   = DB.get('concepts', []);
-  state.payments   = DB.get('payments', []);
-  state.matches    = DB.get('matches', []);
-  state.clubInfo   = DB.get('config', {});
-  // crear admin por defecto si no hay
-  if (!state.users.some(u=>u.role==='admin')) {
-    state.users.push({ id: uid(), email:'admin@pinarfs.es', password:'Pinar2026!', name:'Administrador', role:'admin', playerIds:[], createdAt: Date.now() });
-    DB.set('users', state.users);
+async function loadAll() {
+  const colecciones = ['users', 'categories', 'players', 'concepts', 'payments', 'matches', 'config'];
+
+  await Promise.all(
+    colecciones.map(k =>
+      db.collection(k).doc('global_data').get()
+        .then(doc => {
+          if (doc.exists && doc.data()) {
+            const datosNube = doc.data();
+
+            let datosLimpios = datosNube;
+            if (datosNube && Object.prototype.hasOwnProperty.call(datosNube, 'data')) {
+              datosLimpios = datosNube.data;
+            }
+
+            state[k] = datosLimpios || (k === 'config' ? {} : []);
+          } else {
+            state[k] = k === 'config' ? {} : [];
+          }
+        })
+        .catch(err => {
+          console.error(`Error cargando ${k}:`, err);
+          state[k] = k === 'config' ? {} : [];
+        })
+    )
+  );
+
+  // 👇 crear admin si no existe
+  if (!state.users.some(u => u.role === 'admin')) {
+    state.users.push({
+      id: uid(),
+      email: 'admin@pinarfs.es',
+      password: 'Pinar2026!',
+      name: 'Administrador',
+      role: 'admin',
+      playerIds: [],
+      createdAt: Date.now()
+    });
+
+    db.collection('users').doc('global_data').set({
+      data: state.users
+    });
   }
 }
 
@@ -644,34 +672,28 @@ function doLogin() {
   const err = $('login-error');
   err.classList.add('hidden');
 
-  // 🎯 INYECCIÓN Y DIAGNÓSTICO: Forzamos a la app a leer lo descargado de la nube
-  console.log("=== DIAGNÓSTICO DE LOGIN ===");
-  try {
-    const usuariosDescargados = JSON.parse(localStorage.getItem('pinar_users'));
-    console.log("Usuarios en localStorage:", usuariosDescargados);
-    
-    // Si hay usuarios en el almacenamiento, se los inyectamos al "state"
-    if (usuariosDescargados) {
-      state.users = usuariosDescargados;
-    }
-  } catch(e) {
-    console.error("Error al leer pinar_users:", e.message);
-  }
-  console.log("Usuarios actuales en state.users:", state.users);
-  console.log("============================");
+  // 🔥 Asegurar que usamos datos en memoria (Firebase ya cargado)
+  console.log("=== LOGIN DEBUG ===");
+  console.log("Usuarios en state:", state.users);
 
-  // Tu código original que busca al usuario
-  const u = state.users.find(x => x.email.toLowerCase() === email && x.password === pass);
-  
-  if (!u) { 
-    err.textContent = 'Email o contraseña incorrectos.'; 
-    err.classList.remove('hidden'); 
-    return; 
+  const u = state.users.find(x =>
+    x.email.toLowerCase() === email && x.password === pass
+  );
+
+  if (!u) {
+    err.textContent = 'Email o contraseña incorrectos.';
+    err.classList.remove('hidden');
+    return;
   }
-  
-  state.user = u; 
+
+  state.user = u;
   state.role = u.role;
-  DB.set('session', { id: u.id });
+
+  // 💾 sesión en Firebase
+  db.collection('session').doc('global_data').set({
+    data: { id: u.id }
+  });
+
   enterApp();
 }
 function logout() {
@@ -746,19 +768,34 @@ window.openEditCategory = (id) => {
 window.saveCategoryForm = () => {
   const id = $('cat-form-id').value;
   const data = { base: $('cat-base').value, sub: $('cat-sub').value.trim() };
+
   if (id) {
-    const i = state.categories.findIndex(x=>x.id===id);
+    const i = state.categories.findIndex(x => x.id === id);
     state.categories[i] = { ...state.categories[i], ...data };
   } else {
     state.categories.push({ id: uid(), ...data });
   }
-  DB.set('categories', state.categories);
-  closeModal('cat-modal'); renderCategories(); toast('Equipo guardado','success');
+
+  // 💾 Firebase
+  db.collection('categories').doc('global_data').set({
+    data: state.categories
+  });
+
+  closeModal('cat-modal');
+  renderCategories();
+  toast('Equipo guardado', 'success');
 };
+
 window.deleteCategory = (id) => {
   if (!confirm('¿Eliminar este equipo?')) return;
-  state.categories = state.categories.filter(x=>x.id!==id);
-  DB.set('categories', state.categories);
+
+  state.categories = state.categories.filter(x => x.id !== id);
+
+  // 💾 Firebase
+  db.collection('categories').doc('global_data').set({
+    data: state.categories
+  });
+
   renderCategories();
 };
 
@@ -875,109 +912,118 @@ window.saveConceptForm = () => {
   const data = {
     month: Number($('cc-month').value),
     name: $('cc-name').value.trim(),
-    amount: Number($('cc-amount').value)||0,
+    amount: Number($('cc-amount').value) || 0,
     categoryId: $('cc-category').value || null,
     season: $('cc-season').value.trim(),
     deadline: $('cc-deadline').value
   };
+
   if (!data.name || !data.amount) return toast('Concepto e importe son obligatorios','error');
+
   const id = $('cc-id').value;
-  if (id) { const i = state.concepts.findIndex(x=>x.id===id); state.concepts[i] = { ...state.concepts[i], ...data }; }
-  else { state.concepts.push({ id: uid(), ...data }); }
-  DB.set('concepts', state.concepts);
-  closeModal('concept-modal'); renderConcepts(); toast('Concepto guardado','success');
+  if (id) {
+    const i = state.concepts.findIndex(x => x.id === id);
+    state.concepts[i] = { ...state.concepts[i], ...data };
+  } else {
+    state.concepts.push({ id: uid(), ...data });
+  }
+
+  db.collection('concepts').doc('global_data').set({
+    data: state.concepts
+  });
+
+  closeModal('concept-modal');
+  renderConcepts();
+  toast('Concepto guardado','success');
 };
+
+
 window.deleteConcept = (id) => {
   if (!confirm('¿Eliminar este concepto?')) return;
-  state.concepts = state.concepts.filter(x=>x.id!==id);
-  DB.set('concepts', state.concepts);
+
+  state.concepts = state.concepts.filter(x => x.id !== id);
+
+  db.collection('concepts').doc('global_data').set({
+    data: state.concepts
+  });
+
   renderConcepts();
 };
 
-/* ---------- Cobros ---------- */
-function renderPayments() {
-  $('pay-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('pay-cat-filter').value = state.filters.payCat;
-  $('pay-status-filter').value = state.filters.payStatus;
 
-  let list = [...state.payments];
-  if (state.filters.payCat) {
-    const playersInCat = state.players.filter(p=>p.categoryId===state.filters.payCat).map(p=>p.id);
-    list = list.filter(p=> playersInCat.includes(p.playerId));
-  }
-  if (state.filters.payStatus) list = list.filter(p=>p.status===state.filters.payStatus);
+/* ---------- COBROS ---------- */
 
-  const total = list.reduce((s,p)=>s+(p.amount||0),0);
-  const approved = list.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  $('pay-summary').innerHTML = `<div class="grid grid-cols-3 gap-3 mb-6">
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Total</div><div class="text-xl font-black text-white">${moneyFmt(total)}</div></div>
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Aprobado</div><div class="text-xl font-black text-green-400">${moneyFmt(approved)}</div></div>
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(total-approved)}</div></div>
-  </div>`;
-
-  if (!list.length) { $('pay-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin cobros.</p>'; return; }
-  $('pay-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500">
-        <tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Mes/Concepto</th><th class="px-3 py-3 text-right">Importe</th><th class="px-3 py-3 text-center">Estado</th><th class="px-3 py-3 text-center">Acción</th></tr>
-      </thead>
-      <tbody>
-        ${list.map(p=>{
-          const pl = state.players.find(x=>x.id===p.playerId);
-          return `<tr class="border-b border-slate-800">
-            <td class="px-3 py-2 font-bold text-white">${escapeHtml(pl?.name||'(borrado)')}</td>
-            <td class="px-3 py-2 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
-            <td class="px-3 py-2 text-gray-300">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')}</td>
-            <td class="px-3 py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
-            <td class="px-3 py-2 text-center">${statusBadge(p.status)}</td>
-            <td class="px-3 py-2 text-center">
-              ${p.proofData || p.notes ? `<button onclick="openReview('${p.id}')" class="btn-secondary">Ver</button>` : ''}
-              ${p.status!=='approved' ? `<button onclick="markApproved('${p.id}')" class="btn-success ml-1">OK</button>` : ''}
-              <button onclick="deletePayment('${p.id}')" class="btn-danger ml-1">🗑</button>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
-window.openGeneratePayments = () => {
-  $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
-  $('gen-category').innerHTML = '<option value="">Usar el del concepto</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  openModal('gen-modal');
-};
 window.generatePayments = () => {
   const conceptId = $('gen-concept').value;
   const overrideCat = $('gen-category').value;
-  const concept = state.concepts.find(c=>c.id===conceptId);
+  const concept = state.concepts.find(c => c.id === conceptId);
+
   if (!concept) return toast('Selecciona un concepto','error');
+
   const targetCat = overrideCat || concept.categoryId;
-  const targetPlayers = targetCat ? state.players.filter(p=>p.categoryId===targetCat) : state.players;
+  const targetPlayers = targetCat
+    ? state.players.filter(p => p.categoryId === targetCat)
+    : state.players;
+
   let created = 0;
-  targetPlayers.forEach(pl=>{
-    const exists = state.payments.some(p=> p.playerId===pl.id && p.conceptId===concept.id);
+
+  targetPlayers.forEach(pl => {
+    const exists = state.payments.some(p =>
+      p.playerId === pl.id && p.conceptId === concept.id
+    );
     if (exists) return;
+
     state.payments.push({
-      id: uid(), playerId: pl.id, conceptId: concept.id, conceptName: concept.name,
-      month: concept.month, amount: concept.amount, season: concept.season,
-      status: 'pending', createdAt: Date.now()
+      id: uid(),
+      playerId: pl.id,
+      conceptId: concept.id,
+      conceptName: concept.name,
+      month: concept.month,
+      amount: concept.amount,
+      season: concept.season,
+      status: 'pending',
+      createdAt: Date.now()
     });
+
     created++;
   });
-  DB.set('payments', state.payments);
+
+  db.collection('payments').doc('global_data').set({
+    data: state.payments
+  });
+
   closeModal('gen-modal');
   toast(`${created} cobros generados`, 'success');
   renderPayments();
 };
+
+
 window.markApproved = (id) => {
-  const p = state.payments.find(x=>x.id===id); if (!p) return;
-  p.status='approved'; p.approvedAt = Date.now();
-  DB.set('payments', state.payments); renderPayments(); toast('Pago aprobado','success');
+  const p = state.payments.find(x => x.id === id);
+  if (!p) return;
+
+  p.status = 'approved';
+  p.approvedAt = Date.now();
+
+  db.collection('payments').doc('global_data').set({
+    data: state.payments
+  });
+
+  renderPayments();
+  toast('Pago aprobado','success');
 };
+
+
 window.deletePayment = (id) => {
   if (!confirm('¿Eliminar este cobro?')) return;
-  state.payments = state.payments.filter(x=>x.id!==id);
-  DB.set('payments', state.payments); renderPayments();
+
+  state.payments = state.payments.filter(x => x.id !== id);
+
+  db.collection('payments').doc('global_data').set({
+    data: state.payments
+  });
+
+  renderPayments();
 };
 window.openReview = (paymentId) => {
   const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
@@ -995,74 +1041,121 @@ window.openReview = (paymentId) => {
 };
 window.approvePayment = () => {
   if (!state.currentReviewPayment) return;
-  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
-  p.status='approved'; p.approvedAt=Date.now();
-  DB.set('payments', state.payments);
-  closeModal('review-modal'); renderPayments(); toast('Pago aprobado','success');
-};
-window.rejectPayment = () => {
-  if (!state.currentReviewPayment) return;
-  const reason = prompt('Motivo del rechazo (opcional):','') || '';
-  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
-  p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason;
-  DB.set('payments', state.payments);
-  closeModal('review-modal'); renderPayments(); toast('Pago rechazado','info');
+
+  const p = state.payments.find(x => x.id === state.currentReviewPayment);
+  if (!p) return;
+
+  p.status = 'approved';
+  p.approvedAt = Date.now();
+
+  db.collection('payments').doc('global_data').set({
+    data: state.payments
+  });
+
+  closeModal('review-modal');
+  renderPayments();
+  toast('Pago aprobado','success');
 };
 
-/* ---------- Partidos ---------- */
+
+window.rejectPayment = () => {
+  if (!state.currentReviewPayment) return;
+
+  const reason = prompt('Motivo del rechazo (opcional):','') || '';
+
+  const p = state.payments.find(x => x.id === state.currentReviewPayment);
+  if (!p) return;
+
+  p.status = 'rejected';
+  p.rejectedAt = Date.now();
+  p.rejectionReason = reason;
+
+  db.collection('payments').doc('global_data').set({
+    data: state.payments
+  });
+
+  closeModal('review-modal');
+  renderPayments();
+  toast('Pago rechazado','info');
+};
 function renderMatches() {
-  const list = [...state.matches].sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  if (!list.length) { $('match-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin partidos.</p>'; return; }
+  const list = [...state.matches].sort((a,b)=>
+    (a.date+(a.time||'')).localeCompare(b.date+(b.time||''))
+  );
+
+  if (!list.length) {
+    $('match-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin partidos.</p>';
+    return;
+  }
+
   $('match-list').innerHTML = list.map(m=>`
     <div class="card flex flex-col md:flex-row md:items-center gap-4">
       <div class="text-center md:w-24">
         <div class="text-[10px] font-black text-green-500 uppercase">${m.date||''}</div>
         <div class="text-2xl font-black text-white">${m.time||''}</div>
       </div>
+
       <div class="flex-1">
-        <div class="text-[10px] font-black text-gray-500 uppercase">${escapeHtml(teamName(m.categoryId))} · ${m.home==='home'?'LOCAL':'VISITANTE'}</div>
+        <div class="text-[10px] font-black text-gray-500 uppercase">
+          ${escapeHtml(teamName(m.categoryId))} · ${m.home==='home'?'LOCAL':'VISITANTE'}
+        </div>
         <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
         <div class="text-gray-400 text-sm">${escapeHtml(m.location||'')}</div>
-        <div class="text-[10px] text-gray-500 mt-1">Equipación: ${escapeHtml(m.kit||'Titular')}${m.notes?` · ${escapeHtml(m.notes)}`:''}</div>
+        <div class="text-[10px] text-gray-500 mt-1">
+          Equipación: ${escapeHtml(m.kit||'Titular')}
+          ${m.notes ? ` · ${escapeHtml(m.notes)}` : ''}
+        </div>
       </div>
+
       <div class="flex gap-2">
         <button onclick="openEditMatch('${m.id}')" class="btn-secondary">Editar</button>
         <button onclick="deleteMatch('${m.id}')" class="btn-danger">🗑</button>
       </div>
-    </div>`).join('');
+    </div>
+  `).join('');
 }
-window.openEditMatch = (id) => {
-  const m = id ? state.matches.find(x=>x.id===id) : null;
-  $('mt-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  openModal('match-modal');
-  $('mt-id').value = m?.id||'';
-  $('mt-category').value = m?.categoryId||(state.categories[0]?.id||'');
-  $('mt-date').value = m?.date||'';
-  $('mt-time').value = m?.time||'';
-  $('mt-rival').value = m?.rival||'';
-  $('mt-location').value = m?.location||'';
-  $('mt-address').value = m?.address||'';
-  $('mt-kit').value = m?.kit||'Titular';
-  $('mt-home').value = m?.home||'home';
-  $('mt-notes').value = m?.notes||'';
-};
 window.saveMatchForm = () => {
   const data = {
-    categoryId: $('mt-category').value, date: $('mt-date').value, time: $('mt-time').value,
-    rival: $('mt-rival').value.trim(), location: $('mt-location').value.trim(), address: $('mt-address').value.trim(),
-    kit: $('mt-kit').value, home: $('mt-home').value, notes: $('mt-notes').value.trim()
+    categoryId: $('mt-category').value,
+    date: $('mt-date').value,
+    time: $('mt-time').value,
+    rival: $('mt-rival').value.trim(),
+    location: $('mt-location').value.trim(),
+    address: $('mt-address').value.trim(),
+    kit: $('mt-kit').value,
+    home: $('mt-home').value,
+    notes: $('mt-notes').value.trim()
   };
+
   if (!data.date) return toast('La fecha es obligatoria','error');
+
   const id = $('mt-id').value;
-  if (id) { const i = state.matches.findIndex(x=>x.id===id); state.matches[i] = { ...state.matches[i], ...data }; }
-  else { state.matches.push({ id: uid(), ...data }); }
-  DB.set('matches', state.matches);
-  renderMatches(); closeModal('match-modal'); toast('Partido guardado','success');
+
+  if (id) {
+    const i = state.matches.findIndex(x => x.id === id);
+    state.matches[i] = { ...state.matches[i], ...data };
+  } else {
+    state.matches.push({ id: uid(), ...data });
+  }
+
+  db.collection('matches').doc('global_data').set({
+    data: state.matches
+  });
+
+  renderMatches();
+  closeModal('match-modal');
+  toast('Partido guardado','success');
 };
 window.deleteMatch = (id) => {
   if (!confirm('¿Eliminar este partido?')) return;
-  state.matches = state.matches.filter(x=>x.id!==id);
-  DB.set('matches', state.matches); renderMatches();
+
+  state.matches = state.matches.filter(x => x.id !== id);
+
+  db.collection('matches').doc('global_data').set({
+    data: state.matches
+  });
+
+  renderMatches();
 };
 
 /* ---------- Morosos ---------- */
@@ -1134,37 +1227,79 @@ window.saveUserForm = () => {
   const name = $('us-name').value.trim();
   const password = $('us-password').value;
   const role = $('us-role').value;
-  const playerIds = [...document.querySelectorAll('.us-player-chk:checked')].map(i=>i.value);
+  const playerIds = [...document.querySelectorAll('.us-player-chk:checked')].map(i => i.value);
+
   if (!email || !name) return toast('Email y nombre son obligatorios','error');
   if (!id && password.length < 4) return toast('Contraseña mínima 4 caracteres','error');
-  if (state.users.some(u=> u.email.toLowerCase()===email && u.id!==id)) return toast('Email ya registrado','error');
+  if (state.users.some(u => u.email.toLowerCase() === email && u.id !== id))
+    return toast('Email ya registrado','error');
+
   if (id) {
-    const i = state.users.findIndex(x=>x.id===id);
-    state.users[i] = { ...state.users[i], name, email, role, playerIds, ...(password?{password}:{}) };
+    const i = state.users.findIndex(x => x.id === id);
+    state.users[i] = {
+      ...state.users[i],
+      name,
+      email,
+      role,
+      playerIds,
+      ...(password ? { password } : {})
+    };
   } else {
-    state.users.push({ id: uid(), name, email, password, role, playerIds, createdAt: Date.now() });
+    state.users.push({
+      id: uid(),
+      name,
+      email,
+      password,
+      role,
+      playerIds,
+      createdAt: Date.now()
+    });
   }
-  DB.set('users', state.users);
-  closeModal('user-modal'); renderUsers(); toast('Usuario guardado','success');
-};
-window.deleteUserDoc = (id) => {
-  if (!confirm('¿Eliminar este usuario?')) return;
-  state.users = state.users.filter(x=>x.id!==id);
-  DB.set('users', state.users); renderUsers();
+
+  db.collection('users').doc('global_data').set({
+    data: state.users
+  });
+
+  closeModal('user-modal');
+  renderUsers();
+  toast('Usuario guardado','success');
 };
 
-/* ---------- Config ---------- */
+
+window.deleteUserDoc = (id) => {
+  if (!confirm('¿Eliminar este usuario?')) return;
+
+  state.users = state.users.filter(x => x.id !== id);
+
+  db.collection('users').doc('global_data').set({
+    data: state.users
+  });
+
+  renderUsers();
+};
 function renderConfig() {
   const c = state.clubInfo || {};
-  $('cfg-iban').value = c.iban||'';
-  $('cfg-holder').value = c.holder||'';
-  $('cfg-bank').value = c.bank||'';
-  $('cfg-concept').value = c.concept||'';
-  $('cfg-bizum').value = c.bizum||'';
+  $('cfg-iban').value = c.iban || '';
+  $('cfg-holder').value = c.holder || '';
+  $('cfg-bank').value = c.bank || '';
+  $('cfg-concept').value = c.concept || '';
+  $('cfg-bizum').value = c.bizum || '';
 }
 window.saveClubConfig = () => {
-  const data = { iban: $('cfg-iban').value.trim(), holder: $('cfg-holder').value.trim(), bank: $('cfg-bank').value.trim(), concept: $('cfg-concept').value.trim(), bizum: $('cfg-bizum').value.trim() };
-  DB.set('config', data); state.clubInfo = data;
+  const data = {
+    iban: $('cfg-iban').value.trim(),
+    holder: $('cfg-holder').value.trim(),
+    bank: $('cfg-bank').value.trim(),
+    concept: $('cfg-concept').value.trim(),
+    bizum: $('cfg-bizum').value.trim()
+  };
+
+  state.clubInfo = data;
+
+  db.collection('config').doc('global_data').set({
+    data: state.clubInfo
+  });
+
   toast('Configuración guardada','success');
 };
 
@@ -1456,35 +1591,37 @@ window.submitProof = async () => {
   const paymentId = state.pendingProofPaymentId;
   const file = $('proof-file').files[0];
   const notes = $('proof-notes').value.trim();
-  
+
   if (!file && !notes) return toast('Adjunta una foto o añade una nota', 'error');
-  
-  const p = state.payments.find(x => x.id === paymentId); 
+
+  const p = state.payments.find(x => x.id === paymentId);
   if (!p) return;
-  
-  p.status = 'review'; 
-  p.notes = notes; 
+
+  p.status = 'review';
+  p.notes = notes;
   p.submittedAt = Date.now();
-  
+
   if (file) {
     try {
       const dataUrl = await fileToBase64Resized(file, 1200, 0.8);
       p.proofData = dataUrl;
-    } catch(e) {
+    } catch (e) {
       return toast('Error al procesar imagen: ' + e.message, 'error');
     }
   }
-  
-  // 1. Guardamos en el almacenamiento
-  DB.set('payments', state.payments);
-  closeModal('proof-modal'); 
-  toast('Justificante guardado localmente.', 'success');
+
+  // 🔥 GUARDADO REAL EN FIREBASE (NO LOCAL)
+  db.collection('payments').doc('global_data').set({
+    data: state.payments
+  });
+
+  closeModal('proof-modal');
+  toast('Justificante enviado correctamente.', 'success');
   switchParentTab(state.parentTab);
 
-  // 2. ¡ENVÍO DEL CORREO AL CLUB!
+  // 2. EMAILJS (igual que lo tenías)
   const pl = state.players.find(x => x.id === p.playerId);
-  
-  // Preparamos los datos exactos que leerá tu plantilla de EmailJS
+
   const emailParams = {
     jugador: pl ? pl.name : 'Desconocido',
     equipo: teamName(pl?.categoryId),
@@ -1492,8 +1629,11 @@ window.submitProof = async () => {
     concepto: p.conceptName || 'Mensualidad',
     importe: moneyFmt(p.amount),
     notas: notes || 'Sin notas adicionales.',
-    justificante: p.proofData || 'No se adjuntó imagen (solo nota).' 
+    justificante: p.proofData || 'No se adjuntó imagen (solo nota).'
   };
+
+  emailjs.send("TU_SERVICE_ID", "TU_TEMPLATE_ID", emailParams);
+};
 
   // Enviamos el correo usando EmailJS
   emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', emailParams)
