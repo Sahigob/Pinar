@@ -827,13 +827,17 @@ window.savePlayerForm = () => {
   const id = $('pl-id').value;
   if (id) { const i = state.players.findIndex(x=>x.id===id); state.players[i] = { ...state.players[i], ...data }; }
   else { state.players.push({ id: uid(), ...data }); }
-  DB.set('players', state.players);
+  await setDoc(doc(db, "app", "players"), {
+  data: state.players
+});
   closeModal('player-modal'); renderPlayers(); toast('Jugador guardado','success');
 };
 window.deletePlayer = (id) => {
   if (!confirm('¿Eliminar este jugador?')) return;
   state.players = state.players.filter(x=>x.id!==id);
-  DB.set('players', state.players);
+ await setDoc(doc(db, "app", "players"), {
+  data: state.players
+});
   renderPlayers();
 };
 
@@ -1188,20 +1192,20 @@ window.exportBackup = () => {
 window.importBackup = (e) => {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const data = JSON.parse(reader.result);
       if (data._meta?.app !== 'ClubPinarFS') {
         if (!confirm('El archivo no parece una copia de Club Pinar FS. ¿Importar de todos modos?')) return;
       }
       if (!confirm('Esto SOBRESCRIBIRÁ todos los datos actuales (usuarios, jugadores, cobros...). ¿Continuar?')) return;
-      if (Array.isArray(data.users))      { state.users = data.users;           DB.set('users', state.users); }
-      if (Array.isArray(data.categories)) { state.categories = data.categories; DB.set('categories', state.categories); }
-      if (Array.isArray(data.players))    { state.players = data.players;       DB.set('players', state.players); }
-      if (Array.isArray(data.concepts))   { state.concepts = data.concepts;     DB.set('concepts', state.concepts); }
-      if (Array.isArray(data.payments))   { state.payments = data.payments;     DB.set('payments', state.payments); }
-      if (Array.isArray(data.matches))    { state.matches = data.matches;       DB.set('matches', state.matches); }
-      if (data.config && typeof data.config === 'object') { state.clubInfo = data.config; DB.set('config', state.clubInfo); }
+      if (Array.isArray(data.users))      { state.users = data.users;           await setDoc(doc(db, "app", "users"), { data: state.users });
+      if (Array.isArray(data.categories)) { state.categories = data.categories; await setDoc(doc(db, "app", "categories"), { data: state.categories });
+      if (Array.isArray(data.players))    { state.players = data.players;       await setDoc(doc(db, "app", "players"), { data: state.players });
+      if (Array.isArray(data.concepts))   { state.concepts = data.concepts;    await setDoc(doc(db, "app", "concepts"), { data: state.concepts });
+      if (Array.isArray(data.payments))   { state.payments = data.payments;     await setDoc(doc(db, "app", "payments"), { data: state.payments });
+      if (Array.isArray(data.matches))    { state.matches = data.matches;      await setDoc(doc(db, "app", "matches"), { data: state.matches });
+      if (data.config && typeof data.config === 'object') { state.clubInfo = data.config; await setDoc(doc(db, "app", "config"), state.clubInfo);
       $('backup-info').textContent = `Importado: ${state.users.length} usuarios · ${state.players.length} jugadores · ${state.payments.length} cobros · ${state.matches.length} partidos`;
       toast('Copia importada. Vuelve a iniciar sesión.','success');
       setTimeout(()=> logout(), 1500);
