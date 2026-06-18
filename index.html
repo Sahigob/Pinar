@@ -646,6 +646,7 @@ async function loadAll() {
         })
     )
   );
+
   // 👇 crear admin si no existe
   if (!state.users.some(u => u.role === 'admin')) {
     state.users.push({
@@ -1634,16 +1635,7 @@ window.submitProof = async () => {
   emailjs.send("TU_SERVICE_ID", "TU_TEMPLATE_ID", emailParams);
 };
 
-  // Enviamos el correo usando EmailJS
-  emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', emailParams)
-    .then(() => {
-      toast('📧 Notificación enviada al correo del club.', 'success');
-    })
-    .catch((err) => {
-      console.error('Error EmailJS:', err);
-      toast('Justificante guardado, pero falló el envío del correo.', 'error');
-    });
-};
+  
 function fileToBase64Resized(file, maxDim, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
