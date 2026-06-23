@@ -2,11 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Club Pinar Fútbol Sala | Gestión Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAPpBPLuCMkbb9aT6BYbELaBKe0dP7rXsU",
@@ -18,19 +21,14 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    export const db = getFirestore(app);
-    export const auth = getAuth(app);
+    window.db = getFirestore(app);
+    window.auth = getAuth(app);
 
-    // --- LOGICA DE SINCRONIZACION ---
-    window.syncState = (collectionName, callback) => {
-      onSnapshot(collection(db, collectionName), (snapshot) => {
-        const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        callback(data);
+    // Motor de sincronización
+    window.syncData = (col, setter) => {
+      onSnapshot(collection(window.db, col), (snapshot) => {
+        setter(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       });
-    };
-
-    window.saveToDB = async (collectionName, id, data) => {
-      await setDoc(doc(db, collectionName, id || Date.now().toString()), data);
     };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -443,7 +441,30 @@
   </div>
 </div>
   <script>
-    const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    // 1. Sustitución de carga inicial
+    function loadAll() {
+      ['categories', 'players', 'concepts', 'payments', 'matches', 'users'].forEach(col => {
+        syncData(col, (data) => { state[col] = data; renderAll(); });
+      });
+    }
+
+    // 2. Sustitución de Login
+    async function doLogin() {
+      const email = document.getElementById('login-email').value;
+      const pass = document.getElementById('login-password').value;
+      try {
+        await signInWithEmailAndPassword(window.auth, email, pass);
+        // La app se carga al detectar el cambio de estado de Auth
+      } catch (e) {
+        alert("Error de acceso: " + e.message);
+      }
+    }
+
+    // 3. Sustitución de Guardado (ejemplo para jugadores)
+    async function savePlayer(player) {
+      await setDoc(doc(window.db, 'players', player.id || Date.now().toString()), player);
+    }
+     const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 /* ---------- almacenamiento ---------- */
 const DB = {
