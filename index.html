@@ -1,38 +1,36 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
   <title>Club Pinar Fútbol Sala | Gestión Premium</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Inicializamos EmailJS
+    emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
+
+    // Datos de conexión de Firebase de tu club
     const firebaseConfig = {
-      apiKey: "AIzaSyAPpBPLuCMkbb9aT6BYbELaBKe0dP7rXsU",
+      apiKey: "AIzaSyAPpBPLuCMkbb9aT6BYbELaBKe0dP7rXsU", 
       authDomain: "pinar-c6165.firebaseapp.com",
       projectId: "pinar-c6165",
-      storageBucket: "pinar-c6165.firebasestorage.app",
+      storageBucket: "pinar-c6165.appspot.com",
       messagingSenderId: "110106144676",
       appId: "1:110106144676:web:55eac9c8e4d8f2de851b31"
     };
-
-    const app = initializeApp(firebaseConfig);
-    window.db = getFirestore(app);
-    window.auth = getAuth(app);
-
-    // Motor de sincronización
-    window.syncData = (col, setter) => {
-      onSnapshot(collection(window.db, col), (snapshot) => {
-        setter(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-      });
-    };
+    
+    // Arrancamos Firebase globalmente
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(); 
   </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-   <style>
+
+  <style>
     body { background: #08080a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
     .card { background: #121217; border: 1px solid #1f1f27; border-radius: 16px; padding: 1.25rem; }
     .tab-btn { color: #64748b; transition: all 0.3s; }
@@ -62,11 +60,11 @@
     .bottom-nav button.active { color:#fff; background: linear-gradient(135deg,#b91c1c,#166534); }
     .bottom-nav button svg { width: 22px; height: 22px; margin-bottom: 4px; }
     @media print { .no-print { display:none !important; } body { background:#fff; color:#000; } .card { background:#fff; border:1px solid #ddd; color:#000; } }
-  </style>
-  </head>
+  
+</style>
+</head>
 <body class="pb-24">
 
-<!-- ╔═════════════════════════════ LOGIN VIEW ═════════════════════════════╗ -->
 <div id="view-login" class="hidden min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-md">
     <div class="text-center mb-8">
@@ -93,7 +91,6 @@
   </div>
 </div>
 
-<!-- ╔════════════════════════════ ADMIN VIEW ══════════════════════════════╗ -->
 <div id="view-admin" class="hidden">
   <header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -106,6 +103,9 @@
       </div>
       <div class="flex items-center gap-3">
         <span id="admin-email-badge" class="hidden sm:inline text-[10px] font-black text-green-500 tracking-widest"></span>
+        <button onclick="subirTodoALaNube()" style="background-color: #16a34a; color: white; font-size: 10px; font-weight: bold; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
+          ☁️ Sincronizar Nube
+        </button>
         <button onclick="logout()" class="btn-secondary">Salir</button>
       </div>
     </div>
@@ -229,7 +229,6 @@
   </main>
 </div>
 
-<!-- ╔════════════════════════════ PARENT VIEW ═════════════════════════════╗ -->
 <div id="view-parent" class="hidden">
   <header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
     <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -255,7 +254,7 @@
     <div id="parent-pane-bank" class="parent-pane hidden"></div>
   </main>
 
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 50 !important; background-color: #000000 !important; display: flex !important;">
     <button data-pane="home" onclick="switchParentTab('home')" class="active">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8a2 2 0 002 2h2a2 2 0 002-2v-8"/></svg>Inicio
     </button>
@@ -274,7 +273,6 @@
   </nav>
 </div>
 
-<!-- ╔═════════════════════════════ MODALES ════════════════════════════════╗ -->
 <div id="cat-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
   <div class="card w-full max-w-md">
     <h3 class="text-xl font-black mb-6 uppercase italic">Configurar Equipo</h3>
@@ -440,42 +438,149 @@
     </div>
   </div>
 </div>
-  <script>
-    // 1. Sustitución de carga inicial
-    function loadAll() {
-      ['categories', 'players', 'concepts', 'payments', 'matches', 'users'].forEach(col => {
-        syncData(col, (data) => { state[col] = data; renderAll(); });
-      });
-    }
 
-    // 2. Sustitución de Login
-    async function doLogin() {
-      const email = document.getElementById('login-email').value;
-      const pass = document.getElementById('login-password').value;
-      try {
-        await signInWithEmailAndPassword(window.auth, email, pass);
-        // La app se carga al detectar el cambio de estado de Auth
-      } catch (e) {
-        alert("Error de acceso: " + e.message);
-      }
-    }
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   CLUB PINAR FS · Versión Corregida para Sincronización Completa
+   Almacenamiento: localStorage del navegador + Firebase Back-end
+   ════════════════════════════════════════════════════════════════════════ */
 
-    // 3. Sustitución de Guardado (ejemplo para jugadores)
-    async function savePlayer(player) {
-      await setDoc(doc(window.db, 'players', player.id || Date.now().toString()), player);
-    }
-     const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 /* ---------- almacenamiento ---------- */
 const DB = {
   get(k, def) {
-    try { const v = localStorage.getItem('pinar_'+k); return v ? JSON.parse(v) : def; }
-    catch { return def; }
+    try { 
+      const v = localStorage.getItem('pinar_'+k); 
+      return v ? JSON.parse(v) : def; 
+    } catch { 
+      return def; 
+    }
   },
-  set(k, v) { localStorage.setItem('pinar_'+k, JSON.stringify(v)); }
+  // Añadimos un interruptor 'subirAFirebase'. Por defecto es true para que tus formularios suban solos.
+  set(k, v, subirAFirebase = true) { 
+    // 1. Detectamos qué había antes en la memoria del navegador
+    const dataVieja = localStorage.getItem('pinar_'+k);
+    const dataNuevaString = JSON.stringify(v);
+    
+    // 2. Guardamos localmente de inmediato
+    localStorage.setItem('pinar_'+k, dataNuevaString); 
+    
+    // 🛡️ EL ESCUDO: Si los datos nuevos son EXACTAMENTE idénticos a los que ya había,
+    // o si el código nos pide explícitamente no subir, frenamos aquí y evitamos el bucle infinito.
+    if (!subirAFirebase || dataVieja === dataNuevaString) {
+      return; 
+    }
+    
+    // 3. Si los datos de verdad han cambiado (ej: un nuevo pago), se sube de forma quirúrgica
+    if (['players', 'payments', 'matches', 'categories', 'config', 'users'].includes(k)) {
+      const documentoRef = db.collection(k).doc('global_data');
+      console.log("🔍 CONTENIDO DEL OBJETO A SUBIR (v):", v);
+console.log("🔍 TIPO DE DATOS DE (v):", typeof v);
+console.log("🔍 ¿ES v UN ARRAY VACÍO?:", Array.isArray(v) && v.length === 0);
+      
+      documentoRef.set({ 
+        data: v,
+        _lastUpdated: Date.now(),
+        _clubId: "pinar-c6165" // Pasaporte de acceso para la regla de Firebase
+      })
+      .then(() => console.log(`☁️ [AUTO-SYNC] '${k}' actualizado con éxito en la nube.`))
+      .catch(err => {
+        console.error(`⚠️ Error al subir ${k}:`, err.message);
+      });
+    }
+  }
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
+/* ---------- Sincronización Completa ---------- */
+function descargarDatosDeLaNube() {
+  const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
+  let descargasCompletadas = 0;
+
+  colecciones.forEach(k => {
+    db.collection(k).doc('global_data').get()
+      .then(doc => {
+        if (doc.exists && doc.data()) {
+          const datosNube = doc.data();
+          
+          // 🎯 ARREGLO CRÍTICO: Forzamos la extracción correcta sin importar si es Array u Objeto
+          let datosLimpios = datosNube;
+          if (datosNube && datosNube.hasOwnProperty('data')) {
+            datosLimpios = datosNube.data;
+          }
+          
+          DB.set(k, datosLimpios, false);
+          console.log(`📥 Descargado ${k} desde la nube con éxito.`);
+        } else {
+          console.log(`ℹ️ ${k} está vacío en la nube. Se mantiene la copia local.`);
+        }
+        
+        descargasCompletadas++;
+        if (descargasCompletadas === colecciones.length) {
+          console.log("🔄 Todos los datos sincronizados. Renderizando app...");
+          if (typeof render === 'function') render();
+          if (typeof initApp === 'function') initApp();
+          if (typeof showData === 'function') showData();
+        }
+      })
+      .catch(err => {
+        console.error(`⚠️ Error al descargar ${k}:`, err.message);
+        descargasCompletadas++;
+        if (descargasCompletadas === colecciones.length) {
+          if (typeof render === 'function') render();
+        }
+      });
+  });
+}
+
+/* 🎯 FUNCIÓN GLOBAL PARA FORZAR LA SUBIDA MANUAL DESDE EL BOTÓN VERDE */
+function subirTodoALaNube() {
+  const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
+  console.log("🚀 Forzando subida masiva de datos locales a Firebase...");
+  
+  colecciones.forEach(k => {
+    const datosLocales = localStorage.getItem('pinar_' + k);
+    if (datosLocales) {
+      const datosParseados = JSON.parse(datosLocales);
+      db.collection(k).doc('global_data').set({
+        data: datosParseados,
+        _lastUpdated: Date.now(),
+        _clubId: "pinar-c6165"
+      })
+      .then(() => console.log(`✅ [SUBIDA MANUAL OK] ${k} subido a Firebase.`))
+      .catch(err => console.error(`❌ Error en subida manual de ${k}:`, err.message));
+    }
+  });
+  alert("Sincronización manual completada. ¡Los cambios ya están en internet!");
+}
+/* 🔄 FUNCIÓN MAESTRA PARA GUARDAR LOCALMENTE Y SUBIR A FIREBASE AUTOMÁTICAMENTE */
+function guardarYSubir(coleccion, dataArray) {
+  // 1. Guardamos en el almacenamiento local de inmediato
+  localStorage.setItem('pinar_' + coleccion, JSON.stringify(dataArray));
+  console.log(`💾 [Local] pinar_${coleccion} actualizado.`);
+console.log("🔥 EL NOMBRE DE LA COLECCIÓN ES:", coleccion);
+  // 2. Subimos ÚNICAMENTE esta colección a Firebase (Evita el bucle masivo)
+  db.collection(coleccion).doc('global_data').set({
+    data: dataArray,
+    _lastUpdated: Date.now(),
+    _clubId: "pinar-c6165"
+  })
+  .then(() => {
+    console.log(`☁️ [Firebase OK] Colección '${coleccion}' sincronizada automáticamente.`);
+  })
+  .catch(err => {
+    console.error(`❌ Error al sincronizar ${coleccion}:`, err.message);
+  });
+
+  // 3. Volvemos a dibujar la pantalla para ver el cambio reflejado
+  // (Nota: si tu función para dibujar la web se llama diferente a renderApp, cambia este nombre)
+  if (typeof renderApp === "function") {
+    renderApp();
+  }
+}
+// Arrancamos la descarga al cargar
+descargarDatosDeLaNube();
 /* ---------- estado ---------- */
 let state = {
   user: null, role: null,
@@ -537,9 +642,34 @@ function doLogin() {
   const pass  = $('login-password').value;
   const err = $('login-error');
   err.classList.add('hidden');
-  const u = state.users.find(x=> x.email.toLowerCase()===email && x.password===pass);
-  if (!u) { err.textContent = 'Email o contraseña incorrectos.'; err.classList.remove('hidden'); return; }
-  state.user = u; state.role = u.role;
+
+  // 🎯 INYECCIÓN Y DIAGNÓSTICO: Forzamos a la app a leer lo descargado de la nube
+  console.log("=== DIAGNÓSTICO DE LOGIN ===");
+  try {
+    const usuariosDescargados = JSON.parse(localStorage.getItem('pinar_users'));
+    console.log("Usuarios en localStorage:", usuariosDescargados);
+    
+    // Si hay usuarios en el almacenamiento, se los inyectamos al "state"
+    if (usuariosDescargados) {
+      state.users = usuariosDescargados;
+    }
+  } catch(e) {
+    console.error("Error al leer pinar_users:", e.message);
+  }
+  console.log("Usuarios actuales en state.users:", state.users);
+  console.log("============================");
+
+  // Tu código original que busca al usuario
+  const u = state.users.find(x => x.email.toLowerCase() === email && x.password === pass);
+  
+  if (!u) { 
+    err.textContent = 'Email o contraseña incorrectos.'; 
+    err.classList.remove('hidden'); 
+    return; 
+  }
+  
+  state.user = u; 
+  state.role = u.role;
   DB.set('session', { id: u.id });
   enterApp();
 }
@@ -1303,20 +1433,54 @@ window.submitProof = async () => {
   const paymentId = state.pendingProofPaymentId;
   const file = $('proof-file').files[0];
   const notes = $('proof-notes').value.trim();
-  if (!file && !notes) return toast('Adjunta una foto o añade una nota','error');
-  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
-  p.status='review'; p.notes=notes; p.submittedAt=Date.now();
+  
+  if (!file && !notes) return toast('Adjunta una foto o añade una nota', 'error');
+  
+  const p = state.payments.find(x => x.id === paymentId); 
+  if (!p) return;
+  
+  p.status = 'review'; 
+  p.notes = notes; 
+  p.submittedAt = Date.now();
+  
   if (file) {
     try {
       const dataUrl = await fileToBase64Resized(file, 1200, 0.8);
       p.proofData = dataUrl;
     } catch(e) {
-      return toast('Error al procesar imagen: '+e.message,'error');
+      return toast('Error al procesar imagen: ' + e.message, 'error');
     }
   }
+  
+  // 1. Guardamos en el almacenamiento
   DB.set('payments', state.payments);
-  closeModal('proof-modal'); toast('Justificante enviado.','success');
+  closeModal('proof-modal'); 
+  toast('Justificante guardado localmente.', 'success');
   switchParentTab(state.parentTab);
+
+  // 2. ¡ENVÍO DEL CORREO AL CLUB!
+  const pl = state.players.find(x => x.id === p.playerId);
+  
+  // Preparamos los datos exactos que leerá tu plantilla de EmailJS
+  const emailParams = {
+    jugador: pl ? pl.name : 'Desconocido',
+    equipo: teamName(pl?.categoryId),
+    mes: MONTH_NAMES[(p.month || 1) - 1],
+    concepto: p.conceptName || 'Mensualidad',
+    importe: moneyFmt(p.amount),
+    notas: notes || 'Sin notas adicionales.',
+    justificante: p.proofData || 'No se adjuntó imagen (solo nota).' 
+  };
+
+  // Enviamos el correo usando EmailJS
+  emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', emailParams)
+    .then(() => {
+      toast('📧 Notificación enviada al correo del club.', 'success');
+    })
+    .catch((err) => {
+      console.error('Error EmailJS:', err);
+      toast('Justificante guardado, pero falló el envío del correo.', 'error');
+    });
 };
 function fileToBase64Resized(file, maxDim, quality) {
   return new Promise((resolve, reject) => {
@@ -1364,6 +1528,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('pay-cat-filter').addEventListener('change', e => { state.filters.payCat = e.target.value; renderPayments(); });
   $('pay-status-filter').addEventListener('change', e => { state.filters.payStatus = e.target.value; renderPayments(); });
 });
-  </script>
+</script>
+
 </body>
 </html>
