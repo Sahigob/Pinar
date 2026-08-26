@@ -1,1533 +1,4846 @@
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-  <title>Club Pinar Fútbol Sala | Gestión Premium</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GeoFichaje">
 
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<title>GeoFichaje</title>
 
-  <script>
-    // Inicializamos EmailJS
-    emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
+<!-- =========================================================
+     SHEETJS - GENERACIÓN DE ARCHIVOS EXCEL
+========================================================= -->
 
-    // Datos de conexión de Firebase de tu club
-    const firebaseConfig = {
-      apiKey: "AIzaSyAPpBPLuCMkbb9aT6BYbELaBKe0dP7rXsU", 
-      authDomain: "pinar-c6165.firebaseapp.com",
-      projectId: "pinar-c6165",
-      storageBucket: "pinar-c6165.appspot.com",
-      messagingSenderId: "110106144676",
-      appId: "1:110106144676:web:55eac9c8e4d8f2de851b31"
-    };
-    
-    // Arrancamos Firebase globalmente
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore(); 
-  </script>
+<script
+  type="text/javascript"
+  src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
+></script>
 
-  <style>
-    body { background: #08080a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
-    .card { background: #121217; border: 1px solid #1f1f27; border-radius: 16px; padding: 1.25rem; }
-    .tab-btn { color: #64748b; transition: all 0.3s; }
-    .tab-active { color: #fff; background: linear-gradient(135deg, #b91c1c, #166534); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-    .section-title { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 1rem; }
-    .input-field { width: 100%; background: #0a0a0d; border: 1px solid #1f1f27; border-radius: 10px; padding: 0.6rem 1rem; font-size: 0.875rem; color: #fff; outline: none; transition: border 0.2s; }
-    .input-field:focus { border-color: #15803d; }
-    .badge { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
-    .badge-pending { background: rgba(234,179,8,0.15); color:#fbbf24; border:1px solid rgba(234,179,8,0.3); }
-    .badge-review { background: rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); }
-    .badge-approved { background: rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); }
-    .badge-rejected { background: rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
-    .btn-primary { background: linear-gradient(135deg,#b91c1c,#166534); color:#fff; font-weight:900; padding:0.75rem 1.5rem; border-radius:12px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; }
-    .btn-primary:hover { opacity: 0.9; }
-    .btn-secondary { background:#1e293b; color:#e2e8f0; font-weight:800; padding:0.6rem 1.2rem; border-radius:10px; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; }
-    .btn-secondary:hover { background:#334155; }
-    .btn-danger { background:#7f1d1d; color:#fff; font-weight:800; padding:0.6rem 1.2rem; border-radius:10px; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; }
-    .btn-danger:hover { background:#991b1b; }
-    .btn-success { background:#166534; color:#fff; font-weight:800; padding:0.6rem 1.2rem; border-radius:10px; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; }
-    .btn-success:hover { background:#15803d; }
-    .toast { position: fixed; top: 1rem; right: 1rem; padding: 12px 20px; border-radius: 10px; z-index: 9999; font-weight: 700; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .toast-success { background:#166534; color:#fff; }
-    .toast-error { background:#991b1b; color:#fff; }
-    .toast-info { background:#1e40af; color:#fff; }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0a0a0d; border-top: 1px solid #1f1f27; padding: 8px; z-index: 40; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-    .bottom-nav button { display:flex; flex-direction:column; align-items:center; padding: 8px 4px; border-radius: 10px; color:#64748b; font-size: 9px; font-weight:900; text-transform: uppercase; letter-spacing: 0.05em; }
-    .bottom-nav button.active { color:#fff; background: linear-gradient(135deg,#b91c1c,#166534); }
-    .bottom-nav button svg { width: 22px; height: 22px; margin-bottom: 4px; }
-    @media print { .no-print { display:none !important; } body { background:#fff; color:#000; } .card { background:#fff; border:1px solid #ddd; color:#000; } }
-  
+
+<style>
+:root{
+  --bg:#f3f7f6;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --green:#16a34a;
+  --red:#dc2626;
+  --blue:#2563eb;
+  --border:#dbe4e1;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.container{
+  max-width:480px;
+  margin:0 auto;
+  padding:18px 16px 28px;
+}
+
+h1{
+  margin:8px 0 2px;
+  font-size:30px;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:18px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  margin-bottom:14px;
+}
+
+.row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.ok{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.off{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+.info{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+button{
+  width:100%;
+  border:none;
+  border-radius:14px;
+  padding:14px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  -webkit-appearance:none;
+}
+
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.primary{
+  background:var(--blue);
+  color:white;
+}
+
+.danger{
+  background:var(--red);
+  color:white;
+}
+
+.secondary{
+  background:#eef2ff;
+  color:#3730a3;
+}
+
+.logout{
+  width:auto;
+  padding:8px 12px;
+  background:#f3f4f6;
+  color:#374151;
+  border-radius:10px;
+  font-size:13px;
+}
+
+input,
+select{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  margin-top:6px;
+  margin-bottom:10px;
+  font-size:15px;
+}
+
+label{
+  font-size:13px;
+  color:var(--muted);
+  font-weight:600;
+}
+
+.small{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.error{
+  color:#b91c1c;
+  background:#fef2f2;
+  border-radius:10px;
+  padding:10px;
+  font-size:13px;
+  margin-top:10px;
+}
+
+.success{
+  color:#166534;
+  background:#f0fdf4;
+  border-radius:10px;
+  padding:10px;
+  font-size:13px;
+  margin-top:10px;
+}
+
+.history-item{
+  border-top:1px solid #edf2f0;
+  padding:10px 0;
+}
+
+.history-item:first-child{
+  border-top:none;
+  padding-top:0;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--green);
+  display:inline-block;
+  margin-right:6px;
+}
+
+.footer{
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  margin-top:10px;
+}
+
+.hidden{
+  display:none !important;
+}
+
+.auth-container{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.auth-card{
+  width:100%;
+  max-width:420px;
+  background:white;
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 4px 20px rgba(0,0,0,.08);
+}
+
+.auth-title{
+  text-align:center;
+  font-size:30px;
+  font-weight:800;
+  margin-bottom:5px;
+}
+
+.auth-subtitle{
+  text-align:center;
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:22px;
+}
+
+.auth-switch{
+  text-align:center;
+  margin-top:15px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.link-button{
+  background:none;
+  color:var(--blue);
+  padding:0;
+  width:auto;
+  font-size:13px;
+}
+
+.user-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.user-email{
+  font-size:12px;
+  color:var(--muted);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.loading{
+  text-align:center;
+  color:var(--muted);
+  padding:30px 10px;
+}
+
+
+/* =========================================================
+   ESTILOS HORARIO
+========================================================= */
+
+.schedule-info{
+  background:#eff6ff;
+  color:#1d4ed8;
+  border-radius:12px;
+  padding:10px;
+  font-size:12px;
+  line-height:1.45;
+  margin-top:12px;
+  margin-bottom:14px;
+}
+
+.schedule-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.schedule-box{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:10px;
+}
+
+.schedule-box-title{
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+
+/* =========================================================
+   ESTILOS EXPORTACIÓN EXCEL
+========================================================= */
+
+.export-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.export-icon{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  background:#dcfce7;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+}
+
+.export-info{
+  background:#eff6ff;
+  color:#1d4ed8;
+  border-radius:12px;
+  padding:10px;
+  font-size:12px;
+  line-height:1.45;
+  margin-bottom:14px;
+}
+
+.export-result{
+  font-size:12px;
+  margin-top:10px;
+  line-height:1.45;
+}
+
+.export-total-box{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:10px;
+  margin-top:10px;
+}
+
+.export-total-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:3px 0;
+}
+
+.export-total-label{
+  color:var(--muted);
+}
+
+.export-total-value{
+  font-weight:700;
+  color:var(--text);
+}
+
+.excel-button{
+  background:#15803d;
+  color:white;
+}
+
+.excel-button:active{
+  background:#166534;
+}
 </style>
 </head>
-<body class="pb-24">
 
-<div id="view-login" class="hidden min-h-screen flex items-center justify-center p-6">
-  <div class="w-full max-w-md">
-    <div class="text-center mb-8">
-      <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white text-3xl italic mb-4">P</div>
-      <h1 class="font-black text-3xl tracking-tighter">CLUB PINAR FS</h1>
-      <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2">Acceso a la plataforma</p>
-    </div>
-    <div class="card">
-      <div id="login-error" class="hidden bg-red-900/30 border border-red-700 text-red-300 text-xs p-3 rounded-lg mb-4 font-bold"></div>
-      <div class="space-y-4">
-        <div>
-          <label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Email</label>
-          <input id="login-email" type="email" class="input-field" autocomplete="email" />
-        </div>
-        <div>
-          <label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Contraseña</label>
-          <input id="login-password" type="password" class="input-field" autocomplete="current-password" />
-        </div>
-        <button id="btn-login" class="w-full btn-primary py-3">Entrar</button>
-        <p class="text-center text-[10px] text-gray-500 mt-2">Admin por defecto: <b>admin@pinarfs.es</b> / <b>Pinar2026!</b></p>
-      </div>
-    </div>
-    <p class="text-center text-[9px] text-gray-600 mt-6 uppercase tracking-widest">© Club Pinar FS · Alcorcón</p>
-  </div>
-</div>
+<body>
 
-<div id="view-admin" class="hidden">
-  <header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white italic">P</div>
-        <div>
-          <h1 class="font-black text-xl tracking-tighter leading-none">CLUB PINAR FS</h1>
-          <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Modo Administrador</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <span id="admin-email-badge" class="hidden sm:inline text-[10px] font-black text-green-500 tracking-widest"></span>
-        <button onclick="subirTodoALaNube()" style="background-color: #16a34a; color: white; font-size: 10px; font-weight: bold; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
-          ☁️ Sincronizar Nube
-        </button>
-        <button onclick="logout()" class="btn-secondary">Salir</button>
-      </div>
-    </div>
-    <div class="max-w-7xl mx-auto px-6 pb-4 overflow-x-auto">
-      <div class="flex gap-2 p-1 bg-slate-900/50 rounded-xl w-fit">
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest tab-active" data-tab="dashboard" onclick="switchAdminTab('dashboard')">Panel</button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="categories" onclick="switchAdminTab('categories')">Equipos</button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="players" onclick="switchAdminTab('players')">Plantillas</button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="concepts" onclick="switchAdminTab('concepts')">Conceptos</button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="payments" onclick="switchAdminTab('payments')">Cobros</button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="matches" onclick="switchAdminTab('matches')">Partidos</button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="morosos" onclick="switchAdminTab('morosos')">Morosos</button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="users" onclick="switchAdminTab('users')">Usuarios</button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest" data-tab="config" onclick="switchAdminTab('config')">Config</button>
-      </div>
-    </div>
-  </header>
+<!-- =========================
+     LOGIN / REGISTRO
+========================= -->
 
-  <main class="max-w-7xl mx-auto px-6 mt-8">
-    <div id="admin-tab-dashboard" class="admin-pane">
-      <h2 class="text-3xl font-black mb-8 italic uppercase tracking-tighter">Estado General</h2>
-      <div id="dash-content"></div>
+<div id="authScreen" class="auth-container">
+
+  <div class="auth-card">
+
+    <div class="auth-title">
+      📍 GeoFichaje
     </div>
 
-    <div id="admin-tab-categories" class="admin-pane hidden">
-      <div class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-black italic uppercase tracking-tighter">Equipos</h2>
-        <button onclick="openEditCategory(null)" class="btn-success">+ Nuevo Equipo</button>
-      </div>
-      <div id="cat-list" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    <div class="auth-subtitle">
+      Registro de jornada por localización
     </div>
 
-    <div id="admin-tab-players" class="admin-pane hidden">
-      <div class="flex flex-wrap items-center gap-4 mb-8">
-        <h2 class="text-3xl font-black italic uppercase tracking-tighter flex-1">Plantilla</h2>
-        <input id="player-search" type="text" placeholder="Buscar por nombre..." class="input-field max-w-xs" />
-        <select id="player-cat-filter" class="input-field max-w-xs"></select>
-        <button onclick="exportPlayers()" class="btn-secondary">Excel</button>
-        <button onclick="openEditPlayer(null)" class="btn-primary">+ Alta Jugador</button>
-      </div>
-      <div id="player-list" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
-    </div>
+    <div id="loginForm">
 
-    <div id="admin-tab-concepts" class="admin-pane hidden">
-      <div class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-black italic uppercase tracking-tighter">Conceptos de Cuota</h2>
-        <button onclick="openEditConcept(null)" class="btn-success">+ Nuevo Concepto</button>
-      </div>
-      <p class="text-gray-500 text-sm mb-6">Define cada cuota del año (mes, concepto, importe) y asígnala a todos los equipos o solo a uno concreto. Después podrás generar los cobros para los jugadores.</p>
-      <div id="concept-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    </div>
-
-    <div id="admin-tab-payments" class="admin-pane hidden">
-      <div class="flex flex-wrap items-center gap-4 mb-8">
-        <h2 class="text-3xl font-black italic uppercase tracking-tighter flex-1">Cobros</h2>
-        <select id="pay-cat-filter" class="input-field max-w-xs"></select>
-        <select id="pay-status-filter" class="input-field max-w-[180px]">
-          <option value="">Todos los estados</option>
-          <option value="pending">Pendientes</option>
-          <option value="review">En revisión</option>
-          <option value="approved">Aprobados</option>
-          <option value="rejected">Rechazados</option>
-        </select>
-        <button onclick="openGeneratePayments()" class="btn-success">Generar cobros</button>
-        <button onclick="exportPayments()" class="btn-secondary">Excel</button>
-      </div>
-      <div id="pay-summary"></div>
-      <div id="pay-list"></div>
-    </div>
-
-    <div id="admin-tab-matches" class="admin-pane hidden">
-      <div class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-black italic uppercase tracking-tighter">Partidos</h2>
-        <button onclick="openEditMatch(null)" class="btn-success">+ Nuevo Partido</button>
-      </div>
-      <div id="match-list" class="space-y-4"></div>
-    </div>
-
-    <div id="admin-tab-morosos" class="admin-pane hidden">
-      <div class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-black italic uppercase tracking-tighter">Morosos</h2>
-        <button onclick="exportMorosos()" class="btn-secondary">Excel</button>
-      </div>
-      <div id="morosos-list"></div>
-    </div>
-
-    <div id="admin-tab-users" class="admin-pane hidden">
-      <div class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-black italic uppercase tracking-tighter">Usuarios</h2>
-        <button onclick="openEditUser(null)" class="btn-success">+ Nuevo Usuario</button>
-      </div>
-      <p class="text-gray-500 text-sm mb-6">Crea cuentas para padres/tutores o jugadores mayores de edad y vincúlalos a uno o varios jugadores.</p>
-      <div id="users-list"></div>
-    </div>
-
-    <div id="admin-tab-config" class="admin-pane hidden">
-      <h2 class="text-3xl font-black italic uppercase tracking-tighter mb-8">Configuración del Club</h2>
-      <div class="card max-w-2xl">
-        <h3 class="section-title">Datos Bancarios (visibles para padres)</h3>
-        <div class="space-y-4">
-          <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">IBAN</label><input id="cfg-iban" type="text" class="input-field" placeholder="ES00 0000 0000 0000 0000 0000" /></div>
-          <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Titular</label><input id="cfg-holder" type="text" class="input-field" /></div>
-          <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Banco</label><input id="cfg-bank" type="text" class="input-field" /></div>
-          <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Concepto sugerido</label><input id="cfg-concept" type="text" class="input-field" placeholder="Nombre del jugador + mes" /></div>
-          <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Bizum (opcional)</label><input id="cfg-bizum" type="text" class="input-field" /></div>
-          <button onclick="saveClubConfig()" class="btn-primary mt-4">Guardar Configuración</button>
-        </div>
-      </div>
-
-      <div class="card max-w-2xl mt-6">
-        <h3 class="section-title">Copia de Seguridad</h3>
-        <p class="text-gray-400 text-xs mb-4">Exporta todos los datos (equipos, jugadores, cobros, partidos, usuarios, config) a un archivo JSON. Guárdalo o pásalo a otro dispositivo y usa <b>Importar</b> para restaurarlo.</p>
-        <div class="flex flex-wrap gap-3">
-          <button onclick="exportBackup()" class="btn-success">⬇ Exportar copia</button>
-          <label class="btn-primary cursor-pointer">⬆ Importar copia<input type="file" accept="application/json,.json" onchange="importBackup(event)" class="hidden" /></label>
-          <button onclick="wipeAll()" class="btn-danger">🗑 Borrar todo</button>
-        </div>
-        <p id="backup-info" class="text-[11px] text-gray-500 mt-3"></p>
-      </div>
-    </div>
-  </main>
-</div>
-
-<div id="view-parent" class="hidden">
-  <header class="bg-black/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40">
-    <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center font-black text-white italic">P</div>
-        <div>
-          <h1 class="font-black text-base tracking-tighter leading-none">CLUB PINAR FS</h1>
-          <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Área de familias</p>
-        </div>
-      </div>
-      <button onclick="logout()" class="btn-secondary text-[9px]">Salir</button>
-    </div>
-    <div id="parent-player-selector" class="max-w-3xl mx-auto px-4 pb-3 hidden">
-      <select id="parent-player-select" class="input-field"></select>
-    </div>
-  </header>
-
-  <main class="max-w-3xl mx-auto px-4 mt-6">
-    <div id="parent-pane-home" class="parent-pane"></div>
-    <div id="parent-pane-payments" class="parent-pane hidden"></div>
-    <div id="parent-pane-matches" class="parent-pane hidden"></div>
-    <div id="parent-pane-history" class="parent-pane hidden"></div>
-    <div id="parent-pane-bank" class="parent-pane hidden"></div>
-  </main>
-
-  <nav class="bottom-nav" style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 50 !important; background-color: #000000 !important; display: flex !important;">
-    <button data-pane="home" onclick="switchParentTab('home')" class="active">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8a2 2 0 002 2h2a2 2 0 002-2v-8"/></svg>Inicio
-    </button>
-    <button data-pane="payments" onclick="switchParentTab('payments')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.66 0-3 .67-3 1.5S10.34 11 12 11s3 .67 3 1.5S13.66 14 12 14m0-6V6m0 8v2m9-4a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pagos
-    </button>
-    <button data-pane="matches" onclick="switchParentTab('matches')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Partidos
-    </button>
-    <button data-pane="history" onclick="switchParentTab('history')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Historial
-    </button>
-    <button data-pane="bank" onclick="switchParentTab('bank')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>Banco
-    </button>
-  </nav>
-</div>
-
-<div id="cat-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
-  <div class="card w-full max-w-md">
-    <h3 class="text-xl font-black mb-6 uppercase italic">Configurar Equipo</h3>
-    <input type="hidden" id="cat-form-id" />
-    <div class="space-y-4">
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Categoría Base</label>
-        <select id="cat-base" class="input-field">
-          <option>Prebenjamín</option><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Juvenil</option><option>Sénior</option>
-        </select>
-      </div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Subcategoría (Letra)</label><input id="cat-sub" type="text" placeholder="Ej: A, B o C" class="input-field" /></div>
-    </div>
-    <div class="flex gap-3 mt-8">
-      <button onclick="closeModal('cat-modal')" class="flex-1 btn-secondary">Cancelar</button>
-      <button onclick="saveCategoryForm()" class="flex-1 btn-success">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<div id="player-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
-  <div class="card w-full max-w-lg overflow-y-auto max-h-[90vh]">
-    <h3 class="text-xl font-black mb-6 uppercase italic">Ficha del Jugador</h3>
-    <input type="hidden" id="pl-id" />
-    <div class="grid grid-cols-2 gap-4">
-      <div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Nombre Completo</label><input id="pl-name" type="text" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Dorsal</label><input id="pl-dorsal" type="number" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Posición</label>
-        <select id="pl-position" class="input-field"><option>Portero</option><option>Cierre</option><option>Ala Izquierda</option><option>Ala Derecha</option><option>Pívot</option></select>
-      </div>
-      <div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipo</label><select id="pl-category" class="input-field"></select></div>
-      <div class="col-span-2"><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Foto (URL)</label><input id="pl-photo" type="url" class="input-field" placeholder="https://..." /></div>
-      <div class="col-span-2 border-t border-slate-800 pt-4"><label class="text-[10px] font-black text-red-500 uppercase mb-3 block">Estadísticas y Asistencia</label></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase">Goles</label><input id="pl-goals" type="number" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase">Presencias</label><input id="pl-att-present" type="number" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase">Faltas</label><input id="pl-att-absent" type="number" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase">Lesiones</label><input id="pl-att-injured" type="number" class="input-field" /></div>
-    </div>
-    <div class="flex gap-3 mt-8">
-      <button onclick="closeModal('player-modal')" class="flex-1 btn-secondary">Cancelar</button>
-      <button onclick="savePlayerForm()" class="flex-1 btn-primary">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<div id="concept-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
-  <div class="card w-full max-w-md">
-    <h3 class="text-xl font-black mb-6 uppercase italic">Concepto de Cuota</h3>
-    <input type="hidden" id="cc-id" />
-    <div class="space-y-4">
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Mes</label>
-        <select id="cc-month" class="input-field">
-          <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
-        </select>
-      </div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Concepto</label><input id="cc-name" type="text" class="input-field" placeholder="Ej: Reserva plaza" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Importe (€)</label><input id="cc-amount" type="number" step="0.01" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Aplicar a</label>
-        <select id="cc-category" class="input-field"><option value="">Todos los equipos</option></select>
-      </div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Temporada</label><input id="cc-season" type="text" class="input-field" placeholder="2025-2026" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Fecha límite (opcional)</label><input id="cc-deadline" type="date" class="input-field" /></div>
-    </div>
-    <div class="flex gap-3 mt-8">
-      <button onclick="closeModal('concept-modal')" class="flex-1 btn-secondary">Cancelar</button>
-      <button onclick="saveConceptForm()" class="flex-1 btn-success">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<div id="gen-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
-  <div class="card w-full max-w-md">
-    <h3 class="text-xl font-black mb-6 uppercase italic">Generar Cobros</h3>
-    <p class="text-gray-500 text-xs mb-4">Crea un cobro pendiente para cada jugador que aplique. Si el cobro ya existe, no se duplica.</p>
-    <div class="space-y-4">
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Concepto</label><select id="gen-concept" class="input-field"></select></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipo (override opcional)</label><select id="gen-category" class="input-field"><option value="">Usar el del concepto</option></select></div>
-    </div>
-    <div class="flex gap-3 mt-8">
-      <button onclick="closeModal('gen-modal')" class="flex-1 btn-secondary">Cancelar</button>
-      <button onclick="generatePayments()" class="flex-1 btn-success">Generar</button>
-    </div>
-  </div>
-</div>
-
-<div id="match-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
-  <div class="card w-full max-w-md overflow-y-auto max-h-[90vh]">
-    <h3 class="text-xl font-black mb-6 uppercase italic">Partido</h3>
-    <input type="hidden" id="mt-id" />
-    <div class="space-y-4">
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipo</label><select id="mt-category" class="input-field"></select></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Fecha</label><input id="mt-date" type="date" class="input-field" /></div>
-        <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Hora</label><input id="mt-time" type="time" class="input-field" /></div>
-      </div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Rival</label><input id="mt-rival" type="text" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Lugar / Pabellón</label><input id="mt-location" type="text" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Dirección</label><input id="mt-address" type="text" class="input-field" placeholder="Calle, ciudad..." /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Equipación</label>
-        <select id="mt-kit" class="input-field"><option value="Titular">Titular (rojo/verde)</option><option value="Suplente">Suplente</option><option value="Negra">Tercera (negra)</option></select>
-      </div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Local/Visitante</label>
-        <select id="mt-home" class="input-field"><option value="home">Local</option><option value="away">Visitante</option></select>
-      </div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Notas (opcional)</label><textarea id="mt-notes" class="input-field h-20"></textarea></div>
-    </div>
-    <div class="flex gap-3 mt-8">
-      <button onclick="closeModal('match-modal')" class="flex-1 btn-secondary">Cancelar</button>
-      <button onclick="saveMatchForm()" class="flex-1 btn-success">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<div id="user-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
-  <div class="card w-full max-w-md overflow-y-auto max-h-[90vh]">
-    <h3 class="text-xl font-black mb-6 uppercase italic">Usuario</h3>
-    <input type="hidden" id="us-id" />
-    <p class="text-gray-500 text-[11px] mb-4">Cuenta local. Compártele al padre/tutor su email y la contraseña que indiques.</p>
-    <div class="space-y-4">
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Nombre del titular</label><input id="us-name" type="text" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Email</label><input id="us-email" type="email" class="input-field" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Contraseña</label><input id="us-password" type="text" class="input-field" placeholder="min 4 caracteres" /></div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Rol</label>
-        <select id="us-role" class="input-field"><option value="parent">Padre / Tutor</option><option value="player">Jugador mayor de edad</option><option value="admin">Administrador</option></select>
-      </div>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Jugadores vinculados</label>
-        <div id="us-players" class="space-y-2 max-h-48 overflow-y-auto border border-slate-800 rounded-lg p-3"></div>
-      </div>
-    </div>
-    <div class="flex gap-3 mt-8">
-      <button onclick="closeModal('user-modal')" class="flex-1 btn-secondary">Cancelar</button>
-      <button onclick="saveUserForm()" class="flex-1 btn-success">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<div id="proof-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
-  <div class="card w-full max-w-md">
-    <h3 class="text-xl font-black mb-4 uppercase italic">Subir Justificante</h3>
-    <input type="hidden" id="proof-payment-id" />
-    <p id="proof-info" class="text-gray-400 text-xs mb-4"></p>
-    <div class="space-y-3">
-      <label class="block">
-        <span class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Foto del justificante</span>
-        <input id="proof-file" type="file" accept="image/*" capture="environment" class="input-field" />
+      <label>
+        Correo electrónico
       </label>
-      <div><label class="text-[10px] font-black text-gray-500 uppercase mb-1 block">Notas (opcional)</label><textarea id="proof-notes" class="input-field h-20" placeholder="Ej: pago realizado por Bizum el 15/09"></textarea></div>
-    </div>
-    <div class="flex gap-3 mt-6">
-      <button onclick="closeModal('proof-modal')" class="flex-1 btn-secondary">Cancelar</button>
-      <button onclick="submitProof()" class="flex-1 btn-primary">Enviar</button>
-    </div>
-  </div>
-</div>
 
-<div id="review-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-6">
-  <div class="card w-full max-w-lg max-h-[90vh] overflow-y-auto">
-    <h3 class="text-xl font-black mb-4 uppercase italic">Revisar Justificante</h3>
-    <div id="review-content"></div>
-    <div class="flex gap-3 mt-6">
-      <button onclick="closeModal('review-modal')" class="flex-1 btn-secondary">Cerrar</button>
-      <button onclick="rejectPayment()" class="btn-danger">Rechazar</button>
-      <button onclick="approvePayment()" class="btn-success">Aprobar</button>
-    </div>
-  </div>
-</div>
+      <input
+        id="email"
+        type="email"
+        autocomplete="email"
+        placeholder="tu@email.com"
+      >
 
-<script>
-/* ════════════════════════════════════════════════════════════════════════
-   CLUB PINAR FS · Versión Corregida para Sincronización Completa
-   Almacenamiento: localStorage del navegador + Firebase Back-end
-   ════════════════════════════════════════════════════════════════════════ */
+      <label>
+        Contraseña
+      </label>
 
-const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Contraseña"
+      >
 
-/* ---------- almacenamiento ---------- */
-const DB = {
-  get(k, def) {
-    try { 
-      const v = localStorage.getItem('pinar_'+k); 
-      return v ? JSON.parse(v) : def; 
-    } catch { 
-      return def; 
-    }
-  },
-  // Añadimos un interruptor 'subirAFirebase'. Por defecto es true para que tus formularios suban solos.
-  set(k, v, subirAFirebase = true) { 
-    // 1. Detectamos qué había antes en la memoria del navegador
-    const dataVieja = localStorage.getItem('pinar_'+k);
-    const dataNuevaString = JSON.stringify(v);
-    
-    // 2. Guardamos localmente de inmediato
-    localStorage.setItem('pinar_'+k, dataNuevaString); 
-    
-    // 🛡️ EL ESCUDO: Si los datos nuevos son EXACTAMENTE idénticos a los que ya había,
-    // o si el código nos pide explícitamente no subir, frenamos aquí y evitamos el bucle infinito.
-    if (!subirAFirebase || dataVieja === dataNuevaString) {
-      return; 
-    }
-    
-    // 3. Si los datos de verdad han cambiado (ej: un nuevo pago), se sube de forma quirúrgica
-    if (['players', 'payments', 'matches', 'categories', 'config', 'users'].includes(k)) {
-      const documentoRef = db.collection(k).doc('global_data');
-      console.log("🔍 CONTENIDO DEL OBJETO A SUBIR (v):", v);
-console.log("🔍 TIPO DE DATOS DE (v):", typeof v);
-console.log("🔍 ¿ES v UN ARRAY VACÍO?:", Array.isArray(v) && v.length === 0);
-      
-      documentoRef.set({ 
-        data: v,
-        _lastUpdated: Date.now(),
-        _clubId: "pinar-c6165" // Pasaporte de acceso para la regla de Firebase
-      })
-      .then(() => console.log(`☁️ [AUTO-SYNC] '${k}' actualizado con éxito en la nube.`))
-      .catch(err => {
-        console.error(`⚠️ Error al subir ${k}:`, err.message);
-      });
-    }
-  }
-};
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+      <button
+        id="loginBtn"
+        class="primary"
+        type="button"
+      >
+        Entrar
+      </button>
 
-/* ---------- Sincronización Completa ---------- */
-function descargarDatosDeLaNube() {
-  const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
-  let descargasCompletadas = 0;
+      <div class="auth-switch">
 
-  colecciones.forEach(k => {
-    db.collection(k).doc('global_data').get()
-      .then(doc => {
-        if (doc.exists && doc.data()) {
-          const datosNube = doc.data();
-          
-          // 🎯 ARREGLO CRÍTICO: Forzamos la extracción correcta sin importar si es Array u Objeto
-          let datosLimpios = datosNube;
-          if (datosNube && datosNube.hasOwnProperty('data')) {
-            datosLimpios = datosNube.data;
-          }
-          
-          DB.set(k, datosLimpios, false);
-          console.log(`📥 Descargado ${k} desde la nube con éxito.`);
-        } else {
-          console.log(`ℹ️ ${k} está vacío en la nube. Se mantiene la copia local.`);
-        }
-        
-        descargasCompletadas++;
-        if (descargasCompletadas === colecciones.length) {
-          console.log("🔄 Todos los datos sincronizados. Renderizando app...");
-          if (typeof render === 'function') render();
-          if (typeof initApp === 'function') initApp();
-          if (typeof showData === 'function') showData();
-        }
-      })
-      .catch(err => {
-        console.error(`⚠️ Error al descargar ${k}:`, err.message);
-        descargasCompletadas++;
-        if (descargasCompletadas === colecciones.length) {
-          if (typeof render === 'function') render();
-        }
-      });
-  });
-}
+        ¿No tienes cuenta?
 
-/* 🎯 FUNCIÓN GLOBAL PARA FORZAR LA SUBIDA MANUAL DESDE EL BOTÓN VERDE */
-function subirTodoALaNube() {
-  const colecciones = ['players', 'payments', 'matches', 'categories', 'config', 'users'];
-  console.log("🚀 Forzando subida masiva de datos locales a Firebase...");
-  
-  colecciones.forEach(k => {
-    const datosLocales = localStorage.getItem('pinar_' + k);
-    if (datosLocales) {
-      const datosParseados = JSON.parse(datosLocales);
-      db.collection(k).doc('global_data').set({
-        data: datosParseados,
-        _lastUpdated: Date.now(),
-        _clubId: "pinar-c6165"
-      })
-      .then(() => console.log(`✅ [SUBIDA MANUAL OK] ${k} subido a Firebase.`))
-      .catch(err => console.error(`❌ Error en subida manual de ${k}:`, err.message));
-    }
-  });
-  alert("Sincronización manual completada. ¡Los cambios ya están en internet!");
-}
-/* 🔄 FUNCIÓN MAESTRA PARA GUARDAR LOCALMENTE Y SUBIR A FIREBASE AUTOMÁTICAMENTE */
-function guardarYSubir(coleccion, dataArray) {
-  // 1. Guardamos en el almacenamiento local de inmediato
-  localStorage.setItem('pinar_' + coleccion, JSON.stringify(dataArray));
-  console.log(`💾 [Local] pinar_${coleccion} actualizado.`);
-console.log("🔥 EL NOMBRE DE LA COLECCIÓN ES:", coleccion);
-  // 2. Subimos ÚNICAMENTE esta colección a Firebase (Evita el bucle masivo)
-  db.collection(coleccion).doc('global_data').set({
-    data: dataArray,
-    _lastUpdated: Date.now(),
-    _clubId: "pinar-c6165"
-  })
-  .then(() => {
-    console.log(`☁️ [Firebase OK] Colección '${coleccion}' sincronizada automáticamente.`);
-  })
-  .catch(err => {
-    console.error(`❌ Error al sincronizar ${coleccion}:`, err.message);
-  });
+        <button
+          id="showRegister"
+          class="link-button"
+          type="button"
+        >
+          Crear cuenta
+        </button>
 
-  // 3. Volvemos a dibujar la pantalla para ver el cambio reflejado
-  // (Nota: si tu función para dibujar la web se llama diferente a renderApp, cambia este nombre)
-  if (typeof renderApp === "function") {
-    renderApp();
-  }
-}
-// Arrancamos la descarga al cargar
-descargarDatosDeLaNube();
-/* ---------- estado ---------- */
-let state = {
-  user: null, role: null,
-  categories: [], players: [], concepts: [], payments: [], matches: [], users: [], clubInfo: {},
-  parentSelectedPlayer: null,
-  pendingProofPaymentId: null, currentReviewPayment: null,
-  adminTab: 'dashboard', parentTab: 'home',
-  filters: { playerCat:'', playerSearch:'', payCat:'', payStatus:'' }
-};
-
-/* ---------- helpers ---------- */
-const $ = (id) => document.getElementById(id);
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const moneyFmt = (n) => (Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
-const teamName = (catId) => { const c = state.categories.find(c=>c.id===catId); return c ? `${c.base} ${c.sub||''}`.trim() : 'Sin equipo'; };
-
-function toast(msg, type='info') {
-  const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(()=> t.remove(), 3500);
-}
-function showView(id) { ['view-login','view-admin','view-parent'].forEach(v=> $(v).classList.toggle('hidden', v!==id)); }
-function openModal(id){ $(id).classList.remove('hidden'); }
-function closeModal(id){ $(id).classList.add('hidden'); }
-window.openModal = openModal; window.closeModal = closeModal;
-
-function statusBadge(s) {
-  const map = { pending:['Pendiente','badge-pending'], review:['En revisión','badge-review'], approved:['Aprobado','badge-approved'], rejected:['Rechazado','badge-rejected'] };
-  const [t,c] = map[s]||['?','badge-pending'];
-  return `<span class="badge ${c}">${t}</span>`;
-}
-function roleBadge(role) {
-  const map = { admin:['Admin','badge-approved'], parent:['Padre/Tutor','badge-review'], player:['Jugador','badge-pending'] };
-  const [t,c] = map[role]||['?','badge-pending'];
-  return `<span class="badge ${c}">${t}</span>`;
-}
-
-/* ---------- carga datos ---------- */
-function loadAll() {
-  state.users      = DB.get('users', []);
-  state.categories = DB.get('categories', []);
-  state.players    = DB.get('players', []);
-  state.concepts   = DB.get('concepts', []);
-  state.payments   = DB.get('payments', []);
-  state.matches    = DB.get('matches', []);
-  state.clubInfo   = DB.get('config', {});
-  // crear admin por defecto si no hay
-  if (!state.users.some(u=>u.role==='admin')) {
-    state.users.push({ id: uid(), email:'admin@pinarfs.es', password:'Pinar2026!', name:'Administrador', role:'admin', playerIds:[], createdAt: Date.now() });
-    DB.set('users', state.users);
-  }
-}
-
-/* ════════════════════ AUTH ════════════════════ */
-function doLogin() {
-  const email = $('login-email').value.trim().toLowerCase();
-  const pass  = $('login-password').value;
-  const err = $('login-error');
-  err.classList.add('hidden');
-
-  // 🎯 INYECCIÓN Y DIAGNÓSTICO: Forzamos a la app a leer lo descargado de la nube
-  console.log("=== DIAGNÓSTICO DE LOGIN ===");
-  try {
-    const usuariosDescargados = JSON.parse(localStorage.getItem('pinar_users'));
-    console.log("Usuarios en localStorage:", usuariosDescargados);
-    
-    // Si hay usuarios en el almacenamiento, se los inyectamos al "state"
-    if (usuariosDescargados) {
-      state.users = usuariosDescargados;
-    }
-  } catch(e) {
-    console.error("Error al leer pinar_users:", e.message);
-  }
-  console.log("Usuarios actuales en state.users:", state.users);
-  console.log("============================");
-
-  // Tu código original que busca al usuario
-  const u = state.users.find(x => x.email.toLowerCase() === email && x.password === pass);
-  
-  if (!u) { 
-    err.textContent = 'Email o contraseña incorrectos.'; 
-    err.classList.remove('hidden'); 
-    return; 
-  }
-  
-  state.user = u; 
-  state.role = u.role;
-  DB.set('session', { id: u.id });
-  enterApp();
-}
-function logout() {
-  localStorage.removeItem('pinar_session');
-  state.user = null; state.role = null;
-  showView('view-login');
-}
-window.logout = logout;
-
-function enterApp() {
-  if (state.role === 'admin') {
-    showView('view-admin');
-    $('admin-email-badge').textContent = state.user.email;
-    $('admin-email-badge').classList.remove('hidden');
-    switchAdminTab('dashboard');
-  } else {
-    showView('view-parent');
-    const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-    state.parentSelectedPlayer = myPlayers[0]?.id || null;
-    switchParentTab('home');
-  }
-}
-
-/* ════════════════════ ADMIN: TABS ════════════════════ */
-window.switchAdminTab = (tab) => {
-  state.adminTab = tab;
-  document.querySelectorAll('[data-tab]').forEach(b=> b.classList.toggle('tab-active', b.dataset.tab===tab));
-  document.querySelectorAll('.admin-pane').forEach(p=> p.classList.toggle('hidden', p.id !== 'admin-tab-'+tab));
-  const map = { dashboard: renderDash, categories: renderCategories, players: renderPlayers, concepts: renderConcepts, payments: renderPayments, matches: renderMatches, morosos: renderMorosos, users: renderUsers, config: renderConfig };
-  map[tab] && map[tab]();
-};
-
-/* ---------- Dashboard ---------- */
-function renderDash() {
-  const totalApproved = state.payments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  const totalPending  = state.payments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
-  const numMorosos = new Set(state.payments.filter(p=>p.status!=='approved').map(p=>p.playerId)).size;
-  $('dash-content').innerHTML = `
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Equipos</div><div class="text-3xl font-black text-white">${state.categories.length}</div></div>
-      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Jugadores</div><div class="text-3xl font-black text-white">${state.players.length}</div></div>
-      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Cobrado</div><div class="text-2xl font-black text-green-400">${moneyFmt(totalApproved)}</div></div>
-      <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-2xl font-black text-yellow-400">${moneyFmt(totalPending)}</div></div>
-    </div>
-    <div class="card">
-      <h3 class="section-title">Morosos</h3>
-      <p class="text-gray-300">${numMorosos} jugador(es) con pagos pendientes.</p>
-    </div>`;
-}
-
-/* ---------- Equipos ---------- */
-function renderCategories() {
-  if (!state.categories.length) { $('cat-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin equipos. Crea el primero.</p>'; return; }
-  $('cat-list').innerHTML = state.categories.map(c=>`
-    <div class="card">
-      <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(c.base)}</div>
-      <div class="text-2xl font-black text-white tracking-tighter">${escapeHtml(c.sub||'—')}</div>
-      <div class="text-xs text-gray-500 mt-1">${state.players.filter(p=>p.categoryId===c.id).length} jugadores</div>
-      <div class="flex gap-2 mt-4">
-        <button onclick="openEditCategory('${c.id}')" class="btn-secondary flex-1">Editar</button>
-        <button onclick="deleteCategory('${c.id}')" class="btn-danger">🗑</button>
       </div>
-    </div>`).join('');
-}
-window.openEditCategory = (id) => {
-  const c = id ? state.categories.find(x=>x.id===id) : null;
-  $('cat-form-id').value = c?.id||'';
-  $('cat-base').value = c?.base||'Prebenjamín';
-  $('cat-sub').value = c?.sub||'';
-  openModal('cat-modal');
-};
-window.saveCategoryForm = () => {
-  const id = $('cat-form-id').value;
-  const data = { base: $('cat-base').value, sub: $('cat-sub').value.trim() };
-  if (id) {
-    const i = state.categories.findIndex(x=>x.id===id);
-    state.categories[i] = { ...state.categories[i], ...data };
-  } else {
-    state.categories.push({ id: uid(), ...data });
-  }
-  DB.set('categories', state.categories);
-  closeModal('cat-modal'); renderCategories(); toast('Equipo guardado','success');
-};
-window.deleteCategory = (id) => {
-  if (!confirm('¿Eliminar este equipo?')) return;
-  state.categories = state.categories.filter(x=>x.id!==id);
-  DB.set('categories', state.categories);
-  renderCategories();
-};
 
-/* ---------- Jugadores ---------- */
-function renderPlayers() {
-  // poblar filtros
-  $('player-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('player-cat-filter').value = state.filters.playerCat;
+    </div>
 
-  let list = [...state.players];
-  if (state.filters.playerCat) list = list.filter(p=>p.categoryId===state.filters.playerCat);
-  if (state.filters.playerSearch) {
-    const q = state.filters.playerSearch.toLowerCase();
-    list = list.filter(p=> (p.name||'').toLowerCase().includes(q));
-  }
-  if (!list.length) { $('player-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin jugadores.</p>'; return; }
-  $('player-list').innerHTML = list.map(p=>`
+
+    <div id="registerForm" class="hidden">
+
+      <label>
+        Correo electrónico
+      </label>
+
+      <input
+        id="registerEmail"
+        type="email"
+        autocomplete="email"
+        placeholder="tu@email.com"
+      >
+
+      <label>
+        Contraseña
+      </label>
+
+      <input
+        id="registerPassword"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Mínimo 6 caracteres"
+      >
+
+      <button
+        id="registerBtn"
+        class="primary"
+        type="button"
+      >
+        Crear cuenta
+      </button>
+
+      <div class="auth-switch">
+
+        ¿Ya tienes cuenta?
+
+        <button
+          id="showLogin"
+          class="link-button"
+          type="button"
+        >
+          Iniciar sesión
+        </button>
+
+      </div>
+
+    </div>
+
+    <div
+      id="authMsg"
+      class="hidden"
+      style="margin-top:12px"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     APP
+========================= -->
+
+<div id="appScreen" class="hidden">
+
+  <div class="container">
+
+    <div class="user-bar">
+
+      <div class="user-email">
+        <span id="userEmail"></span>
+      </div>
+
+      <button
+        id="logoutBtn"
+        class="logout"
+        type="button"
+      >
+        Cerrar sesión
+      </button>
+
+    </div>
+
+
+    <h1>📍 GeoFichaje</h1>
+
+    <div class="sub">
+      Registro de jornada por localización
+    </div>
+
+
+    <!-- ESTADO -->
+
     <div class="card">
-      <div class="flex items-center gap-3">
-        <img src="${p.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(p.name)+'&background=7f1d1d&color=fff'}" class="w-14 h-14 rounded-xl object-cover" />
-        <div class="flex-1">
-          <div class="text-[10px] font-black uppercase text-green-500">${escapeHtml(teamName(p.categoryId))}</div>
-          <div class="font-black text-white">${escapeHtml(p.name)}</div>
-          <div class="text-[11px] text-gray-500">#${p.dorsal||'S/N'} · ${escapeHtml(p.position||'')}</div>
+
+      <div class="row">
+
+        <strong>
+          Estado
+        </strong>
+
+        <span
+          id="statusBadge"
+          class="badge off"
+        >
+          Fuera
+        </span>
+
+      </div>
+
+
+      <div style="margin-top:12px">
+
+        <div class="small">
+          Centro detectado
         </div>
-      </div>
-      <div class="grid grid-cols-4 gap-2 mt-3 text-center text-[10px]">
-        <div><div class="text-gray-500">GOL</div><div class="font-black text-white">${p.goals||0}</div></div>
-        <div><div class="text-gray-500">PRE</div><div class="font-black text-white">${p.attPresent||0}</div></div>
-        <div><div class="text-gray-500">FAL</div><div class="font-black text-white">${p.attAbsent||0}</div></div>
-        <div><div class="text-gray-500">LES</div><div class="font-black text-white">${p.attInjured||0}</div></div>
-      </div>
-      <div class="flex gap-2 mt-3">
-        <button onclick="openEditPlayer('${p.id}')" class="btn-secondary flex-1">Editar</button>
-        <button onclick="deletePlayer('${p.id}')" class="btn-danger">🗑</button>
-      </div>
-    </div>`).join('');
-}
-window.openEditPlayer = (id) => {
-  const p = id ? state.players.find(x=>x.id===id) : null;
-  $('pl-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('pl-id').value = p?.id||'';
-  $('pl-name').value = p?.name||'';
-  $('pl-dorsal').value = p?.dorsal||'';
-  $('pl-position').value = p?.position||'Portero';
-  $('pl-category').value = p?.categoryId||(state.categories[0]?.id||'');
-  $('pl-photo').value = p?.photo||'';
-  $('pl-goals').value = p?.goals||0;
-  $('pl-att-present').value = p?.attPresent||0;
-  $('pl-att-absent').value = p?.attAbsent||0;
-  $('pl-att-injured').value = p?.attInjured||0;
-  openModal('player-modal');
-};
-window.savePlayerForm = () => {
-  const data = {
-    name: $('pl-name').value.trim(),
-    dorsal: Number($('pl-dorsal').value)||null,
-    position: $('pl-position').value,
-    categoryId: $('pl-category').value,
-    photo: $('pl-photo').value.trim(),
-    goals: Number($('pl-goals').value)||0,
-    attPresent: Number($('pl-att-present').value)||0,
-    attAbsent: Number($('pl-att-absent').value)||0,
-    attInjured: Number($('pl-att-injured').value)||0
-  };
-  if (!data.name) return toast('Nombre obligatorio','error');
-  const id = $('pl-id').value;
-  if (id) { const i = state.players.findIndex(x=>x.id===id); state.players[i] = { ...state.players[i], ...data }; }
-  else { state.players.push({ id: uid(), ...data }); }
-  DB.set('players', state.players);
-  closeModal('player-modal'); renderPlayers(); toast('Jugador guardado','success');
-};
-window.deletePlayer = (id) => {
-  if (!confirm('¿Eliminar este jugador?')) return;
-  state.players = state.players.filter(x=>x.id!==id);
-  DB.set('players', state.players);
-  renderPlayers();
-};
 
-/* ---------- Conceptos ---------- */
-function renderConcepts() {
-  $('cc-category').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  if (!state.concepts.length) { $('concept-list').innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Sin conceptos.</p>'; return; }
-  $('concept-list').innerHTML = state.concepts.map(c=>`
+        <div
+          id="currentSite"
+          style="font-size:20px;font-weight:700"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div
+        class="row"
+        style="margin-top:14px"
+      >
+
+        <div>
+
+          <div class="small">
+            Entrada
+          </div>
+
+          <div
+            id="entryTime"
+            style="font-weight:700"
+          >
+            --:--
+          </div>
+
+        </div>
+
+
+        <div style="text-align:right">
+
+          <div class="small">
+            Tiempo
+          </div>
+
+          <div
+            id="worked"
+            style="font-weight:700"
+          >
+            0 h
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div style="margin-top:14px">
+
+        <button
+          id="geoBtn"
+          class="primary"
+        >
+          Activar localización
+        </button>
+
+
+        <div style="height:8px"></div>
+
+
+        <div
+          class="row"
+          style="gap:8px"
+        >
+
+          <button
+            id="manualIn"
+            class="secondary"
+            type="button"
+          >
+            Fichar entrada
+          </button>
+
+
+          <button
+            id="manualOut"
+            class="danger"
+            type="button"
+          >
+            Fichar salida
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="geoMsg"
+        class="small"
+        style="margin-top:8px"
+      ></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CONFIGURACIÓN DEL HORARIO
+    ====================================================== -->
+
     <div class="card">
-      <div class="text-[10px] font-black text-green-500 uppercase">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.season||'')}</div>
-      <div class="font-black text-white text-lg">${escapeHtml(c.name)}</div>
-      <div class="text-2xl font-black text-white mt-1">${moneyFmt(c.amount)}</div>
-      <div class="text-[11px] text-gray-500 mt-1">Equipo: ${c.categoryId ? escapeHtml(teamName(c.categoryId)) : 'Todos'}</div>
-      ${c.deadline ? `<div class="text-[11px] text-yellow-500 mt-1">Límite: ${c.deadline}</div>` : ''}
-      <div class="flex gap-2 mt-3">
-        <button onclick="openEditConcept('${c.id}')" class="btn-secondary flex-1">Editar</button>
-        <button onclick="deleteConcept('${c.id}')" class="btn-danger">🗑</button>
+
+      <div class="row">
+
+        <strong>
+          ⏰ Configuración del horario
+        </strong>
+
       </div>
-    </div>`).join('');
-}
-window.openEditConcept = (id) => {
-  $('cc-category').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  const c = id ? state.concepts.find(x=>x.id===id) : null;
-  $('cc-id').value = c?.id||'';
-  $('cc-month').value = c?.month||1;
-  $('cc-name').value = c?.name||'';
-  $('cc-amount').value = c?.amount||'';
-  $('cc-category').value = c?.categoryId||'';
-  $('cc-season').value = c?.season||'2025-2026';
-  $('cc-deadline').value = c?.deadline||'';
-  openModal('concept-modal');
-};
-window.saveConceptForm = () => {
-  const data = {
-    month: Number($('cc-month').value),
-    name: $('cc-name').value.trim(),
-    amount: Number($('cc-amount').value)||0,
-    categoryId: $('cc-category').value || null,
-    season: $('cc-season').value.trim(),
-    deadline: $('cc-deadline').value
-  };
-  if (!data.name || !data.amount) return toast('Concepto e importe son obligatorios','error');
-  const id = $('cc-id').value;
-  if (id) { const i = state.concepts.findIndex(x=>x.id===id); state.concepts[i] = { ...state.concepts[i], ...data }; }
-  else { state.concepts.push({ id: uid(), ...data }); }
-  DB.set('concepts', state.concepts);
-  closeModal('concept-modal'); renderConcepts(); toast('Concepto guardado','success');
-};
-window.deleteConcept = (id) => {
-  if (!confirm('¿Eliminar este concepto?')) return;
-  state.concepts = state.concepts.filter(x=>x.id!==id);
-  DB.set('concepts', state.concepts);
-  renderConcepts();
-};
 
-/* ---------- Cobros ---------- */
-function renderPayments() {
-  $('pay-cat-filter').innerHTML = '<option value="">Todos los equipos</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  $('pay-cat-filter').value = state.filters.payCat;
-  $('pay-status-filter').value = state.filters.payStatus;
 
-  let list = [...state.payments];
-  if (state.filters.payCat) {
-    const playersInCat = state.players.filter(p=>p.categoryId===state.filters.payCat).map(p=>p.id);
-    list = list.filter(p=> playersInCat.includes(p.playerId));
-  }
-  if (state.filters.payStatus) list = list.filter(p=>p.status===state.filters.payStatus);
+      <div class="schedule-info">
 
-  const total = list.reduce((s,p)=>s+(p.amount||0),0);
-  const approved = list.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  $('pay-summary').innerHTML = `<div class="grid grid-cols-3 gap-3 mb-6">
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Total</div><div class="text-xl font-black text-white">${moneyFmt(total)}</div></div>
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Aprobado</div><div class="text-xl font-black text-green-400">${moneyFmt(approved)}</div></div>
-    <div class="card"><div class="text-[10px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(total-approved)}</div></div>
-  </div>`;
+        La geolocalización automática utilizará este horario.
+        La entrada automática solo se realizará dentro de la
+        franja de entrada y la salida automática al alejarte
+        del centro solo se realizará dentro de la franja de salida.
 
-  if (!list.length) { $('pay-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin cobros.</p>'; return; }
-  $('pay-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500">
-        <tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Mes/Concepto</th><th class="px-3 py-3 text-right">Importe</th><th class="px-3 py-3 text-center">Estado</th><th class="px-3 py-3 text-center">Acción</th></tr>
-      </thead>
-      <tbody>
-        ${list.map(p=>{
-          const pl = state.players.find(x=>x.id===p.playerId);
-          return `<tr class="border-b border-slate-800">
-            <td class="px-3 py-2 font-bold text-white">${escapeHtml(pl?.name||'(borrado)')}</td>
-            <td class="px-3 py-2 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
-            <td class="px-3 py-2 text-gray-300">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')}</td>
-            <td class="px-3 py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
-            <td class="px-3 py-2 text-center">${statusBadge(p.status)}</td>
-            <td class="px-3 py-2 text-center">
-              ${p.proofData || p.notes ? `<button onclick="openReview('${p.id}')" class="btn-secondary">Ver</button>` : ''}
-              ${p.status!=='approved' ? `<button onclick="markApproved('${p.id}')" class="btn-success ml-1">OK</button>` : ''}
-              <button onclick="deletePayment('${p.id}')" class="btn-danger ml-1">🗑</button>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
-window.openGeneratePayments = () => {
-  $('gen-concept').innerHTML = state.concepts.map(c=>`<option value="${c.id}">${MONTH_NAMES[(c.month||1)-1]} · ${escapeHtml(c.name)} · ${moneyFmt(c.amount)}</option>`).join('');
-  $('gen-category').innerHTML = '<option value="">Usar el del concepto</option>' + state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  openModal('gen-modal');
-};
-window.generatePayments = () => {
-  const conceptId = $('gen-concept').value;
-  const overrideCat = $('gen-category').value;
-  const concept = state.concepts.find(c=>c.id===conceptId);
-  if (!concept) return toast('Selecciona un concepto','error');
-  const targetCat = overrideCat || concept.categoryId;
-  const targetPlayers = targetCat ? state.players.filter(p=>p.categoryId===targetCat) : state.players;
-  let created = 0;
-  targetPlayers.forEach(pl=>{
-    const exists = state.payments.some(p=> p.playerId===pl.id && p.conceptId===concept.id);
-    if (exists) return;
-    state.payments.push({
-      id: uid(), playerId: pl.id, conceptId: concept.id, conceptName: concept.name,
-      month: concept.month, amount: concept.amount, season: concept.season,
-      status: 'pending', createdAt: Date.now()
-    });
-    created++;
-  });
-  DB.set('payments', state.payments);
-  closeModal('gen-modal');
-  toast(`${created} cobros generados`, 'success');
-  renderPayments();
-};
-window.markApproved = (id) => {
-  const p = state.payments.find(x=>x.id===id); if (!p) return;
-  p.status='approved'; p.approvedAt = Date.now();
-  DB.set('payments', state.payments); renderPayments(); toast('Pago aprobado','success');
-};
-window.deletePayment = (id) => {
-  if (!confirm('¿Eliminar este cobro?')) return;
-  state.payments = state.payments.filter(x=>x.id!==id);
-  DB.set('payments', state.payments); renderPayments();
-};
-window.openReview = (paymentId) => {
-  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
-  state.currentReviewPayment = paymentId;
-  const pl = state.players.find(x=>x.id===p.playerId);
-  $('review-content').innerHTML = `
-    <div class="space-y-3">
-      <div><span class="text-[10px] font-black text-gray-500 uppercase">Jugador</span><div class="font-bold text-white">${escapeHtml(pl?.name||'')} · ${escapeHtml(teamName(pl?.categoryId))}</div></div>
-      <div><span class="text-[10px] font-black text-gray-500 uppercase">Concepto</span><div class="font-bold text-white">${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} · ${moneyFmt(p.amount)}</div></div>
-      <div><span class="text-[10px] font-black text-gray-500 uppercase">Estado</span><div>${statusBadge(p.status)}</div></div>
-      ${p.notes ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Notas del padre</span><div class="text-gray-300 text-sm">${escapeHtml(p.notes)}</div></div>` : ''}
-      ${p.proofData ? `<div><span class="text-[10px] font-black text-gray-500 uppercase">Justificante</span><a href="${p.proofData}" target="_blank"><img src="${p.proofData}" class="w-full max-h-96 object-contain rounded-lg border border-slate-700 mt-2" /></a></div>` : '<p class="text-gray-500 text-sm">Sin justificante</p>'}
-    </div>`;
-  openModal('review-modal');
-};
-window.approvePayment = () => {
-  if (!state.currentReviewPayment) return;
-  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
-  p.status='approved'; p.approvedAt=Date.now();
-  DB.set('payments', state.payments);
-  closeModal('review-modal'); renderPayments(); toast('Pago aprobado','success');
-};
-window.rejectPayment = () => {
-  if (!state.currentReviewPayment) return;
-  const reason = prompt('Motivo del rechazo (opcional):','') || '';
-  const p = state.payments.find(x=>x.id===state.currentReviewPayment);
-  p.status='rejected'; p.rejectedAt=Date.now(); p.rejectionReason=reason;
-  DB.set('payments', state.payments);
-  closeModal('review-modal'); renderPayments(); toast('Pago rechazado','info');
-};
-
-/* ---------- Partidos ---------- */
-function renderMatches() {
-  const list = [...state.matches].sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  if (!list.length) { $('match-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin partidos.</p>'; return; }
-  $('match-list').innerHTML = list.map(m=>`
-    <div class="card flex flex-col md:flex-row md:items-center gap-4">
-      <div class="text-center md:w-24">
-        <div class="text-[10px] font-black text-green-500 uppercase">${m.date||''}</div>
-        <div class="text-2xl font-black text-white">${m.time||''}</div>
       </div>
-      <div class="flex-1">
-        <div class="text-[10px] font-black text-gray-500 uppercase">${escapeHtml(teamName(m.categoryId))} · ${m.home==='home'?'LOCAL':'VISITANTE'}</div>
-        <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
-        <div class="text-gray-400 text-sm">${escapeHtml(m.location||'')}</div>
-        <div class="text-[10px] text-gray-500 mt-1">Equipación: ${escapeHtml(m.kit||'Titular')}${m.notes?` · ${escapeHtml(m.notes)}`:''}</div>
+
+
+      <div class="schedule-grid">
+
+        <div class="schedule-box">
+
+          <div class="schedule-box-title">
+            Entrada desde
+          </div>
+
+          <input
+            id="entryStart"
+            type="time"
+            value="10:00"
+          >
+
+        </div>
+
+
+        <div class="schedule-box">
+
+          <div class="schedule-box-title">
+            Entrada hasta
+          </div>
+
+          <input
+            id="entryEnd"
+            type="time"
+            value="12:00"
+          >
+
+        </div>
+
+
+        <div class="schedule-box">
+
+          <div class="schedule-box-title">
+            Salida desde
+          </div>
+
+          <input
+            id="exitStart"
+            type="time"
+            value="19:00"
+          >
+
+        </div>
+
+
+        <div class="schedule-box">
+
+          <div class="schedule-box-title">
+            Salida hasta
+          </div>
+
+          <input
+            id="exitEnd"
+            type="time"
+            value="21:00"
+          >
+
+        </div>
+
       </div>
-      <div class="flex gap-2">
-        <button onclick="openEditMatch('${m.id}')" class="btn-secondary">Editar</button>
-        <button onclick="deleteMatch('${m.id}')" class="btn-danger">🗑</button>
+
+
+      <button
+        id="saveSchedule"
+        class="primary"
+        type="button"
+        style="margin-top:4px"
+      >
+        💾 Guardar horario
+      </button>
+
+
+      <div
+        id="scheduleMsg"
+        class="small"
+        style="margin-top:8px"
+      ></div>
+
+    </div>
+
+
+    <!-- CENTROS -->
+
+    <div class="card">
+
+      <strong>
+        Mis centros
+      </strong>
+
+      <div style="margin-top:12px">
+
+        <label>
+          Nombre
+        </label>
+
+        <input
+          id="name"
+          placeholder="Oreka"
+        >
+
+
+        <label>
+          Latitud
+        </label>
+
+        <input
+          id="lat"
+          type="number"
+          step="any"
+          placeholder="40.438..."
+        >
+
+
+        <label>
+          Longitud
+        </label>
+
+        <input
+          id="lon"
+          type="number"
+          step="any"
+          placeholder="-3.716..."
+        >
+
+
+        <label>
+          Radio (metros)
+        </label>
+
+        <input
+          id="radius"
+          type="number"
+          value="60"
+        >
+
+
+        <button
+          id="useLocation"
+          class="secondary"
+          type="button"
+        >
+          Usar mi ubicación actual
+        </button>
+
+
+        <div style="height:8px"></div>
+
+
+        <button
+          id="saveSite"
+          class="primary"
+          type="button"
+        >
+          Guardar centro
+        </button>
+
       </div>
-    </div>`).join('');
+
+
+      <div
+        id="sitesList"
+        class="small"
+        style="margin-top:12px"
+      ></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         EXPORTAR EXCEL
+    ====================================================== -->
+
+    <div class="card">
+
+      <div class="export-title">
+
+        <div class="export-icon">
+          📊
+        </div>
+
+        <div>
+          <strong>
+            Exportar registros
+          </strong>
+
+          <div class="small">
+            Descargar tus jornadas en Excel
+          </div>
+        </div>
+
+      </div>
+
+
+      <div
+        class="export-info"
+        style="margin-top:14px"
+      >
+
+        Selecciona las fechas que quieres exportar.
+        El Excel incluirá las jornadas registradas
+        dentro de ese periodo y una fila final con
+        los totales.
+
+      </div>
+
+
+      <label>
+        Fecha desde
+      </label>
+
+      <input
+        id="exportFrom"
+        type="date"
+      >
+
+
+      <label>
+        Fecha hasta
+      </label>
+
+      <input
+        id="exportTo"
+        type="date"
+      >
+
+
+      <button
+        id="exportExcel"
+        class="excel-button"
+        type="button"
+      >
+        📊 Descargar Excel
+      </button>
+
+
+      <div
+        id="exportMsg"
+        class="export-result"
+      ></div>
+
+    </div>
+
+
+    <!-- HISTORIAL -->
+
+    <div class="card">
+
+      <div class="row">
+
+        <strong>
+          Historial
+        </strong>
+
+        <button
+          id="clear"
+          type="button"
+          style="
+            width:auto;
+            padding:8px 12px;
+            background:#f3f4f6;
+            color:#374151;
+            border-radius:10px
+          "
+        >
+          Borrar
+        </button>
+
+      </div>
+
+
+      <div
+        id="history"
+        style="margin-top:10px"
+      ></div>
+
+    </div>
+
+
+    <div class="footer">
+
+      Los datos se guardan de forma segura
+      en Firebase.
+
+      <br><br>
+
+      Para usar la ubicación en iPhone,
+      abre la web mediante HTTPS y permite
+      el acceso a la ubicación.
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+/* =========================================================
+   FIREBASE
+========================================================= */
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,
+  doc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  limit
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyDNyEoFSOr5mc9rO-_7SD7x-2v7qkCWsOk",
+
+  authDomain:
+    "control-horaio.firebaseapp.com",
+
+  projectId:
+    "control-horaio",
+
+  storageBucket:
+    "control-horaio.firebasestorage.app",
+
+  messagingSenderId:
+    "755418184004",
+
+  appId:
+    "1:755418184004:web:83d6a96c35ebeb789c3f11",
+
+  measurementId:
+    "G-8RXVWYEVVL"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+
+const auth =
+  getAuth(app);
+
+
+const db =
+  getFirestore(app);
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let currentUser = null;
+
+let sites = [];
+
+let logs = [];
+
+let active = null;
+
+let watchId = null;
+
+let timer = null;
+
+
+/* =========================================================
+   CONTROL DE GEOLOCALIZACIÓN AUTOMÁTICA
+========================================================= */
+
+let geoStarting = false;
+
+let geoActive = false;
+
+let lastPosition = null;
+
+let lastPositionTime = 0;
+
+let shiftOperationInProgress = false;
+
+
+/*
+ * =========================================================
+ * HORARIO POR DEFECTO
+ *
+ * ESTOS SON LOS VALORES QUE PUEDES CAMBIAR
+ * DIRECTAMENTE EN EL CÓDIGO SI ALGUNA VEZ LO NECESITAS.
+ *
+ * PERO LO NORMAL SERÁ CAMBIARLOS DESDE LA APLICACIÓN.
+ * =========================================================
+ */
+
+const DEFAULT_SCHEDULE = {
+
+  entryStart:"10:00",
+
+  entryEnd:"12:00",
+
+  exitStart:"19:00",
+
+  exitEnd:"21:00"
+
+};
+
+
+let schedule = {
+
+  ...DEFAULT_SCHEDULE
+
+};
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const $ = id =>
+  document.getElementById(id);
+
+
+function show(element){
+
+  element.classList.remove("hidden");
+
 }
-window.openEditMatch = (id) => {
-  const m = id ? state.matches.find(x=>x.id===id) : null;
-  $('mt-category').innerHTML = state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.base)} ${escapeHtml(c.sub||'')}</option>`).join('');
-  openModal('match-modal');
-  $('mt-id').value = m?.id||'';
-  $('mt-category').value = m?.categoryId||(state.categories[0]?.id||'');
-  $('mt-date').value = m?.date||'';
-  $('mt-time').value = m?.time||'';
-  $('mt-rival').value = m?.rival||'';
-  $('mt-location').value = m?.location||'';
-  $('mt-address').value = m?.address||'';
-  $('mt-kit').value = m?.kit||'Titular';
-  $('mt-home').value = m?.home||'home';
-  $('mt-notes').value = m?.notes||'';
-};
-window.saveMatchForm = () => {
-  const data = {
-    categoryId: $('mt-category').value, date: $('mt-date').value, time: $('mt-time').value,
-    rival: $('mt-rival').value.trim(), location: $('mt-location').value.trim(), address: $('mt-address').value.trim(),
-    kit: $('mt-kit').value, home: $('mt-home').value, notes: $('mt-notes').value.trim()
-  };
-  if (!data.date) return toast('La fecha es obligatoria','error');
-  const id = $('mt-id').value;
-  if (id) { const i = state.matches.findIndex(x=>x.id===id); state.matches[i] = { ...state.matches[i], ...data }; }
-  else { state.matches.push({ id: uid(), ...data }); }
-  DB.set('matches', state.matches);
-  renderMatches(); closeModal('match-modal'); toast('Partido guardado','success');
-};
-window.deleteMatch = (id) => {
-  if (!confirm('¿Eliminar este partido?')) return;
-  state.matches = state.matches.filter(x=>x.id!==id);
-  DB.set('matches', state.matches); renderMatches();
-};
 
-/* ---------- Morosos ---------- */
-function renderMorosos() {
-  const debts = state.payments.filter(p => p.status !== 'approved');
-  if (!debts.length) { $('morosos-list').innerHTML = '<p class="text-gray-500 text-center py-8">¡Sin morosos! 🎉</p>'; return; }
-  const byPlayer = {};
-  debts.forEach(p => { (byPlayer[p.playerId] = byPlayer[p.playerId]||[]).push(p); });
-  const rows = Object.entries(byPlayer).map(([pid, ps])=>{
-    const pl = state.players.find(x=>x.id===pid);
-    const total = ps.reduce((s,p)=>s+(p.amount||0),0);
-    const conceptList = ps.map(p=>`${MONTH_NAMES[(p.month||1)-1]} · ${escapeHtml(p.conceptName||'')} (${statusBadge(p.status)})`).join('<br/>');
-    return `<tr class="border-b border-slate-800">
-      <td class="px-3 py-3 font-bold text-white">${escapeHtml(pl?.name||'(eliminado)')}</td>
-      <td class="px-3 py-3 text-gray-400">${escapeHtml(teamName(pl?.categoryId))}</td>
-      <td class="px-3 py-3 text-sm">${conceptList}</td>
-      <td class="px-3 py-3 text-right font-black text-red-400">${moneyFmt(total)}</td>
-    </tr>`;
-  }).join('');
-  $('morosos-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
-    <table class="w-full">
-      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Jugador</th><th class="px-3 py-3 text-left">Equipo</th><th class="px-3 py-3 text-left">Pendiente</th><th class="px-3 py-3 text-right">Total</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>`;
+
+function hide(element){
+
+  element.classList.add("hidden");
+
 }
 
-/* ---------- Usuarios ---------- */
-function renderUsers() {
-  if (!state.users.length) { $('users-list').innerHTML = '<p class="text-gray-500 text-center py-8">Sin usuarios.</p>'; return; }
-  $('users-list').innerHTML = `<div class="overflow-x-auto rounded-xl border border-slate-800">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-900 text-[10px] uppercase font-black text-gray-500"><tr><th class="px-3 py-3 text-left">Nombre</th><th class="px-3 py-3 text-left">Email</th><th class="px-3 py-3 text-left">Rol</th><th class="px-3 py-3 text-left">Jugadores</th><th class="px-3 py-3 text-center">Acción</th></tr></thead>
-      <tbody>
-        ${state.users.map(u=>{
-          const linked = (u.playerIds||[]).map(pid => state.players.find(p=>p.id===pid)?.name || '(?)').join(', ');
-          return `<tr class="border-b border-slate-800">
-            <td class="px-3 py-2 font-bold text-white">${escapeHtml(u.name||'')}</td>
-            <td class="px-3 py-2 text-gray-400">${escapeHtml(u.email||'')}</td>
-            <td class="px-3 py-2">${roleBadge(u.role)}</td>
-            <td class="px-3 py-2 text-gray-300">${escapeHtml(linked||'—')}</td>
-            <td class="px-3 py-2 text-center">
-              <button onclick="openEditUser('${u.id}')" class="btn-secondary">Editar</button>
-              ${u.id !== state.user.id ? `<button onclick="deleteUserDoc('${u.id}')" class="btn-danger ml-1">🗑</button>` : ''}
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
+
+function showAuthMessage(
+  message,
+  type = "error"
+){
+
+  const box =
+    $("authMsg");
+
+  box.textContent =
+    message;
+
+  box.className =
+    type === "success"
+      ? "success"
+      : "error";
+
+  show(box);
+
 }
-window.openEditUser = (id) => {
-  const u = id ? state.users.find(x=>x.id===id) : null;
-  $('us-id').value = u?.id||'';
-  $('us-name').value = u?.name||'';
-  $('us-email').value = u?.email||'';
-  $('us-password').value = u?.password||'';
-  $('us-role').value = u?.role||'parent';
-  $('us-players').innerHTML = state.players.map(p=>`
-    <label class="flex items-center gap-2 text-sm text-gray-300">
-      <input type="checkbox" value="${p.id}" class="us-player-chk accent-green-600" ${u?.playerIds?.includes(p.id)?'checked':''} />
-      ${escapeHtml(p.name)} <span class="text-gray-500 text-xs">· ${escapeHtml(teamName(p.categoryId))}</span>
-    </label>`).join('') || '<p class="text-gray-500 text-xs">Crea primero algún jugador.</p>';
-  openModal('user-modal');
-};
-window.saveUserForm = () => {
-  const id = $('us-id').value;
-  const email = $('us-email').value.trim().toLowerCase();
-  const name = $('us-name').value.trim();
-  const password = $('us-password').value;
-  const role = $('us-role').value;
-  const playerIds = [...document.querySelectorAll('.us-player-chk:checked')].map(i=>i.value);
-  if (!email || !name) return toast('Email y nombre son obligatorios','error');
-  if (!id && password.length < 4) return toast('Contraseña mínima 4 caracteres','error');
-  if (state.users.some(u=> u.email.toLowerCase()===email && u.id!==id)) return toast('Email ya registrado','error');
-  if (id) {
-    const i = state.users.findIndex(x=>x.id===id);
-    state.users[i] = { ...state.users[i], name, email, role, playerIds, ...(password?{password}:{}) };
-  } else {
-    state.users.push({ id: uid(), name, email, password, role, playerIds, createdAt: Date.now() });
-  }
-  DB.set('users', state.users);
-  closeModal('user-modal'); renderUsers(); toast('Usuario guardado','success');
-};
-window.deleteUserDoc = (id) => {
-  if (!confirm('¿Eliminar este usuario?')) return;
-  state.users = state.users.filter(x=>x.id!==id);
-  DB.set('users', state.users); renderUsers();
-};
 
-/* ---------- Config ---------- */
-function renderConfig() {
-  const c = state.clubInfo || {};
-  $('cfg-iban').value = c.iban||'';
-  $('cfg-holder').value = c.holder||'';
-  $('cfg-bank').value = c.bank||'';
-  $('cfg-concept').value = c.concept||'';
-  $('cfg-bizum').value = c.bizum||'';
+
+function clearAuthMessage(){
+
+  $("authMsg").textContent = "";
+
+  $("authMsg").className =
+    "hidden";
+
 }
-window.saveClubConfig = () => {
-  const data = { iban: $('cfg-iban').value.trim(), holder: $('cfg-holder').value.trim(), bank: $('cfg-bank').value.trim(), concept: $('cfg-concept').value.trim(), bizum: $('cfg-bizum').value.trim() };
-  DB.set('config', data); state.clubInfo = data;
-  toast('Configuración guardada','success');
-};
 
-/* ---------- Copia de seguridad ---------- */
-window.exportBackup = () => {
-  const data = {
-    _meta: { app: 'ClubPinarFS', version: 1, exportedAt: new Date().toISOString() },
-    users: state.users,
-    categories: state.categories,
-    players: state.players,
-    concepts: state.concepts,
-    payments: state.payments,
-    matches: state.matches,
-    config: state.clubInfo
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const ts = new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
-  a.href = url; a.download = `pinar_backup_${ts}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-  toast('Copia descargada','success');
-};
 
-window.importBackup = (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const data = JSON.parse(reader.result);
-      if (data._meta?.app !== 'ClubPinarFS') {
-        if (!confirm('El archivo no parece una copia de Club Pinar FS. ¿Importar de todos modos?')) return;
+function formatTime(d){
+
+  const x =
+    new Date(d);
+
+  return x.toLocaleTimeString(
+    "es-ES",
+    {
+      hour:"2-digit",
+      minute:"2-digit"
+    }
+  );
+
+}
+
+
+function formatDate(d){
+
+  return new Date(d)
+    .toLocaleDateString(
+      "es-ES",
+      {
+        day:"2-digit",
+        month:"2-digit",
+        year:"numeric"
       }
-      if (!confirm('Esto SOBRESCRIBIRÁ todos los datos actuales (usuarios, jugadores, cobros...). ¿Continuar?')) return;
-      if (Array.isArray(data.users))      { state.users = data.users;           DB.set('users', state.users); }
-      if (Array.isArray(data.categories)) { state.categories = data.categories; DB.set('categories', state.categories); }
-      if (Array.isArray(data.players))    { state.players = data.players;       DB.set('players', state.players); }
-      if (Array.isArray(data.concepts))   { state.concepts = data.concepts;     DB.set('concepts', state.concepts); }
-      if (Array.isArray(data.payments))   { state.payments = data.payments;     DB.set('payments', state.payments); }
-      if (Array.isArray(data.matches))    { state.matches = data.matches;       DB.set('matches', state.matches); }
-      if (data.config && typeof data.config === 'object') { state.clubInfo = data.config; DB.set('config', state.clubInfo); }
-      $('backup-info').textContent = `Importado: ${state.users.length} usuarios · ${state.players.length} jugadores · ${state.payments.length} cobros · ${state.matches.length} partidos`;
-      toast('Copia importada. Vuelve a iniciar sesión.','success');
-      setTimeout(()=> logout(), 1500);
-    } catch(err) {
-      toast('Archivo inválido: '+err.message,'error');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-};
+    );
 
-window.wipeAll = () => {
-  if (!confirm('⚠️ Esto borra TODOS los datos (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
-  if (!confirm('⚠️ ¿Borrar ABSOLUTAMENTE TODO? Esta acción es irreversible y eliminará jugadores, pagos y usuarios.')) return;
-  localStorage.clear();
-  location.reload();
-};
-
-/* ---------- Export Excel ---------- */
-window.exportPlayers = () => {
-  const rows = state.players.map(p => ({ 
-    Nombre: p.name, 
-    Dorsal: p.dorsal, 
-    Equipo: teamName(p.categoryId), 
-    Goles: p.goals || 0 
-  }));
-  downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
-};
-
-window.exportPayments = () => {
-  const rows = state.payments.map(p => { 
-    const pl = state.players.find(x => x.id === p.playerId); 
-    return { 
-      Jugador: pl?.name || '', 
-      Mes: MONTH_NAMES[(p.month || 1) - 1], 
-      Concepto: p.conceptName || '', 
-      Importe: p.amount || 0, 
-      Estado: p.status 
-    }; 
-  });
-  downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
-};
-
-function downloadXlsx(rows, filename, sheet) {
-  if (!rows.length) return toast('Sin datos para exportar', 'info');
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet);
-  XLSX.writeFile(wb, filename);
 }
 
-window.wipeAll = () => {
-  if (!confirm('⚠️ Esto borra TODOS los datos (usuarios, jugadores, cobros, partidos...). ¿Seguro?')) return;
-  if (!confirm('Última oportunidad. ¿Confirmas que quieres borrar TODO?')) return;
-  ['users','categories','players','concepts','payments','matches','config','session'].forEach(k => localStorage.removeItem('pinar_'+k));
-  toast('Todo borrado','info');
-  setTimeout(()=> location.reload(), 800);
-};
 
-/* ---------- Export Excel ---------- */
-window.exportPlayers = () => {
-  const rows = state.players.map(p=>({ Nombre: p.name, Dorsal: p.dorsal, Posición: p.position, Equipo: teamName(p.categoryId), Goles: p.goals||0, Presencias: p.attPresent||0, Faltas: p.attAbsent||0, Lesiones: p.attInjured||0 }));
-  downloadXlsx(rows, 'jugadores_pinar.xlsx', 'Jugadores');
-};
-window.exportPayments = () => {
-  const rows = state.payments.map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status, Notas: p.notes||'' }; });
-  downloadXlsx(rows, 'cobros_pinar.xlsx', 'Cobros');
-};
-window.exportMorosos = () => {
-  const rows = state.payments.filter(p=>p.status!=='approved').map(p=>{ const pl = state.players.find(x=>x.id===p.playerId); return { Jugador: pl?.name||'', Equipo: teamName(pl?.categoryId), Mes: MONTH_NAMES[(p.month||1)-1], Concepto: p.conceptName||'', Importe: p.amount||0, Estado: p.status }; });
-  downloadXlsx(rows, 'morosos_pinar.xlsx', 'Morosos');
-};
-function downloadXlsx(rows, filename, sheet) {
-  if (!rows.length) return toast('Sin datos para exportar','info');
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet);
-  XLSX.writeFile(wb, filename);
+function hours(ms){
+
+  if(ms < 0)
+    ms = 0;
+
+  const m =
+    Math.floor(
+      ms / 60000
+    );
+
+  const h =
+    Math.floor(
+      m / 60
+    );
+
+  const mm =
+    m % 60;
+
+  return `${h} h ${mm} min`;
+
 }
 
-/* ════════════════════ PARENT ════════════════════ */
-window.switchParentTab = (tab) => {
-  state.parentTab = tab;
-  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.pane===tab));
-  document.querySelectorAll('.parent-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'parent-pane-'+tab));
-  const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-  if (myPlayers.length>1) {
-    const sel = $('parent-player-select');
-    sel.innerHTML = myPlayers.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${escapeHtml(teamName(p.categoryId))}</option>`).join('');
-    sel.value = state.parentSelectedPlayer || myPlayers[0].id;
-    $('parent-player-selector').classList.remove('hidden');
-    sel.onchange = (e)=>{ state.parentSelectedPlayer = e.target.value; switchParentTab(state.parentTab); };
+
+function distance(
+  lat1,
+  lon1,
+  lat2,
+  lon2
+){
+
+  const R =
+    6371000;
+
+  const toRad =
+    x => x * Math.PI / 180;
+
+  const dLat =
+    toRad(
+      lat2 - lat1
+    );
+
+  const dLon =
+    toRad(
+      lon2 - lon1
+    );
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+
+    Math.cos(
+      toRad(lat1)
+    ) *
+
+    Math.cos(
+      toRad(lat2)
+    ) *
+
+    Math.sin(dLon / 2) ** 2;
+
+  return 2 * R *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
+
+}
+
+
+function escapeHtml(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================================================
+   HORARIO
+========================================================= */
+
+/*
+ * Convierte HH:MM a minutos desde medianoche.
+ */
+
+function timeToMinutes(
+  value
+){
+
+  if(
+    !value ||
+    typeof value !== "string"
+  ){
+
+    return null;
+
   }
-  const map = { home: renderParentHome, payments: renderParentPayments, matches: renderParentMatches, history: renderParentHistory, bank: renderParentBank };
-  map[tab] && map[tab]();
-};
-function currentParentPlayer() {
-  const myPlayers = state.players.filter(p=> (state.user.playerIds||[]).includes(p.id));
-  return myPlayers.find(p=>p.id===state.parentSelectedPlayer) || myPlayers[0];
-}
-function renderParentHome() {
-  const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-home').innerHTML = '<div class="card text-center py-12"><p class="text-gray-400 font-bold">Tu cuenta aún no está vinculada a ningún jugador.</p><p class="text-gray-500 text-xs mt-2">Contacta con el administrador.</p></div>'; return; }
-  const myPayments = state.payments.filter(p=>p.playerId===pl.id);
-  const nextPending = myPayments.filter(p=>p.status!=='approved').sort((a,b)=>(a.month||0)-(b.month||0))[0];
-  const upcomingMatch = state.matches.filter(m=>m.categoryId===pl.categoryId && m.date && new Date(m.date+'T'+(m.time||'23:59'))>=new Date()).sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')))[0];
-  const totalPendiente = myPayments.filter(p=>p.status!=='approved').reduce((s,p)=>s+(p.amount||0),0);
-  const totalPagado = myPayments.filter(p=>p.status==='approved').reduce((s,p)=>s+(p.amount||0),0);
-  $('parent-pane-home').innerHTML = `
-    <div class="card mb-4 flex items-center gap-4">
-      <img src="${pl.photo||'https://ui-avatars.com/api/?name='+encodeURIComponent(pl.name)+'&background=7f1d1d&color=fff'}" class="w-16 h-16 rounded-2xl object-cover" />
-      <div>
-        <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${escapeHtml(teamName(pl.categoryId))}</div>
-        <h2 class="text-2xl font-black text-white tracking-tight">${escapeHtml(pl.name)}</h2>
-        <div class="text-[11px] text-gray-500">#${pl.dorsal||'S/N'} · ${escapeHtml(pl.position||'')}</div>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pagado</div><div class="text-xl font-black text-green-400">${moneyFmt(totalPagado)}</div></div>
-      <div class="card text-center"><div class="text-[9px] font-black uppercase text-gray-500">Pendiente</div><div class="text-xl font-black text-yellow-400">${moneyFmt(totalPendiente)}</div></div>
-    </div>
-    ${nextPending ? `<div class="card border-l-4 border-l-yellow-500 mb-4">
-      <div class="text-[10px] font-black text-yellow-500 uppercase tracking-widest mb-1">Próximo Pago</div>
-      <div class="flex justify-between items-center">
-        <div>
-          <div class="font-black text-white text-lg">${escapeHtml(nextPending.conceptName)}</div>
-          <div class="text-[10px] text-gray-500">${MONTH_NAMES[(nextPending.month||1)-1]} · ${statusBadge(nextPending.status)}</div>
-        </div>
-        <div class="text-2xl font-black text-white">${moneyFmt(nextPending.amount)}</div>
-      </div>
-      ${nextPending.status==='pending' || nextPending.status==='rejected' ? `<button onclick="openProof('${nextPending.id}')" class="w-full btn-primary mt-3">Subir Justificante</button>` : ''}
-    </div>` : `<div class="card text-center mb-4"><p class="text-green-400 font-black">¡Estás al corriente! 🎉</p></div>`}
-    ${upcomingMatch ? `<div class="card border-l-4 border-l-green-600 mb-4">
-      <div class="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">Próximo Partido</div>
-      <div class="font-black text-white text-lg">vs ${escapeHtml(upcomingMatch.rival||'?')} (${upcomingMatch.home==='home'?'Local':'Visitante'})</div>
-      <div class="text-sm text-gray-300">${upcomingMatch.date} · ${upcomingMatch.time||''}</div>
-      <div class="text-[11px] text-gray-500 mt-1">${escapeHtml(upcomingMatch.location||'')}</div>
-      <div class="text-[11px] text-gray-500 mt-1">Equipación: <span class="text-white font-bold">${escapeHtml(upcomingMatch.kit||'Titular')}</span></div>
-    </div>` : ''}`;
-}
-function renderParentPayments() {
-  const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-payments').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-  const myPayments = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=>(a.month||0)-(b.month||0));
-  if (!myPayments.length) { $('parent-pane-payments').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin cobros generados aún.</p></div>'; return; }
-  $('parent-pane-payments').innerHTML = myPayments.map(p=>`
-    <div class="card mb-3">
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="text-[10px] font-black text-green-500 uppercase tracking-widest">${MONTH_NAMES[(p.month||1)-1]}</div>
-          <div class="font-black text-white text-lg">${escapeHtml(p.conceptName||'')}</div>
-          <div class="mt-1">${statusBadge(p.status)}</div>
-          ${p.rejectionReason ? `<div class="text-[11px] text-red-400 mt-1">Rechazo: ${escapeHtml(p.rejectionReason)}</div>` : ''}
-        </div>
-        <div class="text-right"><div class="text-2xl font-black text-white">${moneyFmt(p.amount)}</div></div>
-      </div>
-      ${p.proofData ? `<a href="${p.proofData}" target="_blank" class="block mt-3"><img src="${p.proofData}" class="rounded-lg max-h-48 object-contain border border-slate-700" /></a>` : ''}
-      ${p.status!=='approved' ? `<button onclick="openProof('${p.id}')" class="w-full btn-primary mt-3">${p.proofData?'Reemplazar Justificante':'Subir Justificante'}</button>` : ''}
-    </div>`).join('');
-}
-function renderParentMatches() {
-  const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-matches').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-  const list = state.matches.filter(m=>m.categoryId===pl.categoryId).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  if (!list.length) { $('parent-pane-matches').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">No hay partidos.</p></div>'; return; }
-  $('parent-pane-matches').innerHTML = list.map(m=>{
-    const past = m.date && new Date(m.date+'T'+(m.time||'23:59'))<new Date();
-    return `<div class="card mb-3 ${past?'opacity-60':''}">
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="text-[10px] font-black ${past?'text-gray-500':'text-green-500'} uppercase tracking-widest">${m.date} · ${m.time||''}</div>
-          <div class="font-black text-white text-lg">vs ${escapeHtml(m.rival||'?')}</div>
-          <div class="text-[11px] text-gray-500">${m.home==='home'?'Local':'Visitante'} · Equipación ${escapeHtml(m.kit||'Titular')}</div>
-        </div>
-      </div>
-      <div class="mt-2 text-sm text-gray-300">${escapeHtml(m.location||'')}</div>
-      ${m.notes ? `<div class="text-[11px] text-gray-500 mt-2">${escapeHtml(m.notes)}</div>` : ''}
-    </div>`;
-  }).join('');
-}
-function renderParentHistory() {
-  const pl = currentParentPlayer();
-  if (!pl) { $('parent-pane-history').innerHTML = '<p class="text-gray-500 text-center py-12">Sin jugador vinculado.</p>'; return; }
-  const list = state.payments.filter(p=>p.playerId===pl.id).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
-  if (!list.length) { $('parent-pane-history').innerHTML = '<div class="card text-center py-8"><p class="text-gray-400">Sin historial.</p></div>'; return; }
-  $('parent-pane-history').innerHTML = `<div class="card overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead><tr class="text-[10px] font-black uppercase text-gray-500"><th class="py-2 text-left">Concepto</th><th class="py-2 text-left">Mes</th><th class="py-2 text-right">Importe</th><th class="py-2 text-center">Estado</th></tr></thead>
-      <tbody>
-        ${list.map(p=>`<tr class="border-t border-slate-800">
-          <td class="py-2 font-bold text-white">${escapeHtml(p.conceptName||'')}</td>
-          <td class="py-2 text-gray-400">${MONTH_NAMES[(p.month||1)-1]}</td>
-          <td class="py-2 text-right font-bold text-white">${moneyFmt(p.amount)}</td>
-          <td class="py-2 text-center">${statusBadge(p.status)}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
-function renderParentBank() {
-  const c = state.clubInfo || {};
-  $('parent-pane-bank').innerHTML = `<div class="card">
-    <h3 class="section-title">💳 Datos para el Pago</h3>
-    ${c.iban ? `<div class="mb-4"><div class="text-[10px] font-black uppercase text-gray-500">IBAN</div>
-      <div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.iban)}</code><button onclick="copyText('${escapeHtml(c.iban)}')" class="btn-secondary">Copiar</button></div></div>` : ''}
-    ${c.holder ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Titular</div><div class="text-white font-bold">${escapeHtml(c.holder)}</div></div>` : ''}
-    ${c.bank ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Banco</div><div class="text-white">${escapeHtml(c.bank)}</div></div>` : ''}
-    ${c.concept ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Concepto</div><div class="text-white">${escapeHtml(c.concept)}</div></div>` : ''}
-    ${c.bizum ? `<div class="mb-3"><div class="text-[10px] font-black uppercase text-gray-500">Bizum</div><div class="flex items-center gap-2 mt-1"><code class="text-white font-mono font-bold text-sm flex-1 bg-slate-900 px-3 py-2 rounded-lg">${escapeHtml(c.bizum)}</code><button onclick="copyText('${escapeHtml(c.bizum)}')" class="btn-secondary">Copiar</button></div></div>` : ''}
-    ${!c.iban && !c.bizum ? '<p class="text-gray-500 text-sm text-center py-4">El club aún no ha configurado los datos bancarios.</p>' : ''}
-    <div class="mt-6 p-3 bg-blue-900/20 border border-blue-800 rounded-lg text-[11px] text-blue-300">
-      💡 Tras pagar, ve a <b>Pagos</b> y sube la foto del justificante.
-    </div>
-  </div>`;
-}
-window.copyText = (t) => { navigator.clipboard.writeText(t).then(()=> toast('Copiado','success')); };
 
-/* ---------- Subir justificante (base64) ---------- */
-window.openProof = (paymentId) => {
-  const p = state.payments.find(x=>x.id===paymentId); if (!p) return;
-  state.pendingProofPaymentId = paymentId;
-  $('proof-payment-id').value = paymentId;
-  $('proof-info').textContent = `${MONTH_NAMES[(p.month||1)-1]} · ${p.conceptName} · ${moneyFmt(p.amount)}`;
-  $('proof-file').value = '';
-  $('proof-notes').value = p.notes||'';
-  openModal('proof-modal');
-};
-window.submitProof = async () => {
-  const paymentId = state.pendingProofPaymentId;
-  const file = $('proof-file').files[0];
-  const notes = $('proof-notes').value.trim();
-  
-  if (!file && !notes) return toast('Adjunta una foto o añade una nota', 'error');
-  
-  const p = state.payments.find(x => x.id === paymentId); 
-  if (!p) return;
-  
-  p.status = 'review'; 
-  p.notes = notes; 
-  p.submittedAt = Date.now();
-  
-  if (file) {
-    try {
-      const dataUrl = await fileToBase64Resized(file, 1200, 0.8);
-      p.proofData = dataUrl;
-    } catch(e) {
-      return toast('Error al procesar imagen: ' + e.message, 'error');
-    }
+
+  const parts =
+    value.split(":");
+
+
+  if(parts.length !== 2)
+    return null;
+
+
+  const hour =
+    Number(parts[0]);
+
+  const minute =
+    Number(parts[1]);
+
+
+  if(
+    !Number.isInteger(hour) ||
+    !Number.isInteger(minute)
+  ){
+
+    return null;
+
   }
-  
-  // 1. Guardamos en el almacenamiento
-  DB.set('payments', state.payments);
-  closeModal('proof-modal'); 
-  toast('Justificante guardado localmente.', 'success');
-  switchParentTab(state.parentTab);
 
-  // 2. ¡ENVÍO DEL CORREO AL CLUB!
-  const pl = state.players.find(x => x.id === p.playerId);
-  
-  // Preparamos los datos exactos que leerá tu plantilla de EmailJS
-  const emailParams = {
-    jugador: pl ? pl.name : 'Desconocido',
-    equipo: teamName(pl?.categoryId),
-    mes: MONTH_NAMES[(p.month || 1) - 1],
-    concepto: p.conceptName || 'Mensualidad',
-    importe: moneyFmt(p.amount),
-    notas: notes || 'Sin notas adicionales.',
-    justificante: p.proofData || 'No se adjuntó imagen (solo nota).' 
+
+  if(
+    hour < 0 ||
+    hour > 23 ||
+    minute < 0 ||
+    minute > 59
+  ){
+
+    return null;
+
+  }
+
+
+  return (
+    hour * 60 +
+    minute
+  );
+
+}
+
+
+/*
+ * Devuelve los minutos actuales
+ * según la hora local del dispositivo.
+ */
+
+function currentMinutes(){
+
+  const now =
+    new Date();
+
+
+  return (
+    now.getHours() * 60 +
+    now.getMinutes()
+  );
+
+}
+
+
+/*
+ * Comprueba si la hora actual está
+ * dentro de una franja.
+ */
+
+function isCurrentTimeBetween(
+  start,
+  end
+){
+
+  const startMinutes =
+    timeToMinutes(start);
+
+  const endMinutes =
+    timeToMinutes(end);
+
+
+  if(
+    startMinutes === null ||
+    endMinutes === null
+  ){
+
+    return false;
+
+  }
+
+
+  const now =
+    currentMinutes();
+
+
+  /*
+   * Horario normal:
+   *
+   * 10:00 -> 12:00
+   */
+
+  if(
+    startMinutes <=
+    endMinutes
+  ){
+
+    return (
+      now >= startMinutes &&
+      now <= endMinutes
+    );
+
+  }
+
+
+  /*
+   * También permitimos horarios
+   * que atraviesen medianoche.
+   *
+   * Ejemplo:
+   *
+   * 22:00 -> 02:00
+   */
+
+  return (
+    now >= startMinutes ||
+    now <= endMinutes
+  );
+
+}
+
+
+/*
+ * Comprueba si estamos en horario
+ * de entrada.
+ */
+
+function isEntryScheduleOpen(){
+
+  return isCurrentTimeBetween(
+    schedule.entryStart,
+    schedule.entryEnd
+  );
+
+}
+
+
+/*
+ * Comprueba si estamos en horario
+ * de salida.
+ */
+
+function isExitScheduleOpen(){
+
+  return isCurrentTimeBetween(
+    schedule.exitStart,
+    schedule.exitEnd
+  );
+
+}
+
+
+/*
+ * Actualiza los campos visuales
+ * del horario.
+ */
+
+function renderSchedule(){
+
+  $("entryStart").value =
+    schedule.entryStart;
+
+  $("entryEnd").value =
+    schedule.entryEnd;
+
+  $("exitStart").value =
+    schedule.exitStart;
+
+  $("exitEnd").value =
+    schedule.exitEnd;
+
+}
+
+
+/*
+ * Carga el horario del usuario
+ * desde:
+ *
+ * users/{uid}/settings/schedule
+ */
+
+async function loadSchedule(){
+
+  schedule = {
+
+    ...DEFAULT_SCHEDULE
+
   };
 
-  // Enviamos el correo usando EmailJS
-  emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', emailParams)
-    .then(() => {
-      toast('📧 Notificación enviada al correo del club.', 'success');
-    })
-    .catch((err) => {
-      console.error('Error EmailJS:', err);
-      toast('Justificante guardado, pero falló el envío del correo.', 'error');
-    });
-};
-function fileToBase64Resized(file, maxDim, quality) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          const r = Math.min(maxDim/width, maxDim/height);
-          width = Math.round(width*r); height = Math.round(height*r);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+
+  if(!currentUser)
+    return;
+
+
+  try{
+
+    const scheduleRef =
+      doc(
+        db,
+        "users",
+        currentUser.uid,
+        "settings",
+        "schedule"
+      );
+
+
+    const snapshot =
+      await getDoc(
+        scheduleRef
+      );
+
+
+    if(
+      snapshot.exists()
+    ){
+
+      const data =
+        snapshot.data();
+
+
+      schedule = {
+
+        entryStart:
+          data.entryStart ||
+          DEFAULT_SCHEDULE.entryStart,
+
+        entryEnd:
+          data.entryEnd ||
+          DEFAULT_SCHEDULE.entryEnd,
+
+        exitStart:
+          data.exitStart ||
+          DEFAULT_SCHEDULE.exitStart,
+
+        exitEnd:
+          data.exitEnd ||
+          DEFAULT_SCHEDULE.exitEnd
+
       };
-      img.onerror = reject;
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
-/* ════════════════════ INIT ════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  loadAll();
+    }
 
-  // sesión persistente
-  const sess = DB.get('session', null);
-  if (sess?.id) {
-    const u = state.users.find(x=>x.id===sess.id);
-    if (u) { state.user = u; state.role = u.role; enterApp(); }
-    else showView('view-login');
-  } else {
-    showView('view-login');
+
+    renderSchedule();
+
+  }
+  catch(error){
+
+    console.error(
+      "Error cargando horario:",
+      error
+    );
+
+
+    renderSchedule();
+
   }
 
-  // listeners
-  $('btn-login').addEventListener('click', doLogin);
-  $('login-password').addEventListener('keypress', e => { if (e.key==='Enter') doLogin(); });
-  $('player-search').addEventListener('input', e => { state.filters.playerSearch = e.target.value; renderPlayers(); });
-  $('player-cat-filter').addEventListener('change', e => { state.filters.playerCat = e.target.value; renderPlayers(); });
-  $('pay-cat-filter').addEventListener('change', e => { state.filters.payCat = e.target.value; renderPayments(); });
-  $('pay-status-filter').addEventListener('change', e => { state.filters.payStatus = e.target.value; renderPayments(); });
-});
+}
+
+
+/*
+ * Guarda el horario del usuario.
+ */
+
+$("saveSchedule").onclick =
+  async () => {
+
+    if(!currentUser)
+      return;
+
+
+    const entryStart =
+      $("entryStart").value;
+
+
+    const entryEnd =
+      $("entryEnd").value;
+
+
+    const exitStart =
+      $("exitStart").value;
+
+
+    const exitEnd =
+      $("exitEnd").value;
+
+
+    /*
+     * Validamos todos los campos.
+     */
+
+    if(
+      timeToMinutes(entryStart) === null ||
+      timeToMinutes(entryEnd) === null ||
+      timeToMinutes(exitStart) === null ||
+      timeToMinutes(exitEnd) === null
+    ){
+
+      $("scheduleMsg").textContent =
+        "Comprueba que todos los horarios sean válidos.";
+
+      $("scheduleMsg").className =
+        "error";
+
+      return;
+
+    }
+
+
+    /*
+     * Evitamos horarios de entrada
+     * completamente vacíos o iguales.
+     */
+
+    if(
+      entryStart === entryEnd
+    ){
+
+      $("scheduleMsg").textContent =
+        "La franja de entrada debe tener una hora inicial y una hora final diferentes.";
+
+      $("scheduleMsg").className =
+        "error";
+
+      return;
+
+    }
+
+
+    if(
+      exitStart === exitEnd
+    ){
+
+      $("scheduleMsg").textContent =
+        "La franja de salida debe tener una hora inicial y una hora final diferentes.";
+
+      $("scheduleMsg").className =
+        "error";
+
+      return;
+
+    }
+
+
+    const newSchedule = {
+
+      entryStart,
+
+      entryEnd,
+
+      exitStart,
+
+      exitEnd
+
+    };
+
+
+    try{
+
+      $("saveSchedule").disabled =
+        true;
+
+      $("saveSchedule").textContent =
+        "Guardando...";
+
+
+      await setDoc(
+        doc(
+          db,
+          "users",
+          currentUser.uid,
+          "settings",
+          "schedule"
+        ),
+        newSchedule
+      );
+
+
+      schedule =
+        newSchedule;
+
+
+      $("scheduleMsg").textContent =
+        `Horario guardado. Entrada: ${entryStart}–${entryEnd}. Salida: ${exitStart}–${exitEnd}.`;
+
+      $("scheduleMsg").className =
+        "success";
+
+
+      navigator.vibrate?.(80);
+
+    }
+   catch(error){
+
+  console.error(
+    "ERROR GUARDANDO HORARIO:",
+    error
+  );
+
+  let message =
+    "No se pudo guardar el horario.";
+
+  if(
+    error.code === "permission-denied"
+  ){
+
+    message =
+      "Firebase ha rechazado el guardado del horario. Hay que revisar las reglas de Firestore.";
+
+  }
+  else if(
+    error.code === "unavailable"
+  ){
+
+    message =
+      "Firebase no está disponible en este momento. Comprueba la conexión.";
+
+  }
+  else if(
+    error.code === "unauthenticated"
+  ){
+
+    message =
+      "La sesión ha caducado. Cierra sesión y vuelve a entrar.";
+
+  }
+  else if(error.message){
+
+    message =
+      `Error: ${error.message}`;
+
+  }
+
+
+  $("scheduleMsg").textContent =
+    message;
+
+  $("scheduleMsg").className =
+    "error";
+    }
+    finally{
+
+      $("saveSchedule").disabled =
+        false;
+
+      $("saveSchedule").textContent =
+        "💾 Guardar horario";
+
+    }
+
+  };
+
+
+/* =========================================================
+   FIRESTORE PATHS
+========================================================= */
+
+function userSitesCollection(){
+
+  return collection(
+    db,
+    "users",
+    currentUser.uid,
+    "sites"
+  );
+
+}
+
+
+function userLogsCollection(){
+
+  return collection(
+    db,
+    "users",
+    currentUser.uid,
+    "logs"
+  );
+
+}
+
+
+/* =========================================================
+   CARGAR CENTROS
+========================================================= */
+
+async function loadSites(){
+
+  sites = [];
+
+  const snapshot =
+    await getDocs(
+      userSitesCollection()
+    );
+
+  snapshot.forEach(
+    item => {
+
+      sites.push({
+
+        id:item.id,
+
+        ...item.data()
+
+      });
+
+    }
+  );
+
+  renderSites();
+
+}
+
+
+/* =========================================================
+   CARGAR HISTORIAL
+========================================================= */
+
+async function loadLogs(){
+
+  logs = [];
+
+  const q =
+    query(
+      userLogsCollection(),
+      orderBy("in","desc"),
+      limit(100)
+    );
+
+  const snapshot =
+    await getDocs(q);
+
+  snapshot.forEach(
+    item => {
+
+      logs.push({
+
+        id:item.id,
+
+        ...item.data()
+
+      });
+
+    }
+  );
+
+
+  /*
+   * Buscamos si hay una jornada
+   * abierta.
+   */
+
+  active =
+    logs.find(
+      l => !l.out
+    ) || null;
+
+
+  renderHistory();
+
+  updateUI();
+
+}
+
+
+/* =========================================================
+   RENDER CENTROS
+========================================================= */
+
+function renderSites(){
+
+  if(!sites.length){
+
+    $("sitesList").innerHTML =
+      "No hay centros guardados.";
+
+    return;
+
+  }
+
+
+  $("sitesList").innerHTML =
+    sites.map(
+      s => `
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:8px 0;
+            border-top:1px solid #edf2f0
+          "
+        >
+
+          <div>
+
+            <strong>
+              ${escapeHtml(s.name)}
+            </strong>
+
+            <br>
+
+            ${s.radius} m
+
+          </div>
+
+
+          <button
+            data-site-id="${escapeHtml(s.id)}"
+            class="delete-site"
+            style="
+              width:auto;
+              background:#fee2e2;
+              color:#991b1b;
+              padding:6px 10px;
+              border-radius:8px
+            "
+            type="button"
+          >
+            ✕
+          </button>
+
+        </div>
+
+      `
+    ).join("");
+
+
+  document
+    .querySelectorAll(".delete-site")
+    .forEach(
+      button => {
+
+        button.onclick =
+          () => removeSite(
+            button.dataset.siteId
+          );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   BORRAR CENTRO
+========================================================= */
+
+async function removeSite(siteId){
+
+  if(!currentUser)
+    return;
+
+
+  if(
+    !confirm(
+      "¿Quieres borrar este centro?"
+    )
+  )
+    return;
+
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "users",
+        currentUser.uid,
+        "sites",
+        siteId
+      )
+    );
+
+
+    sites =
+      sites.filter(
+        s => s.id !== siteId
+      );
+
+
+    renderSites();
+
+    $("geoMsg").textContent =
+      "Centro eliminado.";
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    alert(
+      "No se pudo borrar el centro."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   RENDER HISTORIAL
+========================================================= */
+
+function renderHistory(){
+
+  if(!logs.length){
+
+    $("history").innerHTML =
+      '<div class="small">Todavía no hay jornadas registradas.</div>';
+
+    return;
+
+  }
+
+
+  $("history").innerHTML =
+    logs
+      .map(
+        l => {
+
+          const total =
+            l.out
+              ? hours(
+                  new Date(l.out) -
+                  new Date(l.in)
+                )
+              : "En curso";
+
+
+          return `
+
+            <div class="history-item">
+
+              <div class="row">
+
+                <div>
+
+                  <span class="dot"></span>
+
+                  <strong>
+                    ${escapeHtml(l.site || "Centro")}
+                  </strong>
+
+                </div>
+
+                <div class="small">
+
+                  ${formatDate(l.in)}
+
+                </div>
+
+              </div>
+
+
+              <div
+                class="row"
+                style="margin-top:6px"
+              >
+
+                <div>
+
+                  ${formatTime(l.in)}
+
+                  →
+
+                  ${
+                    l.out
+                      ? formatTime(l.out)
+                      : "..."
+                  }
+
+                </div>
+
+                <strong>
+                  ${total}
+                </strong>
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   ACTUALIZAR INTERFAZ
+========================================================= */
+
+function updateUI(){
+
+  if(active){
+
+    $("statusBadge").textContent =
+      "Trabajando";
+
+    $("statusBadge").className =
+      "badge ok";
+
+    $("currentSite").textContent =
+      active.site || "—";
+
+    $("entryTime").textContent =
+      formatTime(active.in);
+
+
+    const ms =
+      Date.now() -
+      new Date(active.in)
+        .getTime();
+
+
+    $("worked").textContent =
+      hours(ms);
+
+  }
+
+  else{
+
+    $("statusBadge").textContent =
+      "Fuera";
+
+    $("statusBadge").className =
+      "badge off";
+
+    $("currentSite").textContent =
+      "—";
+
+    $("entryTime").textContent =
+      "--:--";
+
+    $("worked").textContent =
+      "0 h";
+
+  }
+
+}
+
+
+/* =========================================================
+   ENCONTRAR CENTRO
+========================================================= */
+
+function findSiteByPosition(
+  lat,
+  lon
+){
+
+  if(!sites.length)
+    return null;
+
+
+  for(
+    const site of sites
+  ){
+
+    const d =
+      distance(
+        lat,
+        lon,
+        Number(site.lat),
+        Number(site.lon)
+      );
+
+
+    if(
+      d <= Number(site.radius)
+    ){
+
+      return {
+
+        site,
+
+        distance:d
+
+      };
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+/* =========================================================
+   FICHAR ENTRADA
+========================================================= */
+
+async function startShift(
+  site,
+  lat,
+  lon
+){
+
+  if(active){
+
+    return;
+
+  }
+
+
+  /*
+   * Evitamos dos fichajes simultáneos
+   * si llegan dos posiciones GPS casi al mismo tiempo.
+   */
+
+  if(shiftOperationInProgress){
+
+    return;
+
+  }
+
+
+  shiftOperationInProgress = true;
+
+
+  const now =
+    new Date()
+      .toISOString();
+
+
+  const shift = {
+
+    site:site.name,
+
+    siteId:site.id || null,
+
+    in:now,
+
+    out:null,
+
+    latIn:Number(lat),
+
+    lonIn:Number(lon)
+
+  };
+
+
+  try{
+
+    const docRef =
+      await addDoc(
+        userLogsCollection(),
+        shift
+      );
+
+
+    active = {
+
+      id:docRef.id,
+
+      ...shift
+
+    };
+
+
+    logs.unshift(
+      active
+    );
+
+
+    updateUI();
+
+    renderHistory();
+
+    $("geoMsg").textContent =
+      `Entrada registrada en ${site.name}.`;
+
+    $("geoMsg").className =
+      "success";
+
+
+    navigator.vibrate?.(80);
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    alert(
+      "No se pudo registrar la entrada. Comprueba tu conexión."
+    );
+
+  }
+  finally{
+
+    shiftOperationInProgress = false;
+
+  }
+
+}
+
+
+/* =========================================================
+   FICHAR SALIDA
+========================================================= */
+
+async function endShift(
+  lat = null,
+  lon = null,
+  automatic = false
+){
+
+  if(!active){
+
+    if(!automatic){
+
+      alert(
+        "No hay ninguna jornada en curso."
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  const out =
+    new Date()
+      .toISOString();
+
+
+  const updateData = {
+
+    out:out
+
+  };
+
+
+  if(
+    lat !== null &&
+    lon !== null
+  ){
+
+    updateData.latOut =
+      Number(lat);
+
+    updateData.lonOut =
+      Number(lon);
+
+  }
+
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "users",
+        currentUser.uid,
+        "logs",
+        active.id
+      ),
+      updateData
+    );
+
+
+    const index =
+      logs.findIndex(
+        l => l.id === active.id
+      );
+
+
+    if(index !== -1){
+
+      logs[index] = {
+
+        ...logs[index],
+
+        ...updateData
+
+      };
+
+    }
+
+
+    active = null;
+
+
+    updateUI();
+
+    renderHistory();
+
+
+    if(automatic){
+
+      $("geoMsg").textContent =
+        "Salida automática registrada al salir del centro.";
+
+    }
+    else{
+
+      $("geoMsg").textContent =
+        "Salida registrada correctamente.";
+
+    }
+
+
+    $("geoMsg").className =
+      "success";
+
+
+    navigator.vibrate?.(
+      [80,40,80]
+    );
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    if(!automatic){
+
+      alert(
+        "No se pudo registrar la salida. Comprueba tu conexión."
+      );
+
+    }
+    else{
+
+      $("geoMsg").textContent =
+        "No se pudo registrar automáticamente la salida. Comprueba tu conexión.";
+
+      $("geoMsg").className =
+        "error";
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   OBTENER UBICACIÓN ACTUAL
+========================================================= */
+
+function getCurrentPosition(){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      if(
+        !navigator.geolocation
+      ){
+
+        reject(
+          new Error(
+            "Geolocalización no disponible."
+          )
+        );
+
+        return;
+
+      }
+
+
+      navigator.geolocation
+        .getCurrentPosition(
+
+          position => {
+
+            resolve(
+              position
+            );
+
+          },
+
+          error => {
+
+            reject(
+              error
+            );
+
+          },
+
+          {
+
+            enableHighAccuracy:true,
+
+            maximumAge:5000,
+
+            timeout:15000
+
+          }
+
+        );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   FICHAR ENTRADA DESDE BOTÓN
+========================================================= */
+
+$("manualIn").onclick =
+  async () => {
+
+    if(!sites.length){
+
+      alert(
+        "Primero guarda al menos un centro de trabajo."
+      );
+
+      return;
+
+    }
+
+
+    if(active){
+
+      alert(
+        "Ya hay una jornada en curso."
+      );
+
+      return;
+
+    }
+
+
+    $("geoMsg").textContent =
+      "Comprobando tu ubicación...";
+
+    $("geoMsg").className =
+      "small";
+
+
+    try{
+
+      const position =
+        await getCurrentPosition();
+
+
+      const lat =
+        position.coords.latitude;
+
+      const lon =
+        position.coords.longitude;
+
+
+      const result =
+        findSiteByPosition(
+          lat,
+          lon
+        );
+
+
+      if(!result){
+
+        $("geoMsg").textContent =
+          "No estás dentro del radio de ningún centro. No se ha registrado la entrada.";
+
+        $("geoMsg").className =
+          "error";
+
+        return;
+
+      }
+
+
+      $("geoMsg").textContent =
+        `Estás a ${Math.round(result.distance)} m de ${result.site.name}.`;
+
+      $("geoMsg").className =
+        "success";
+
+
+      await startShift(
+        result.site,
+        lat,
+        lon
+      );
+
+    }
+    catch(error){
+
+      console.error(error);
+
+      $("geoMsg").textContent =
+        "No se ha podido obtener tu ubicación. Comprueba que Safari tiene permiso para usarla.";
+
+      $("geoMsg").className =
+        "error";
+
+    }
+
+  };
+
+
+/* =========================================================
+   FICHAR SALIDA DESDE BOTÓN
+========================================================= */
+
+$("manualOut").onclick =
+  async () => {
+
+    if(!active){
+
+      alert(
+        "No hay ninguna jornada en curso."
+      );
+
+      return;
+
+    }
+
+
+    $("geoMsg").textContent =
+      "Comprobando tu ubicación...";
+
+    $("geoMsg").className =
+      "small";
+
+
+    try{
+
+      const position =
+        await getCurrentPosition();
+
+
+      const lat =
+        position.coords.latitude;
+
+      const lon =
+        position.coords.longitude;
+
+
+      /*
+       * Para la salida manual seguimos exigiendo
+       * estar dentro de algún centro, igual que
+       * en la versión original.
+       */
+
+      const result =
+        findSiteByPosition(
+          lat,
+          lon
+        );
+
+
+      if(!result){
+
+        $("geoMsg").textContent =
+          "No estás dentro del radio del centro. No se ha registrado la salida.";
+
+        $("geoMsg").className =
+          "error";
+
+        return;
+
+      }
+
+
+      await endShift(
+        lat,
+        lon
+      );
+
+    }
+    catch(error){
+
+      console.error(error);
+
+      $("geoMsg").textContent =
+        "No se ha podido obtener tu ubicación.";
+
+      $("geoMsg").className =
+        "error";
+
+    }
+
+  };
+/* =========================================================
+   INICIAR GEOLOCALIZACIÓN AUTOMÁTICAMENTE
+========================================================= */
+
+async function startAutomaticGeolocation(){
+
+  /*
+   * Evitamos iniciar dos vigilancias
+   * al mismo tiempo.
+   */
+
+  if(geoStarting || geoActive){
+
+    return;
+
+  }
+
+
+  if(!currentUser){
+
+    return;
+
+  }
+
+
+  if(!navigator.geolocation){
+
+    $("geoMsg").textContent =
+      "Este dispositivo no soporta geolocalización.";
+
+    $("geoMsg").className =
+      "error";
+
+    return;
+
+  }
+
+
+  geoStarting = true;
+
+
+  $("geoMsg").textContent =
+    "📍 Activando localización...";
+
+  $("geoMsg").className =
+    "small";
+
+
+  try{
+
+    /*
+     * Primera posición inmediata.
+     */
+
+    const position =
+      await getCurrentPosition();
+
+
+    const lat =
+      position.coords.latitude;
+
+    const lon =
+      position.coords.longitude;
+
+
+    lastPosition = {
+
+      lat,
+
+      lon
+
+    };
+
+
+    lastPositionTime =
+      Date.now();
+
+
+    /*
+     * Comprobamos inmediatamente
+     * si corresponde fichar.
+     */
+
+    await checkPosition(
+      lat,
+      lon
+    );
+
+
+    /*
+     * Por seguridad, eliminamos
+     * una vigilancia anterior.
+     */
+
+   if(watchId){
+
+  navigator.geolocation
+    .clearWatch(
+      watchId
+    );
+
+  watchId = null;
+
+}
+
+geoActive = false;
+
+geoStarting = false;
+
+lastPosition = null;
+
+lastPositionTime = 0;
+
+shiftOperationInProgress = false;
+
+
+    /*
+     * Iniciamos vigilancia continua.
+     */
+
+    watchId =
+      navigator.geolocation
+        .watchPosition(
+
+          async position => {
+
+            const lat =
+              position.coords.latitude;
+
+            const lon =
+              position.coords.longitude;
+
+
+            lastPosition = {
+
+              lat,
+
+              lon
+
+            };
+
+
+            lastPositionTime =
+              Date.now();
+
+
+            await checkPosition(
+              lat,
+              lon
+            );
+
+          },
+
+
+          error => {
+
+            console.warn(
+              "Error de geolocalización:",
+              error
+            );
+
+
+            geoActive = false;
+
+
+            if(error.code === 1){
+
+              $("geoMsg").textContent =
+                "La ubicación está bloqueada. Permite la ubicación para GeoFichaje.";
+
+            }
+            else{
+
+              $("geoMsg").textContent =
+                "Se ha perdido temporalmente la localización.";
+
+            }
+
+
+            $("geoMsg").className =
+              "error";
+
+          },
+
+
+          {
+
+            enableHighAccuracy:true,
+
+            maximumAge:10000,
+
+            timeout:15000
+
+          }
+
+        );
+
+
+    geoActive = true;
+
+
+    $("geoMsg").textContent =
+      "📍 Localización automática activada.";
+
+    $("geoMsg").className =
+      "success";
+
+
+  }
+  catch(error){
+
+    console.error(
+      "Error iniciando geolocalización:",
+      error
+    );
+
+
+    geoActive = false;
+
+
+    if(error.code === 1){
+
+      $("geoMsg").textContent =
+        "Permiso de ubicación denegado. Activa la ubicación para GeoFichaje en Ajustes del iPhone.";
+
+    }
+
+    else if(error.code === 2){
+
+      $("geoMsg").textContent =
+        "No se ha podido determinar tu ubicación.";
+
+    }
+
+    else if(error.code === 3){
+
+      $("geoMsg").textContent =
+        "La obtención de ubicación ha tardado demasiado.";
+
+    }
+
+    else{
+
+      $("geoMsg").textContent =
+        "No se ha podido activar la localización automáticamente.";
+
+    }
+
+
+    $("geoMsg").className =
+      "error";
+
+  }
+  finally{
+
+    geoStarting = false;
+
+  }
+
+}
+
+/* =========================================================
+   ACTIVAR GEOLOCALIZACIÓN
+========================================================= */
+
+/* =========================================================
+   ACTIVAR GEOLOCALIZACIÓN MANUAL
+========================================================= */
+
+$("geoBtn").onclick =
+  async () => {
+
+    await startAutomaticGeolocation();
+
+  };
+
+/* =========================================================
+   COMPROBAR POSICIÓN
+========================================================= */
+
+async function checkPosition(
+  lat,
+  lon
+){
+
+  if(!sites.length)
+    return;
+
+
+  /*
+   * =======================================================
+   * SALIDA AUTOMÁTICA
+   *
+   * La salida automática se comprueba ANTES de la entrada.
+   *
+   * Condiciones:
+   *
+   * 1. Hay una jornada activa.
+   * 2. Estamos dentro del horario de salida.
+   * 3. Estamos FUERA del radio del centro de la jornada.
+   *
+   * Esto significa que, por ejemplo, si el radio es 60 m,
+   * al estar a más de 60 m durante 19:00-21:00 se registra
+   * automáticamente la salida.
+   * =======================================================
+   */
+
+  if(
+    active &&
+    isExitScheduleOpen()
+  ){
+
+    let activeSite = null;
+
+
+    /*
+     * Intentamos encontrar el centro exacto
+     * de la jornada.
+     */
+
+    if(active.siteId){
+
+      activeSite =
+        sites.find(
+          site =>
+            site.id ===
+            active.siteId
+        );
+
+    }
+
+
+    /*
+     * Compatibilidad con registros antiguos
+     * que pudieran no tener siteId.
+     */
+
+    if(!activeSite){
+
+      activeSite =
+        sites.find(
+          site =>
+            site.name ===
+            active.site
+        );
+
+    }
+
+
+    if(activeSite){
+
+      const activeDistance =
+        distance(
+          lat,
+          lon,
+          Number(activeSite.lat),
+          Number(activeSite.lon)
+        );
+
+
+      const activeRadius =
+        Number(activeSite.radius);
+
+
+      /*
+       * Estamos fuera del radio.
+       */
+
+      if(
+        activeDistance >
+        activeRadius
+      ){
+
+        await endShift(
+          lat,
+          lon,
+          true
+        );
+
+        return;
+
+      }
+
+    }
+
+  }
+
+
+  /*
+   * =======================================================
+   * ENTRADA AUTOMÁTICA
+   *
+   * Solo se permite dentro del horario de entrada.
+   * =======================================================
+   */
+
+  const result =
+  findSiteByPosition(
+    lat,
+    lon
+  );
+
+
+if(
+  result &&
+  !active &&
+  isEntryScheduleOpen()
+){
+
+  await startShift(
+    result.site,
+    lat,
+    lon
+  );
+
+  return;
+
+}
+
+
+  /*
+   * Si no estamos dentro del horario de entrada
+   * no se ficha automáticamente aunque estemos
+   * dentro del centro.
+   *
+   * Si estamos trabajando pero fuera del horario
+   * de salida tampoco se hace nada.
+   */
+
+}
+
+
+/* =========================================================
+   USAR UBICACIÓN PARA CREAR CENTRO
+========================================================= */
+
+$("useLocation").onclick =
+  async () => {
+
+    try{
+
+      $("useLocation").disabled =
+        true;
+
+      $("useLocation").textContent =
+        "Obteniendo ubicación...";
+
+
+      const position =
+        await getCurrentPosition();
+
+
+      $("lat").value =
+        position.coords.latitude
+          .toFixed(6);
+
+
+      $("lon").value =
+        position.coords.longitude
+          .toFixed(6);
+
+
+    }
+    catch(error){
+
+      console.error(error);
+
+      alert(
+        "No se pudo obtener tu ubicación. Comprueba los permisos de Safari."
+      );
+
+    }
+    finally{
+
+      $("useLocation").disabled =
+        false;
+
+      $("useLocation").textContent =
+        "Usar mi ubicación actual";
+
+    }
+
+  };
+
+
+/* =========================================================
+   GUARDAR CENTRO
+========================================================= */
+
+$("saveSite").onclick =
+  async () => {
+
+    if(!currentUser)
+      return;
+
+
+    const name =
+      $("name")
+        .value
+        .trim();
+
+
+    const lat =
+      parseFloat(
+        $("lat").value
+      );
+
+
+    const lon =
+      parseFloat(
+        $("lon").value
+      );
+
+
+    const radius =
+      parseInt(
+        $("radius").value
+      ) || 60;
+
+
+    if(
+      !name ||
+      isNaN(lat) ||
+      isNaN(lon)
+    ){
+
+      alert(
+        "Completa todos los campos."
+      );
+
+      return;
+
+    }
+
+
+    if(
+      lat < -90 ||
+      lat > 90 ||
+      lon < -180 ||
+      lon > 180
+    ){
+
+      alert(
+        "Las coordenadas no son válidas."
+      );
+
+      return;
+
+    }
+
+
+    if(
+      radius < 10 ||
+      radius > 5000
+    ){
+
+      alert(
+        "El radio debe estar entre 10 y 5000 metros."
+      );
+
+      return;
+
+    }
+
+
+    try{
+
+      $("saveSite").disabled =
+        true;
+
+      $("saveSite").textContent =
+        "Guardando...";
+
+
+      const site = {
+
+        name:name,
+
+        lat:lat,
+
+        lon:lon,
+
+        radius:radius
+
+      };
+
+
+      const docRef =
+        await addDoc(
+          userSitesCollection(),
+          site
+        );
+
+
+      sites.push({
+
+        id:docRef.id,
+
+        ...site
+
+      });
+
+
+      renderSites();
+
+
+      $("name").value =
+        "";
+
+
+      $("geoMsg").textContent =
+        `Centro "${name}" guardado correctamente.`;
+
+      $("geoMsg").className =
+        "success";
+
+    }
+    catch(error){
+
+      console.error(error);
+
+      alert(
+        "No se pudo guardar el centro. Comprueba tu conexión."
+      );
+
+    }
+    finally{
+
+      $("saveSite").disabled =
+        false;
+
+      $("saveSite").textContent =
+        "Guardar centro";
+
+    }
+
+  };
+
+
+/* =========================================================
+   BORRAR HISTORIAL
+========================================================= */
+
+$("clear").onclick =
+  async () => {
+
+    if(!currentUser)
+      return;
+
+
+    if(!logs.length){
+
+      alert(
+        "No hay historial para borrar."
+      );
+
+      return;
+
+    }
+
+
+    if(
+      !confirm(
+        "¿Borrar todo el historial? Esta acción no se puede deshacer."
+      )
+    ){
+
+      return;
+
+    }
+
+
+    try{
+
+      $("clear").disabled =
+        true;
+
+
+      /*
+       * Borramos uno a uno.
+       */
+
+      for(
+        const log of logs
+      ){
+
+        await deleteDoc(
+          doc(
+            db,
+            "users",
+            currentUser.uid,
+            "logs",
+            log.id
+          )
+        );
+
+      }
+
+
+      logs = [];
+
+      active = null;
+
+
+      renderHistory();
+
+      updateUI();
+
+
+      $("geoMsg").textContent =
+        "Historial borrado.";
+
+      $("geoMsg").className =
+        "success";
+
+    }
+    catch(error){
+
+      console.error(error);
+
+      alert(
+        "No se pudo borrar todo el historial."
+      );
+
+    }
+    finally{
+
+      $("clear").disabled =
+        false;
+
+    }
+
+  };
+
+
+/* =========================================================
+   EXPORTAR A EXCEL
+========================================================= */
+
+function setDefaultExportDates(){
+
+  /*
+   * Ponemos por defecto:
+   *
+   * Desde = primer día del mes actual
+   * Hasta = hoy
+   *
+   * Esto hace que al abrir la aplicación
+   * ya haya un periodo razonable seleccionado.
+   */
+
+  const today =
+    new Date();
+
+
+  const firstDay =
+    new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1
+    );
+
+
+  const toInputDate =
+    date => {
+
+      const year =
+        date.getFullYear();
+
+      const month =
+        String(
+          date.getMonth() + 1
+        ).padStart(2,"0");
+
+      const day =
+        String(
+          date.getDate()
+        ).padStart(2,"0");
+
+      return `${year}-${month}-${day}`;
+
+    };
+
+
+  $("exportFrom").value =
+    toInputDate(
+      firstDay
+    );
+
+
+  $("exportTo").value =
+    toInputDate(
+      today
+    );
+
+}
+
+
+/* =========================================================
+   FORMATEAR FECHA PARA ARCHIVO
+========================================================= */
+
+function formatDateForFilename(
+  inputDate
+){
+
+  if(!inputDate)
+    return "";
+
+  const parts =
+    inputDate.split("-");
+
+  if(parts.length !== 3)
+    return inputDate;
+
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+}
+
+
+/* =========================================================
+   CONVERTIR FECHA DE INPUT A INICIO DEL DÍA
+========================================================= */
+
+function startOfDayFromInput(
+  value
+){
+
+  if(!value)
+    return null;
+
+
+  const parts =
+    value.split("-");
+
+
+  if(parts.length !== 3)
+    return null;
+
+
+  const year =
+    Number(parts[0]);
+
+  const month =
+    Number(parts[1]) - 1;
+
+  const day =
+    Number(parts[2]);
+
+
+  return new Date(
+    year,
+    month,
+    day,
+    0,
+    0,
+    0,
+    0
+  );
+
+}
+
+
+/* =========================================================
+   CONVERTIR FECHA DE INPUT A FIN DEL DÍA
+========================================================= */
+
+function endOfDayFromInput(
+  value
+){
+
+  if(!value)
+    return null;
+
+
+  const parts =
+    value.split("-");
+
+
+  if(parts.length !== 3)
+    return null;
+
+
+  const year =
+    Number(parts[0]);
+
+  const month =
+    Number(parts[1]) - 1;
+
+  const day =
+    Number(parts[2]);
+
+
+  return new Date(
+    year,
+    month,
+    day,
+    23,
+    59,
+    59,
+    999
+  );
+
+}
+
+
+/* =========================================================
+   DURACIÓN EN MILISEGUNDOS
+========================================================= */
+
+function durationMilliseconds(
+  log
+){
+
+  if(
+    !log ||
+    !log.in
+  ){
+
+    return 0;
+
+  }
+
+
+  const inTime =
+    new Date(
+      log.in
+    ).getTime();
+
+
+  if(
+    !log.out
+  ){
+
+    /*
+     * Si está en curso, calculamos
+     * hasta este momento.
+     */
+
+    return Math.max(
+      0,
+      Date.now() - inTime
+    );
+
+  }
+
+
+  const outTime =
+    new Date(
+      log.out
+    ).getTime();
+
+
+  return Math.max(
+    0,
+    outTime - inTime
+  );
+
+}
+
+
+/* =========================================================
+   FORMATEAR DURACIÓN PARA EXCEL
+========================================================= */
+
+function formatDurationForExcel(
+  ms
+){
+
+  if(
+    !Number.isFinite(ms) ||
+    ms < 0
+  ){
+
+    ms = 0;
+
+  }
+
+
+  const totalMinutes =
+    Math.floor(
+      ms / 60000
+    );
+
+
+  const h =
+    Math.floor(
+      totalMinutes / 60
+    );
+
+
+  const m =
+    totalMinutes % 60;
+
+
+  return `${h} h ${String(m).padStart(2,"0")} min`;
+
+}
+
+
+/* =========================================================
+   EXPORTACIÓN EXCEL
+========================================================= */
+
+$("exportExcel").onclick =
+  async () => {
+
+    const button =
+      $("exportExcel");
+
+    const message =
+      $("exportMsg");
+
+
+    message.textContent =
+      "";
+
+
+    /*
+     * Comprobamos que SheetJS
+     * está disponible.
+     */
+
+    if(
+      typeof XLSX === "undefined"
+    ){
+
+      message.textContent =
+        "No se ha podido cargar el generador de Excel. Comprueba tu conexión a Internet y vuelve a intentarlo.";
+
+      message.className =
+        "export-result error";
+
+      return;
+
+    }
+
+
+    /*
+     * Comprobamos que hay usuario.
+     */
+
+    if(!currentUser){
+
+      message.textContent =
+        "No hay ningún usuario conectado.";
+
+      message.className =
+        "export-result error";
+
+      return;
+
+    }
+
+
+    /*
+     * Fechas seleccionadas.
+     */
+
+    const fromValue =
+      $("exportFrom").value;
+
+
+    const toValue =
+      $("exportTo").value;
+
+
+    if(
+      !fromValue ||
+      !toValue
+    ){
+
+      message.textContent =
+        "Selecciona una fecha inicial y una fecha final.";
+
+      message.className =
+        "export-result error";
+
+      return;
+
+    }
+
+
+    const fromDate =
+      startOfDayFromInput(
+        fromValue
+      );
+
+
+    const toDate =
+      endOfDayFromInput(
+        toValue
+      );
+
+
+    if(
+      !fromDate ||
+      !toDate
+    ){
+
+      message.textContent =
+        "Las fechas seleccionadas no son válidas.";
+
+      message.className =
+        "export-result error";
+
+      return;
+
+    }
+
+
+    if(
+      fromDate.getTime() >
+      toDate.getTime()
+    ){
+
+      message.textContent =
+        "La fecha inicial no puede ser posterior a la fecha final.";
+
+      message.className =
+        "export-result error";
+
+      return;
+
+    }
+
+
+    try{
+
+      button.disabled =
+        true;
+
+      button.textContent =
+        "⏳ Preparando Excel...";
+
+
+      /*
+       * IMPORTANTE:
+       *
+       * Trabajamos con los registros que ya
+       * están cargados desde Firestore.
+       *
+       * No modificamos absolutamente nada
+       * en Firestore.
+       */
+
+
+      const filteredLogs =
+        logs
+          .filter(
+            log => {
+
+              if(
+                !log ||
+                !log.in
+              ){
+
+                return false;
+
+              }
+
+
+              const entry =
+                new Date(
+                  log.in
+                );
+
+
+              if(
+                Number.isNaN(
+                  entry.getTime()
+                )
+              ){
+
+                return false;
+
+              }
+
+
+              return (
+                entry.getTime() >=
+                  fromDate.getTime()
+                &&
+                entry.getTime() <=
+                  toDate.getTime()
+              );
+
+            }
+          )
+          .sort(
+            (a,b) =>
+              new Date(a.in).getTime()
+              -
+              new Date(b.in).getTime()
+          );
+
+
+      /*
+       * Si no hay registros.
+       */
+
+      if(
+        !filteredLogs.length
+      ){
+
+        message.textContent =
+          "No hay registros dentro del periodo seleccionado.";
+
+        message.className =
+          "export-result error";
+
+        return;
+
+      }
+
+
+      /*
+       * Filas principales.
+       */
+
+      const rows = [];
+
+
+      let totalMilliseconds =
+        0;
+
+
+      let completedShifts =
+        0;
+
+
+      let activeShifts =
+        0;
+
+
+      filteredLogs.forEach(
+        log => {
+
+          const duration =
+            durationMilliseconds(
+              log
+            );
+
+
+          totalMilliseconds +=
+            duration;
+
+
+          if(log.out){
+
+            completedShifts++;
+
+          }
+          else{
+
+            activeShifts++;
+
+          }
+
+
+          const entryDate =
+            new Date(
+              log.in
+            );
+
+
+          const exitDate =
+            log.out
+              ? new Date(log.out)
+              : null;
+
+
+          rows.push({
+
+            "Fecha":
+              formatDate(
+                entryDate
+              ),
+
+            "Centro":
+              log.site ||
+              "Centro",
+
+            "Entrada":
+              formatTime(
+                entryDate
+              ),
+
+            "Salida":
+              exitDate
+                ? formatTime(
+                    exitDate
+                  )
+                : "En curso",
+
+            "Tiempo trabajado":
+              formatDurationForExcel(
+                duration
+              ),
+
+            "Latitud entrada":
+              Number.isFinite(
+                Number(log.latIn)
+              )
+                ? Number(log.latIn)
+                : "",
+
+            "Longitud entrada":
+              Number.isFinite(
+                Number(log.lonIn)
+              )
+                ? Number(log.lonIn)
+                : "",
+
+            "Latitud salida":
+              exitDate &&
+              Number.isFinite(
+                Number(log.latOut)
+              )
+                ? Number(log.latOut)
+                : "",
+
+            "Longitud salida":
+              exitDate &&
+              Number.isFinite(
+                Number(log.lonOut)
+              )
+                ? Number(log.lonOut)
+                : ""
+
+          });
+
+        }
+      );
+
+
+      /*
+       * Creamos la hoja de Excel.
+       */
+
+      const worksheet =
+        XLSX.utils.json_to_sheet(
+          rows
+        );
+
+
+      /*
+       * Añadimos una fila vacía
+       * y después los totales.
+       */
+
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [],
+          [
+            "TOTALES",
+            "",
+            "",
+            "",
+            formatDurationForExcel(
+              totalMilliseconds
+            ),
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Número de jornadas",
+            filteredLogs.length,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Jornadas finalizadas",
+            completedShifts,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Jornadas en curso",
+            activeShifts,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
+        ],
+        {
+          origin:-1
+        }
+      );
+
+
+      /*
+       * Ajustamos el ancho de las columnas.
+       */
+
+      worksheet["!cols"] = [
+
+        {
+          wch:12
+        },
+
+        {
+          wch:24
+        },
+
+        {
+          wch:10
+        },
+
+        {
+          wch:12
+        },
+
+        {
+          wch:20
+        },
+
+        {
+          wch:17
+        },
+
+        {
+          wch:18
+        },
+
+        {
+          wch:17
+        },
+
+        {
+          wch:18
+        }
+
+      ];
+
+
+      /*
+       * Creamos el libro.
+       */
+
+      const workbook =
+        XLSX.utils.book_new();
+
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Registros"
+      );
+
+
+      /*
+       * Creamos una segunda hoja
+       * con un resumen.
+       */
+
+      const summaryRows = [
+
+        {
+          "Concepto":
+            "Periodo desde",
+
+          "Valor":
+            formatDate(
+              fromDate
+            )
+
+        },
+
+        {
+          "Concepto":
+            "Periodo hasta",
+
+          "Valor":
+            formatDate(
+              toDate
+            )
+
+        },
+
+        {
+          "Concepto":
+            "Número de jornadas",
+
+          "Valor":
+            filteredLogs.length
+
+        },
+
+        {
+          "Concepto":
+            "Jornadas finalizadas",
+
+          "Valor":
+            completedShifts
+
+        },
+
+        {
+          "Concepto":
+            "Jornadas en curso",
+
+          "Valor":
+            activeShifts
+
+        },
+
+        {
+          "Concepto":
+            "Total trabajado",
+
+          "Valor":
+            formatDurationForExcel(
+              totalMilliseconds
+            )
+
+        }
+
+      ];
+
+
+      const summarySheet =
+        XLSX.utils.json_to_sheet(
+          summaryRows
+        );
+
+
+      summarySheet["!cols"] = [
+
+        {
+          wch:26
+        },
+
+        {
+          wch:25
+        }
+
+      ];
+
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        summarySheet,
+        "Resumen"
+      );
+
+
+      /*
+       * Nombre del archivo.
+       */
+
+      const fromFilename =
+        formatDateForFilename(
+          fromValue
+        );
+
+
+      const toFilename =
+        formatDateForFilename(
+          toValue
+        );
+
+
+      const filename =
+        `GeoFichaje_${fromFilename}_${toFilename}.xlsx`;
+
+
+      /*
+       * Generamos y descargamos
+       * el archivo.
+       */
+
+      XLSX.writeFile(
+        workbook,
+        filename
+      );
+
+
+      /*
+       * Mostramos un resumen en pantalla.
+       */
+
+      message.innerHTML = `
+
+        <div class="success">
+
+          Excel descargado correctamente.
+
+          <div class="export-total-box">
+
+            <div class="export-total-row">
+
+              <span class="export-total-label">
+                Jornadas:
+              </span>
+
+              <span class="export-total-value">
+                ${filteredLogs.length}
+              </span>
+
+            </div>
+
+
+            <div class="export-total-row">
+
+              <span class="export-total-label">
+                Finalizadas:
+              </span>
+
+              <span class="export-total-value">
+                ${completedShifts}
+              </span>
+
+            </div>
+
+
+            <div class="export-total-row">
+
+              <span class="export-total-label">
+                En curso:
+              </span>
+
+              <span class="export-total-value">
+                ${activeShifts}
+              </span>
+
+            </div>
+
+
+            <div class="export-total-row">
+
+              <span class="export-total-label">
+                Total trabajado:
+              </span>
+
+              <span class="export-total-value">
+                ${formatDurationForExcel(
+                  totalMilliseconds
+                )}
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+
+      message.className =
+        "export-result";
+
+
+    }
+    catch(error){
+
+      console.error(
+        "Error exportando Excel:",
+        error
+      );
+
+
+      message.textContent =
+        "No se pudo generar el archivo Excel. Revisa la consola del navegador para más información.";
+
+      message.className =
+        "export-result error";
+
+    }
+    finally{
+
+      button.disabled =
+        false;
+
+      button.textContent =
+        "📊 Descargar Excel";
+
+    }
+
+  };
+
+
+/* =========================================================
+   INICIALIZAR FECHAS DE EXPORTACIÓN
+========================================================= */
+
+setDefaultExportDates();
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+$("loginBtn").onclick =
+  async () => {
+
+    clearAuthMessage();
+
+
+    const email =
+      $("email")
+        .value
+        .trim();
+
+
+    const password =
+      $("password")
+        .value;
+
+
+    if(!email || !password){
+
+      showAuthMessage(
+        "Introduce tu correo y contraseña."
+      );
+
+      return;
+
+    }
+
+
+    try{
+
+      $("loginBtn").disabled =
+        true;
+
+      $("loginBtn").textContent =
+        "Entrando...";
+
+
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    }
+    catch(error){
+
+      console.error(error);
+
+      let message =
+        "No se pudo iniciar sesión.";
+
+
+      if(
+        error.code ===
+        "auth/invalid-credential"
+      ){
+
+        message =
+          "Correo o contraseña incorrectos.";
+
+      }
+
+      else if(
+        error.code ===
+        "auth/too-many-requests"
+      ){
+
+        message =
+          "Demasiados intentos. Inténtalo más tarde.";
+
+      }
+
+
+      showAuthMessage(
+        message
+      );
+
+    }
+    finally{
+
+      $("loginBtn").disabled =
+        false;
+
+      $("loginBtn").textContent =
+        "Entrar";
+
+    }
+
+  };
+
+
+/* =========================================================
+   REGISTRO
+========================================================= */
+
+$("registerBtn").onclick =
+  async () => {
+
+    clearAuthMessage();
+
+
+    const email =
+      $("registerEmail")
+        .value
+        .trim();
+
+
+    const password =
+      $("registerPassword")
+        .value;
+
+
+    if(!email || !password){
+
+      showAuthMessage(
+        "Introduce un correo y una contraseña."
+      );
+
+      return;
+
+    }
+
+
+    if(password.length < 6){
+
+      showAuthMessage(
+        "La contraseña debe tener al menos 6 caracteres."
+      );
+
+      return;
+
+    }
+
+
+    try{
+
+      $("registerBtn").disabled =
+        true;
+
+      $("registerBtn").textContent =
+        "Creando cuenta...";
+
+
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    }
+    catch(error){
+
+      console.error(error);
+
+      let message =
+        "No se pudo crear la cuenta.";
+
+
+      if(
+        error.code ===
+        "auth/email-already-in-use"
+      ){
+
+        message =
+          "Ese correo ya tiene una cuenta.";
+
+      }
+
+      else if(
+        error.code ===
+        "auth/invalid-email"
+      ){
+
+        message =
+          "El correo electrónico no es válido.";
+
+      }
+
+      else if(
+        error.code ===
+        "auth/weak-password"
+      ){
+
+        message =
+          "La contraseña es demasiado débil.";
+
+      }
+
+
+      showAuthMessage(
+        message
+      );
+
+    }
+    finally{
+
+      $("registerBtn").disabled =
+        false;
+
+      $("registerBtn").textContent =
+        "Crear cuenta";
+
+    }
+
+  };
+
+
+/* =========================================================
+   CAMBIAR LOGIN / REGISTRO
+========================================================= */
+
+$("showRegister").onclick =
+  () => {
+
+    hide(
+      $("loginForm")
+    );
+
+    show(
+      $("registerForm")
+    );
+
+    clearAuthMessage();
+
+  };
+
+
+$("showLogin").onclick =
+  () => {
+
+    hide(
+      $("registerForm")
+    );
+
+    show(
+      $("loginForm")
+    );
+
+    clearAuthMessage();
+
+  };
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+$("logoutBtn").onclick =
+  async () => {
+
+    if(watchId){
+
+      navigator.geolocation
+        .clearWatch(
+          watchId
+        );
+
+      watchId = null;
+
+    }
+
+
+    await signOut(
+      auth
+    );
+
+  };
+
+
+/* =========================================================
+   AUTENTICACIÓN
+========================================================= */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if(user){
+
+      currentUser =
+        user;
+
+
+      $("userEmail").textContent =
+        user.email || "";
+
+
+      hide(
+        $("authScreen")
+      );
+
+      show(
+        $("appScreen")
+      );
+
+
+      /*
+       * Cada vez que entra el usuario
+       * reiniciamos las fechas por defecto.
+       */
+
+      setDefaultExportDates();
+
+
+      try{
+
+        /*
+         * Cargamos el horario antes de
+         * comenzar a utilizar la geolocalización.
+         */
+
+        await loadSchedule();
+
+
+        await loadSites();
+
+        await loadLogs();
+/*
+ * =========================================================
+ * INICIO AUTOMÁTICO DE GEOLOCALIZACIÓN
+ * =========================================================
+ */
+
+setTimeout(
+  () => {
+
+    startAutomaticGeolocation();
+
+  },
+  1000
+);
+      }
+      catch(error){
+
+        console.error(error);
+
+        $("geoMsg").textContent =
+          "No se pudieron cargar los datos de Firebase. Comprueba tu conexión y las reglas de Firestore.";
+
+        $("geoMsg").className =
+          "error";
+
+      }
+
+    }
+
+    else{
+
+      currentUser =
+        null;
+
+      sites = [];
+
+      logs = [];
+
+      active = null;
+
+
+      schedule = {
+
+        ...DEFAULT_SCHEDULE
+
+      };
+
+
+      if(watchId){
+
+        navigator.geolocation
+          .clearWatch(
+            watchId
+          );
+
+        watchId = null;
+
+      }
+
+
+      hide(
+        $("appScreen")
+      );
+
+      show(
+        $("authScreen")
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   TEMPORIZADOR
+========================================================= */
+
+timer =
+  setInterval(
+    updateUI,
+    30000
+  );
+/* =========================================================
+   REACTIVAR GEOLOCALIZACIÓN AL VOLVER A GEO fichaje
+========================================================= */
+
+document.addEventListener(
+  "visibilitychange",
+  async () => {
+
+    if(
+      document.visibilityState === "visible" &&
+      currentUser
+    ){
+
+      if(
+        !watchId &&
+        !geoStarting
+      ){
+
+        await startAutomaticGeolocation();
+
+      }
+
+    }
+
+  }
+);
 </script>
 
 </body>
