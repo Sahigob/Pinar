@@ -381,6 +381,16 @@ label{
 .excel-button:active{
   background:#166534;
 }
+
+/* =========================================================
+   PESTAÑAS DE LA APLICACIÓN
+========================================================= */
+.app-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:#e8efed;padding:5px;border-radius:14px;margin:0 0 14px;position:sticky;top:8px;z-index:20}
+.app-tab{width:100%;border:none;border-radius:10px;padding:10px 5px;background:transparent;color:#4b5563;font-size:12px;font-weight:700;line-height:1.2}
+.app-tab.active{background:white;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.app-panel{display:block}
+@media(max-width:380px){.app-tab{font-size:11px;padding-left:2px;padding-right:2px}}
+
 </style>
 </head>
 
@@ -541,6 +551,15 @@ label{
       Registro de jornada por localización
     </div>
 
+    <div class="app-tabs" role="tablist" aria-label="Secciones de GeoFichaje">
+      <button class="app-tab active" type="button" data-panel="panelEstado">📍<br>Estado</button>
+      <button class="app-tab" type="button" data-panel="panelHorario">⏰<br>Horarios</button>
+      <button class="app-tab" type="button" data-panel="panelCentros">🏢<br>Mis centros</button>
+      <button class="app-tab" type="button" data-panel="panelExportar">📊<br>Exportar</button>
+    </div>
+
+
+    <div id="panelEstado" class="app-panel">
 
     <!-- ESTADO -->
 
@@ -666,6 +685,46 @@ label{
     </div>
 
 
+
+    <!-- HISTORIAL -->
+
+    <div class="card">
+
+      <div class="row">
+
+        <strong>
+          Historial
+        </strong>
+
+        <button
+          id="clear"
+          type="button"
+          style="
+            width:auto;
+            padding:8px 12px;
+            background:#f3f4f6;
+            color:#374151;
+            border-radius:10px
+          "
+        >
+          Borrar
+        </button>
+
+      </div>
+
+
+      <div
+        id="history"
+        style="margin-top:10px"
+      ></div>
+
+    </div>
+
+
+    </div> <!-- /panelEstado -->
+
+    <div id="panelHorario" class="app-panel hidden">
+
     <!-- =====================================================
          CONFIGURACIÓN DEL HORARIO
     ====================================================== -->
@@ -774,6 +833,10 @@ label{
     </div>
 
 
+    </div> <!-- /panelHorario -->
+
+    <div id="panelCentros" class="app-panel hidden">
+
     <!-- CENTROS -->
 
     <div class="card">
@@ -861,6 +924,10 @@ label{
     </div>
 
 
+    </div> <!-- /panelCentros -->
+
+    <div id="panelExportar" class="app-panel hidden">
+
     <!-- =====================================================
          EXPORTAR EXCEL
     ====================================================== -->
@@ -936,40 +1003,9 @@ label{
     </div>
 
 
-    <!-- HISTORIAL -->
-
-    <div class="card">
-
-      <div class="row">
-
-        <strong>
-          Historial
-        </strong>
-
-        <button
-          id="clear"
-          type="button"
-          style="
-            width:auto;
-            padding:8px 12px;
-            background:#f3f4f6;
-            color:#374151;
-            border-radius:10px
-          "
-        >
-          Borrar
-        </button>
-
-      </div>
 
 
-      <div
-        id="history"
-        style="margin-top:10px"
-      ></div>
-
-    </div>
-
+    </div> <!-- /panelExportar -->
 
     <div class="footer">
 
@@ -988,6 +1024,29 @@ label{
 
 </div>
 
+
+<script>
+/* =========================================================
+   NAVEGACIÓN POR PESTAÑAS
+========================================================= */
+(function(){
+  const tabs = document.querySelectorAll('.app-tab');
+  const panels = document.querySelectorAll('.app-panel');
+  function showPanel(panelId){
+    panels.forEach(panel => panel.classList.toggle('hidden', panel.id !== panelId));
+    tabs.forEach(tab => {
+      const active = tab.dataset.panel === panelId;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+  }
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    showPanel(tab.dataset.panel);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+  showPanel('panelEstado');
+})();
+</script>
 
 <script type="module">
 
