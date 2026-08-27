@@ -85,7 +85,7 @@ h1{
 
 .ok{
   background:#dcfce7;
-  color:#FFFFFF;
+  color:#166534;
 }
 
 .off{
@@ -161,7 +161,7 @@ label{
 }
 
 .error{
-  color:#516CED;
+  color:#b91c1c;
   background:#fef2f2;
   border-radius:10px;
   padding:10px;
@@ -170,7 +170,7 @@ label{
 }
 
 .success{
-  color:#FFFFFF;
+  color:#166534;
   background:#f0fdf4;
   border-radius:10px;
   padding:10px;
@@ -379,131 +379,797 @@ label{
 }
 
 .excel-button:active{
-  background:#FFFFFF;
+  background:#166534;
 }
 
-/* =========================================================
-   PESTAÑAS DE LA APLICACIÓN
-========================================================= */
-.app-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:#e8efed;padding:5px;border-radius:14px;margin:0 0 14px;position:sticky;top:8px;z-index:20}
-.app-tab{width:100%;border:none;border-radius:10px;padding:10px 5px;background:transparent;color:#4b5563;font-size:12px;font-weight:700;line-height:1.2}
-.app-tab.active{background:white;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.app-panel{display:block}
-@media(max-width:380px){.app-tab{font-size:11px;padding-left:2px;padding-right:2px}}
 
-</style>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: { sans: ['Inter', 'sans-serif'] },
-        colors: { pinarred: '#516CED', pinargreen: '#FFFFFF' }
-      }
-    }
-  };
-</script>
-<style>
 /* =========================================================
-   TEMA CLUB PINAR FS — DASHBOARD OSCURO
-   Capa visual: no modifica la lógica de GeoFichaje.
+   GEO FICHAJE · NUEVA INTERFAZ DASHBOARD
+   Mantiene intacta la lógica y los IDs existentes.
 ========================================================= */
 :root{
-  --bg:#08080a;
-  --bg2:#0a0a0d;
-  --card:#121217;
-  --card2:#15151b;
-  --text:#e2e8f0;
-  --muted:#94a3b8;
-  --green:#FFFFFF;
-  --green-bright:#22c55e;
-  --red:#516CED;
-  --red-bright:#ef4444;
-  --blue:#2563eb;
-  --yellow:#ca8a04;
-  --border:#1f1f27;
-  --border2:#2a2a34;
+  --bg:#050914;
+  --bg-2:#080d1b;
+  --card:#0b1426;
+  --card-2:#0e1a30;
+  --text:#f3f6ff;
+  --muted:#8f9bb3;
+  --blue:#516CED;
+  --blue-2:#3158e8;
+  --blue-soft:rgba(81,108,237,.15);
+  --green:#35c759;
+  --green-soft:rgba(53,199,89,.14);
+  --red:#ef5350;
+  --red-soft:rgba(239,83,80,.14);
+  --border:#1c2940;
+  --border-soft:rgba(255,255,255,.07);
+  --shadow:0 14px 35px rgba(0,0,0,.28);
 }
 
-html,body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
-body{background:radial-gradient(circle at top,#171019 0,#0a0a0d 34%,#08080a 100%);min-height:100vh;}
+html,body{
+  min-height:100%;
+}
 
-.container{max-width:560px;padding:18px 14px 34px;}
+body{
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(81,108,237,.18),transparent 38%),
+    linear-gradient(180deg,#050914 0%,#070b15 100%);
+  color:var(--text);
+}
 
-h1{margin:10px 0 4px;font-size:30px;line-height:1.05;font-weight:900;font-style:italic;letter-spacing:-.04em;text-transform:uppercase;}
-.sub{color:#94a3b8;font-size:12px;margin-bottom:18px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;}
+button,input,select{
+  font-family:inherit;
+}
 
-.user-bar{margin-bottom:14px;padding:8px 0;}
-.user-email{color:#64748b;font-size:11px;letter-spacing:.02em;}
-.logout{background:#17171d!important;color:#cbd5e1!important;border:1px solid var(--border)!important;border-radius:10px!important;font-weight:800!important;text-transform:uppercase;letter-spacing:.08em;}
-.logout:hover{border-color:#343440!important;background:#1d1d24!important;}
+/* LOGIN */
+.auth-container{
+  min-height:100vh;
+  padding:24px 18px;
+  background:
+    radial-gradient(circle at 50% 18%,rgba(81,108,237,.22),transparent 32%),
+    linear-gradient(180deg,#030711,#07101f);
+}
 
-.card,.auth-card{background:linear-gradient(180deg,#141419 0%,#101014 100%);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.28);}
-.card{padding:17px;margin-bottom:14px;}
-.auth-card{padding:25px;}
-.auth-title{font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:-.04em;color:#f8fafc;}
-.auth-subtitle{color:#94a3b8;}
+.auth-card{
+  max-width:430px;
+  background:rgba(10,18,34,.94);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:28px 22px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(14px);
+}
 
-label{color:#94a3b8;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;}
-input,select{background:#0b0b0f!important;color:#e2e8f0!important;border:1px solid #292932!important;border-radius:11px!important;outline:none;}
-input::placeholder{color:#475569;}
-input:focus,select:focus{border-color:#FFFFFF!important;box-shadow:0 0 0 3px rgba(22,101,52,.18)!important;}
+.auth-title{
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  color:#fff;
+}
 
-button{font-family:'Inter',sans-serif;font-weight:900;letter-spacing:.05em;text-transform:uppercase;transition:transform .12s ease,filter .12s ease,border-color .12s ease,background .12s ease;}
-button:not(:disabled):active{transform:scale(.985);}
-button:not(:disabled):hover{filter:brightness(1.08);}
+.auth-title::first-letter{
+  color:var(--blue);
+}
 
-.primary,.btn-primary{background:linear-gradient(135deg,#516CED 0%,#8f1515 55%,#FFFFFF 140%)!important;color:#fff!important;border:1px solid rgba(239,68,68,.28)!important;box-shadow:0 8px 20px rgba(127,29,29,.22);}
-.secondary{background:#17171d!important;color:#cbd5e1!important;border:1px solid var(--border2)!important;}
-.danger{background:linear-gradient(135deg,#516CED,#7f1d1d)!important;color:#fff!important;border:1px solid rgba(239,68,68,.28)!important;}
-.excel-button{background:linear-gradient(135deg,#FFFFFF,#14532d)!important;color:#fff!important;border:1px solid rgba(34,197,94,.25)!important;}
-.link-button{color:#4ade80!important;text-transform:none;letter-spacing:0;font-weight:800;}
+.auth-subtitle{
+  color:var(--muted);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-size:11px;
+}
 
-.badge{padding:6px 10px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;border:1px solid transparent;}
-.ok{background:rgba(34,197,94,.12)!important;color:#86efac!important;border-color:rgba(34,197,94,.2)!important;}
-.off{background:rgba(239,68,68,.12)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.2)!important;}
-.info{background:rgba(59,130,246,.12)!important;color:#93c5fd!important;border-color:rgba(59,130,246,.2)!important;}
-.pending{background:rgba(234,179,8,.12);color:#fde68a;border-color:rgba(234,179,8,.2);}
+label{
+  color:#aeb9cc;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  font-size:11px;
+  font-weight:800;
+}
 
-.small{color:#64748b;}
-.schedule-info,.export-info{background:rgba(59,130,246,.08)!important;color:#93c5fd!important;border:1px solid rgba(59,130,246,.14);}
-.schedule-box,.export-total-box{background:#0d0d12!important;border:1px solid var(--border)!important;border-radius:12px;}
-.schedule-box-title{color:#cbd5e1;font-weight:900;text-transform:uppercase;letter-spacing:.05em;font-size:11px;}
+input,select{
+  background:#071020;
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:12px;
+  outline:none;
+}
 
-.history-item{border-top:1px solid #202028!important;}
-.dot{background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.45);}
-.error{background:rgba(185,28,28,.12)!important;color:#fca5a5!important;border:1px solid rgba(185,28,28,.22);}
-.success{background:rgba(22,101,52,.14)!important;color:#86efac!important;border:1px solid rgba(34,197,94,.18);}
+input::placeholder{
+  color:#5f6c82;
+}
 
-.app-tabs{background:#0d0d12!important;border:1px solid var(--border);box-shadow:0 8px 22px rgba(0,0,0,.24);padding:5px;border-radius:14px;}
-.app-tab{color:#64748b!important;border-radius:10px!important;font-weight:900!important;}
-.app-tab.active{background:linear-gradient(135deg,#211114,#111a14)!important;color:#f8fafc!important;box-shadow:inset 0 0 0 1px rgba(185,28,28,.28),0 3px 10px rgba(0,0,0,.3)!important;}
+input:focus,select:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(81,108,237,.12);
+}
 
-#panelEstado .card:first-child{position:relative;overflow:hidden;}
-#panelEstado .card:first-child:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(#516CED,#FFFFFF);}
+.primary,.btn-primary{
+  background:linear-gradient(135deg,#516CED 0%,#3158e8 100%) !important;
+  color:#fff !important;
+  border:1px solid rgba(125,145,255,.28) !important;
+  box-shadow:0 10px 24px rgba(49,88,232,.28);
+  text-transform:uppercase;
+  font-weight:900;
+  letter-spacing:.045em;
+}
 
-.footer{color:#475569;}
-.export-icon{background:rgba(34,197,94,.10)!important;border:1px solid rgba(34,197,94,.18);}
-.export-total-label{color:#64748b;}
-.export-total-value{color:#e2e8f0;}
+.danger{
+  background:linear-gradient(135deg,#b83c50 0%,#8d2638 100%);
+  color:#fff;
+  box-shadow:0 10px 24px rgba(141,38,56,.2);
+  text-transform:uppercase;
+  font-weight:900;
+  letter-spacing:.035em;
+}
 
-.auth-container{background:radial-gradient(circle at center,#171019 0,#08080a 65%);}
-.auth-card{box-shadow:0 25px 70px rgba(0,0,0,.5);}
+.secondary{
+  background:rgba(81,108,237,.12);
+  color:#dce4ff;
+  border:1px solid rgba(81,108,237,.35);
+  text-transform:uppercase;
+  font-weight:900;
+  letter-spacing:.035em;
+}
 
-/* El texto de los encabezados de tarjetas sigue la estética SaaS/Pinar. */
-.card strong{font-weight:900;letter-spacing:-.02em;}
+button:active{
+  transform:translateY(1px);
+}
 
-/* Ajustes de los botones secundarios que están definidos con style inline. */
-#clear{background:#17171d!important;color:#94a3b8!important;border:1px solid var(--border)!important;}
+/* APP */
+.app-shell{
+  width:100%;
+  max-width:520px;
+  margin:0 auto;
+  min-height:100vh;
+  padding:0 14px 96px;
+}
 
-/* Scrollbar discreta en escritorio. */
-::-webkit-scrollbar{width:8px;height:8px;}
-::-webkit-scrollbar-track{background:#08080a;}
-::-webkit-scrollbar-thumb{background:#292932;border-radius:999px;}
-::-webkit-scrollbar-thumb:hover{background:#3b3b46;}
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  margin:0 -14px;
+  padding:15px 17px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:rgba(5,9,20,.9);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  backdrop-filter:blur(18px);
+}
+
+.topbar-brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+
+.brand-mark{
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:19px;
+  font-weight:900;
+  color:#fff;
+  background:linear-gradient(145deg,#516CED,#294fe0);
+  box-shadow:0 8px 20px rgba(49,88,232,.3);
+}
+
+.brand-title{
+  font-size:18px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.04em;
+  color:#fff;
+}
+
+.brand-title span{
+  color:#6680ff;
+}
+
+.brand-subtitle{
+  margin-top:4px;
+  font-size:8px;
+  color:#7e8ba4;
+  letter-spacing:.12em;
+  font-weight:800;
+}
+
+.logout{
+  width:38px;
+  height:38px;
+  padding:0;
+  border-radius:11px;
+  background:#0d1728;
+  border:1px solid var(--border);
+  color:#c4ccdb;
+  font-size:20px;
+}
+
+.user-strip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:14px 0 20px;
+  padding:10px 12px;
+  background:rgba(10,18,34,.72);
+  border:1px solid var(--border-soft);
+  border-radius:14px;
+}
+
+.user-avatar{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  background:linear-gradient(145deg,#516CED,#3158e8);
+  font-size:12px;
+}
+
+.user-info{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.user-info strong{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.user-info span{
+  color:var(--muted);
+  font-size:11px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:330px;
+}
+
+.online-dot{
+  margin-left:auto;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 4px var(--green-soft);
+}
+
+.tab-content{
+  width:100%;
+}
+
+.tab-panel{
+  display:none;
+  animation:tabIn .18s ease-out;
+}
+
+.tab-panel.active{
+  display:block;
+}
+
+@keyframes tabIn{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.page-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.eyebrow{
+  color:#7180a0;
+  font-size:9px;
+  line-height:1;
+  letter-spacing:.16em;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.page-heading h1{
+  margin:7px 0 3px;
+  font-size:29px;
+  line-height:1;
+  font-weight:950;
+  font-style:italic;
+  text-transform:uppercase;
+  letter-spacing:-.025em;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:12px;
+  margin:0;
+}
+
+.header-status-icon{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  border-radius:13px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#88a0ff;
+  background:var(--blue-soft);
+  border:1px solid rgba(81,108,237,.25);
+  font-size:23px;
+}
+
+.card{
+  background:linear-gradient(145deg,rgba(12,22,40,.98),rgba(7,14,28,.98));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:var(--shadow);
+  margin-bottom:14px;
+}
+
+.status-card{
+  position:relative;
+  overflow:hidden;
+}
+
+.status-card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:2px;
+  background:linear-gradient(90deg,#516CED,rgba(81,108,237,0));
+}
+
+.status-main{
+  margin-top:4px;
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:-.01em;
+}
+
+.badge{
+  padding:7px 10px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  border:1px solid transparent;
+}
+
+.ok{
+  background:var(--green-soft);
+  color:#69e889;
+  border-color:rgba(53,199,89,.22);
+}
+
+.off{
+  background:var(--red-soft);
+  color:#ff7b80;
+  border-color:rgba(239,83,80,.22);
+}
+
+.info{
+  background:var(--blue-soft);
+  color:#8ea2ff;
+  border-color:rgba(81,108,237,.22);
+}
+
+.status-divider{
+  height:1px;
+  background:var(--border);
+  margin:14px 0;
+}
+
+.status-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.status-cell.right{
+  text-align:right;
+}
+
+.status-value{
+  margin-top:4px;
+  font-size:16px;
+  font-weight:900;
+  color:#fff;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.status-value.compact{
+  font-size:20px;
+}
+
+.time-grid{
+  margin-top:13px;
+  padding-top:13px;
+  border-top:1px solid var(--border-soft);
+}
+
+.location-state{
+  margin-top:5px;
+  color:#91a0b9;
+  font-size:11px;
+  font-weight:700;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  display:inline-block;
+  margin-right:5px;
+  box-shadow:0 0 0 3px var(--green-soft);
+}
+
+.action-stack{
+  margin-top:14px;
+}
+
+.action-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:9px;
+}
+
+.action-button{
+  min-height:58px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  text-align:left;
+  padding:11px 13px;
+  border-radius:14px;
+}
+
+.action-button b{
+  display:block;
+  font-size:11px;
+  line-height:1.15;
+  letter-spacing:.07em;
+}
+
+.action-button small{
+  display:block;
+  margin-top:4px;
+  font-size:9px;
+  line-height:1.2;
+  color:rgba(255,255,255,.68);
+  font-weight:600;
+  text-transform:none;
+  letter-spacing:0;
+}
+
+.action-icon{
+  width:32px;
+  height:32px;
+  flex:0 0 32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  font-size:18px;
+}
+
+.chevron{
+  margin-left:auto;
+  color:rgba(255,255,255,.6);
+  font-size:25px;
+  line-height:1;
+}
+
+.message-area{
+  min-height:0;
+  margin-top:8px;
+}
+
+.section-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:22px 2px 10px;
+}
+
+.section-title-row h2{
+  margin:5px 0 0;
+  font-size:17px;
+  text-transform:uppercase;
+  font-weight:950;
+  font-style:italic;
+}
+
+.history-icon{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--blue-soft);
+  color:#7890ff;
+}
+
+.history-card{
+  padding:13px 15px;
+}
+
+.history-item{
+  border-top:1px solid var(--border);
+  padding:12px 0;
+  color:#dce3f0;
+}
+
+.history-item:first-child{
+  border-top:none;
+  padding-top:2px;
+}
+
+.clear-button{
+  width:auto;
+  margin-top:7px;
+  padding:8px 11px;
+  background:#0d1728;
+  border:1px solid var(--border);
+  color:#8996ad;
+  border-radius:10px;
+  font-size:10px;
+  text-transform:uppercase;
+  font-weight:800;
+}
+
+/* FORMULARIOS */
+.section-heading{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin-bottom:15px;
+}
+
+.section-heading strong{
+  display:block;
+  font-size:12px;
+  letter-spacing:.08em;
+  font-weight:950;
+}
+
+.section-heading span{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  margin-top:3px;
+}
+
+.feature-icon{
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--blue-soft);
+  color:#7d93ff;
+  border:1px solid rgba(81,108,237,.2);
+  font-size:20px;
+}
+
+.excel-feature{
+  background:var(--green-soft);
+  color:#68e889;
+  border-color:rgba(53,199,89,.2);
+}
+
+.schedule-info,.export-info{
+  background:rgba(81,108,237,.08);
+  color:#9eacd0;
+  border:1px solid rgba(81,108,237,.15);
+  border-radius:12px;
+  padding:11px;
+  font-size:10px;
+  line-height:1.55;
+  margin:0 0 16px;
+}
+
+.schedule-label{
+  color:#7281a0;
+  font-size:9px;
+  letter-spacing:.15em;
+  font-weight:900;
+  margin:0 0 7px;
+}
+
+.exit-label{
+  margin-top:16px;
+}
+
+.schedule-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.schedule-box{
+  background:#081224;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px;
+}
+
+.schedule-box-title{
+  color:#8d9ab1;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:800;
+}
+
+.schedule-box input{
+  margin-top:6px;
+  margin-bottom:0;
+  padding:10px;
+  border:0;
+  background:transparent;
+  font-size:17px;
+  font-weight:900;
+}
+
+.save-button{
+  margin-top:15px !important;
+  width:100%;
+}
+
+.form-two-col{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.unit{
+  float:right;
+  color:#63718a;
+  font-size:9px;
+}
+
+.sites-card{
+  min-height:55px;
+}
+
+.sites-list{
+  color:#aeb9cc;
+}
+
+.export-info{
+  background:rgba(53,199,89,.06);
+  border-color:rgba(53,199,89,.13);
+  color:#9eb8a7;
+}
+
+.excel-button{
+  background:linear-gradient(135deg,#177d4a 0%,#12613a 100%);
+  color:#fff;
+  border:1px solid rgba(53,199,89,.24);
+  box-shadow:0 10px 24px rgba(18,97,58,.2);
+  text-transform:uppercase;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+
+.excel-button:active{
+  background:#12613a;
+}
+
+.export-result{
+  color:#94a1b8;
+  font-size:10px;
+  margin-top:10px;
+  line-height:1.45;
+}
+
+.error{
+  color:#ff8c91;
+  background:rgba(239,83,80,.1);
+  border:1px solid rgba(239,83,80,.18);
+  border-radius:10px;
+  padding:10px;
+  font-size:11px;
+}
+
+.success{
+  color:#6ee98a;
+  background:rgba(53,199,89,.1);
+  border:1px solid rgba(53,199,89,.18);
+  border-radius:10px;
+  padding:10px;
+  font-size:11px;
+}
+
+.footer{
+  color:#56647c;
+}
+
+/* NAVEGACIÓN INFERIOR */
+.bottom-nav{
+  position:fixed;
+  left:50%;
+  bottom:10px;
+  transform:translateX(-50%);
+  z-index:30;
+  width:min(calc(100% - 24px),492px);
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  padding:7px;
+  border-radius:17px;
+  background:rgba(8,15,29,.94);
+  border:1px solid #1b2941;
+  box-shadow:0 16px 35px rgba(0,0,0,.45);
+  backdrop-filter:blur(20px);
+}
+
+.nav-item{
+  width:100%;
+  min-height:56px;
+  padding:5px 2px;
+  border-radius:12px;
+  background:transparent;
+  color:#6f7d95;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+
+.nav-item span{
+  font-size:20px;
+  line-height:1;
+}
+
+.nav-item small{
+  font-size:8px;
+  line-height:1;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+.nav-item.active{
+  color:#fff;
+  background:linear-gradient(180deg,rgba(81,108,237,.2),rgba(81,108,237,.08));
+  box-shadow:inset 0 0 0 1px rgba(81,108,237,.14);
+}
+
+.nav-item.active span{
+  color:#6f87ff;
+}
+
+@media (min-width:700px){
+  .app-shell{padding-left:0;padding-right:0;}
+  .topbar{margin:0;}
+  .bottom-nav{bottom:18px;}
+}
+
 </style>
 </head>
 
@@ -639,529 +1305,339 @@ button:not(:disabled):hover{filter:brightness(1.08);}
 
 <div id="appScreen" class="hidden">
 
-  <div class="container">
+  <div class="app-shell">
 
-    <div class="user-bar">
+    <!-- CABECERA -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <div class="brand-mark">G</div>
+        <div>
+          <div class="brand-title">GEO <span>FICHAJE</span></div>
+          <div class="brand-subtitle">POLICÍA MUNICIPAL · MADRID</div>
+        </div>
+      </div>
 
-      <div class="user-email">
+      <button id="logoutBtn" class="logout" type="button" title="Cerrar sesión">⇥</button>
+    </header>
+
+    <div class="user-strip">
+      <div class="user-avatar">●</div>
+      <div class="user-info">
+        <strong>Mi cuenta</strong>
         <span id="userEmail"></span>
       </div>
-
-      <button
-        id="logoutBtn"
-        class="logout"
-        type="button"
-      >
-        Cerrar sesión
-      </button>
-
+      <div class="online-dot" title="Conectado"></div>
     </div>
 
+    <!-- CONTENIDO DE LAS PESTAÑAS -->
+    <main class="tab-content">
 
-    <h1>📍 GeoFichaje</h1>
+      <!-- =====================================================
+           PESTAÑA 1 · ESTADO
+      ====================================================== -->
+      <section id="tab-status" class="tab-panel active">
 
-    <div class="sub">
-      Registro de jornada por localización
-    </div>
-
-    <div class="app-tabs" role="tablist" aria-label="Secciones de GeoFichaje">
-      <button class="app-tab active" type="button" data-panel="panelEstado">📍<br>Estado</button>
-      <button class="app-tab" type="button" data-panel="panelHorario">⏰<br>Horarios</button>
-      <button class="app-tab" type="button" data-panel="panelCentros">🏢<br>Mis centros</button>
-      <button class="app-tab" type="button" data-panel="panelExportar">📊<br>Exportar</button>
-    </div>
-
-
-    <div id="panelEstado" class="app-panel">
-
-    <!-- ESTADO -->
-
-    <div class="card">
-
-      <div class="row">
-
-        <strong>
-          Estado
-        </strong>
-
-        <span
-          id="statusBadge"
-          class="badge off"
-        >
-          Fuera
-        </span>
-
-      </div>
-
-
-      <div style="margin-top:12px">
-
-        <div class="small">
-          Centro detectado
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">PANEL DE CONTROL</div>
+            <h1>Estado actual</h1>
+            <div class="sub">Control de jornada y geolocalización</div>
+          </div>
+          <div class="header-status-icon">⌁</div>
         </div>
 
-        <div
-          id="currentSite"
-          style="font-size:20px;font-weight:700"
-        >
-          —
+        <div class="card status-card">
+          <div class="row">
+            <div>
+              <div class="small uppercase">Estado de servicio</div>
+              <div class="status-main">Jornada laboral</div>
+            </div>
+            <span id="statusBadge" class="badge off">FUERA</span>
+          </div>
+
+          <div class="status-divider"></div>
+
+          <div class="status-grid">
+            <div class="status-cell">
+              <div class="small">Centro detectado</div>
+              <div id="currentSite" class="status-value">—</div>
+            </div>
+            <div class="status-cell right">
+              <div class="small">Tiempo trabajado</div>
+              <div id="worked" class="status-value">0 h</div>
+            </div>
+          </div>
+
+          <div class="status-grid time-grid">
+            <div class="status-cell">
+              <div class="small">Entrada</div>
+              <div id="entryTime" class="status-value compact">--:--</div>
+            </div>
+            <div class="status-cell right">
+              <div class="small">Localización</div>
+              <div class="location-state"><span class="dot"></span> GPS preparado</div>
+            </div>
+          </div>
         </div>
 
-      </div>
-
-
-      <div
-        class="row"
-        style="margin-top:14px"
-      >
-
-        <div>
-
-          <div class="small">
-            Entrada
-          </div>
-
-          <div
-            id="entryTime"
-            style="font-weight:700"
-          >
-            --:--
-          </div>
-
-        </div>
-
-
-        <div style="text-align:right">
-
-          <div class="small">
-            Tiempo
-          </div>
-
-          <div
-            id="worked"
-            style="font-weight:700"
-          >
-            0 h
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div style="margin-top:14px">
-
-        <button
-          id="geoBtn"
-          class="primary"
-        >
-          Activar localización
-        </button>
-
-
-        <div style="height:8px"></div>
-
-
-        <div
-          class="row"
-          style="gap:8px"
-        >
-
-          <button
-            id="manualIn"
-            class="secondary"
-            type="button"
-          >
-            Fichar entrada
+        <div class="action-stack">
+          <button id="geoBtn" class="primary action-button" type="button">
+            <span class="action-icon">⌖</span>
+            <span><b>ACTIVAR LOCALIZACIÓN</b><small>Permitir ubicación del dispositivo</small></span>
+            <span class="chevron">›</span>
           </button>
 
+          <div class="action-row">
+            <button id="manualIn" class="secondary action-button half" type="button">
+              <span class="action-icon">↪</span>
+              <span><b>ENTRAR</b><small>Iniciar jornada</small></span>
+            </button>
+            <button id="manualOut" class="danger action-button half" type="button">
+              <span class="action-icon">↩</span>
+              <span><b>FICHAJE DE SALIDA</b><small>Finalizar jornada</small></span>
+            </button>
+          </div>
+        </div>
 
-          <button
-            id="manualOut"
-            class="danger"
-            type="button"
-          >
-            Fichar salida
+        <div id="geoMsg" class="small message-area"></div>
+
+        <div class="section-title-row">
+          <div>
+            <div class="eyebrow">ACTIVIDAD</div>
+            <h2>Últimos fichajes</h2>
+          </div>
+          <div class="history-icon">◷</div>
+        </div>
+
+        <div class="card history-card">
+          <div id="history"></div>
+          <button id="clear" class="clear-button" type="button">Borrar historial</button>
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+           PESTAÑA 2 · HORARIOS
+      ====================================================== -->
+      <section id="tab-schedule" class="tab-panel">
+
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">CONFIGURACIÓN</div>
+            <h1>Mi horario</h1>
+            <div class="sub">Personaliza las franjas automáticas</div>
+          </div>
+          <div class="header-status-icon">◷</div>
+        </div>
+
+        <div class="card schedule-card">
+          <div class="section-heading">
+            <div class="feature-icon">◷</div>
+            <div>
+              <strong>HORARIO DE TRABAJO</strong>
+              <span>Define cuándo se permite el fichaje automático.</span>
+            </div>
+          </div>
+
+          <div class="schedule-info">
+            La geolocalización automática utilizará este horario. La entrada automática solo se realizará dentro de la franja de entrada y la salida automática al alejarte del centro solo se realizará dentro de la franja de salida.
+          </div>
+
+          <div class="schedule-label">ENTRADA</div>
+          <div class="schedule-grid">
+            <div class="schedule-box">
+              <div class="schedule-box-title">Desde</div>
+              <input id="entryStart" type="time" value="10:00">
+            </div>
+            <div class="schedule-box">
+              <div class="schedule-box-title">Hasta</div>
+              <input id="entryEnd" type="time" value="12:00">
+            </div>
+          </div>
+
+          <div class="schedule-label exit-label">SALIDA</div>
+          <div class="schedule-grid">
+            <div class="schedule-box">
+              <div class="schedule-box-title">Desde</div>
+              <input id="exitStart" type="time" value="19:00">
+            </div>
+            <div class="schedule-box">
+              <div class="schedule-box-title">Hasta</div>
+              <input id="exitEnd" type="time" value="21:00">
+            </div>
+          </div>
+
+          <button id="saveSchedule" class="primary action-button save-button" type="button">
+            <span class="action-icon">▣</span>
+            <span><b>GUARDAR HORARIO</b><small>Aplicar nueva configuración</small></span>
           </button>
 
+          <div id="scheduleMsg" class="small message-area"></div>
         </div>
 
-      </div>
+      </section>
 
 
-      <div
-        id="geoMsg"
-        class="small"
-        style="margin-top:8px"
-      ></div>
+      <!-- =====================================================
+           PESTAÑA 3 · CENTROS
+      ====================================================== -->
+      <section id="tab-sites" class="tab-panel">
 
-    </div>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">GEOLOCALIZACIÓN</div>
+            <h1>Mis centros</h1>
+            <div class="sub">Gestiona tus lugares de trabajo</div>
+          </div>
+          <div class="header-status-icon">⌖</div>
+        </div>
 
-
-
-    <!-- HISTORIAL -->
-
-    <div class="card">
-
-      <div class="row">
-
-        <strong>
-          Historial
-        </strong>
-
-        <button
-          id="clear"
-          type="button"
-          style="
-            width:auto;
-            padding:8px 12px;
-            background:#f3f4f6;
-            color:#374151;
-            border-radius:10px
-          "
-        >
-          Borrar
-        </button>
-
-      </div>
-
-
-      <div
-        id="history"
-        style="margin-top:10px"
-      ></div>
-
-    </div>
-
-
-    </div> <!-- /panelEstado -->
-
-    <div id="panelHorario" class="app-panel hidden">
-
-    <!-- =====================================================
-         CONFIGURACIÓN DEL HORARIO
-    ====================================================== -->
-
-    <div class="card">
-
-      <div class="row">
-
-        <strong>
-          ⏰ Configuración del horario
-        </strong>
-
-      </div>
-
-
-      <div class="schedule-info">
-
-        La geolocalización automática utilizará este horario.
-        La entrada automática solo se realizará dentro de la
-        franja de entrada y la salida automática al alejarte
-        del centro solo se realizará dentro de la franja de salida.
-
-      </div>
-
-
-      <div class="schedule-grid">
-
-        <div class="schedule-box">
-
-          <div class="schedule-box-title">
-            Entrada desde
+        <div class="card">
+          <div class="section-heading">
+            <div class="feature-icon">⌂</div>
+            <div>
+              <strong>NUEVO CENTRO</strong>
+              <span>Guarda la ubicación y el radio de fichaje.</span>
+            </div>
           </div>
 
-          <input
-            id="entryStart"
-            type="time"
-            value="10:00"
-          >
+          <label>Nombre</label>
+          <input id="name" placeholder="Oreka">
 
-        </div>
-
-
-        <div class="schedule-box">
-
-          <div class="schedule-box-title">
-            Entrada hasta
+          <div class="form-two-col">
+            <div>
+              <label>Latitud</label>
+              <input id="lat" type="number" step="any" placeholder="40.438...">
+            </div>
+            <div>
+              <label>Longitud</label>
+              <input id="lon" type="number" step="any" placeholder="-3.716...">
+            </div>
           </div>
 
-          <input
-            id="entryEnd"
-            type="time"
-            value="12:00"
-          >
+          <label>Radio de fichaje <span class="unit">METROS</span></label>
+          <input id="radius" type="number" value="60">
 
+          <button id="useLocation" class="secondary action-button" type="button">
+            <span class="action-icon">⌖</span>
+            <span><b>USAR MI UBICACIÓN ACTUAL</b><small>Obtener coordenadas del dispositivo</small></span>
+          </button>
+
+          <button id="saveSite" class="primary action-button save-button" type="button">
+            <span class="action-icon">＋</span>
+            <span><b>GUARDAR CENTRO</b><small>Añadir a mis ubicaciones</small></span>
+          </button>
         </div>
 
+        <div class="section-title-row compact-heading">
+          <div>
+            <div class="eyebrow">UBICACIONES GUARDADAS</div>
+            <h2>Centros activos</h2>
+          </div>
+        </div>
 
-        <div class="schedule-box">
+        <div class="card sites-card">
+          <div id="sitesList" class="sites-list"></div>
+        </div>
 
-          <div class="schedule-box-title">
-            Salida desde
+      </section>
+
+
+      <!-- =====================================================
+           PESTAÑA 4 · EXPORTAR
+      ====================================================== -->
+      <section id="tab-export" class="tab-panel">
+
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">DOCUMENTACIÓN</div>
+            <h1>Exportar archivos</h1>
+            <div class="sub">Descarga tus registros de jornada</div>
+          </div>
+          <div class="header-status-icon">▣</div>
+        </div>
+
+        <div class="card export-card">
+          <div class="section-heading">
+            <div class="feature-icon excel-feature">▤</div>
+            <div>
+              <strong>EXPORTAR REGISTROS</strong>
+              <span>Genera un Excel con tus fichajes.</span>
+            </div>
           </div>
 
-          <input
-            id="exitStart"
-            type="time"
-            value="19:00"
-          >
-
-        </div>
-
-
-        <div class="schedule-box">
-
-          <div class="schedule-box-title">
-            Salida hasta
+          <div class="export-info">
+            Selecciona las fechas que quieres exportar. El Excel incluirá las jornadas registradas dentro de ese periodo y una fila final con los totales.
           </div>
 
-          <input
-            id="exitEnd"
-            type="time"
-            value="21:00"
-          >
+          <label>Fecha desde</label>
+          <input id="exportFrom" type="date">
 
+          <label>Fecha hasta</label>
+          <input id="exportTo" type="date">
+
+          <button id="exportExcel" class="excel-button action-button" type="button">
+            <span class="action-icon">▤</span>
+            <span><b>DESCARGAR EXCEL</b><small>Exportar registros seleccionados</small></span>
+            <span class="chevron">›</span>
+          </button>
+
+          <div id="exportMsg" class="export-result"></div>
         </div>
 
-      </div>
+      </section>
 
+    </main>
 
-      <button
-        id="saveSchedule"
-        class="primary"
-        type="button"
-        style="margin-top:4px"
-      >
-        💾 Guardar horario
+    <!-- NAVEGACIÓN INFERIOR -->
+    <nav class="bottom-nav" aria-label="Navegación principal">
+      <button class="nav-item active" data-tab="tab-status" type="button">
+        <span>⌂</span><small>Estado</small>
       </button>
-
-
-      <div
-        id="scheduleMsg"
-        class="small"
-        style="margin-top:8px"
-      ></div>
-
-    </div>
-
-
-    </div> <!-- /panelHorario -->
-
-    <div id="panelCentros" class="app-panel hidden">
-
-    <!-- CENTROS -->
-
-    <div class="card">
-
-      <strong>
-        Mis centros
-      </strong>
-
-      <div style="margin-top:12px">
-
-        <label>
-          Nombre
-        </label>
-
-        <input
-          id="name"
-          placeholder="Nombre del Centro"
-        >
-
-
-        <label>
-          Latitud
-        </label>
-
-        <input
-          id="lat"
-          type="number"
-          step="any"
-          placeholder="40.438..."
-        >
-
-
-        <label>
-          Longitud
-        </label>
-
-        <input
-          id="lon"
-          type="number"
-          step="any"
-          placeholder="-3.716..."
-        >
-
-
-        <label>
-          Radio (metros)
-        </label>
-
-        <input
-          id="radius"
-          type="number"
-          value="60"
-        >
-
-
-        <button
-          id="useLocation"
-          class="secondary"
-          type="button"
-        >
-          Usar mi ubicación actual
-        </button>
-
-
-        <div style="height:8px"></div>
-
-
-        <button
-          id="saveSite"
-          class="primary"
-          type="button"
-        >
-          Guardar centro
-        </button>
-
-      </div>
-
-
-      <div
-        id="sitesList"
-        class="small"
-        style="margin-top:12px"
-      ></div>
-
-    </div>
-
-
-    </div> <!-- /panelCentros -->
-
-    <div id="panelExportar" class="app-panel hidden">
-
-    <!-- =====================================================
-         EXPORTAR EXCEL
-    ====================================================== -->
-
-    <div class="card">
-
-      <div class="export-title">
-
-        <div class="export-icon">
-          📊
-        </div>
-
-        <div>
-          <strong>
-            Exportar registros
-          </strong>
-
-          <div class="small">
-            Descargar tus jornadas en Excel
-          </div>
-        </div>
-
-      </div>
-
-
-      <div
-        class="export-info"
-        style="margin-top:14px"
-      >
-
-        Selecciona las fechas que quieres exportar.
-        El Excel incluirá las jornadas registradas
-        dentro de ese periodo y una fila final con
-        los totales.
-
-      </div>
-
-
-      <label>
-        Fecha desde
-      </label>
-
-      <input
-        id="exportFrom"
-        type="date"
-      >
-
-
-      <label>
-        Fecha hasta
-      </label>
-
-      <input
-        id="exportTo"
-        type="date"
-      >
-
-
-      <button
-        id="exportExcel"
-        class="excel-button"
-        type="button"
-      >
-        📊 Descargar Excel
+      <button class="nav-item" data-tab="tab-schedule" type="button">
+        <span>◷</span><small>Horarios</small>
       </button>
-
-
-      <div
-        id="exportMsg"
-        class="export-result"
-      ></div>
-
-    </div>
-
-
-
-
-    </div> <!-- /panelExportar -->
-
-    <div class="footer">
-
-      Los datos se guardan de forma segura
-      en Firebase.
-
-      <br><br>
-
-      Para usar la ubicación en iPhone,
-      abre la web mediante HTTPS y permite
-      el acceso a la ubicación.
-
-    </div>
+      <button class="nav-item" data-tab="tab-sites" type="button">
+        <span>⌖</span><small>Mis centros</small>
+      </button>
+      <button class="nav-item" data-tab="tab-export" type="button">
+        <span>▤</span><small>Exportar</small>
+      </button>
+    </nav>
 
   </div>
 
 </div>
 
 
-<script>
+<script type="module">
+
 /* =========================================================
    NAVEGACIÓN POR PESTAÑAS
+   No modifica la lógica de fichajes, horarios, centros ni Excel.
 ========================================================= */
-(function(){
-  const tabs = document.querySelectorAll('.app-tab');
-  const panels = document.querySelectorAll('.app-panel');
-  function showPanel(panelId){
-    panels.forEach(panel => panel.classList.toggle('hidden', panel.id !== panelId));
-    tabs.forEach(tab => {
-      const active = tab.dataset.panel === panelId;
-      tab.classList.toggle('active', active);
-      tab.setAttribute('aria-selected', active ? 'true' : 'false');
-    });
-  }
-  tabs.forEach(tab => tab.addEventListener('click', () => {
-    showPanel(tab.dataset.panel);
-    window.scrollTo({top:0,behavior:'smooth'});
-  }));
-  showPanel('panelEstado');
-})();
-</script>
+const tabButtons = document.querySelectorAll('.nav-item[data-tab]');
+const tabPanels = document.querySelectorAll('.tab-panel');
 
-<script type="module">
+function openTab(tabId){
+  tabPanels.forEach(panel => {
+    panel.classList.toggle('active', panel.id === tabId);
+  });
+
+  tabButtons.forEach(button => {
+    button.classList.toggle('active', button.dataset.tab === tabId);
+  });
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+tabButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    openTab(button.dataset.tab);
+  });
+});
+
 
 /* =========================================================
    FIREBASE
